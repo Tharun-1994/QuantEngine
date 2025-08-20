@@ -1,0 +1,374 @@
+{
+  "2025-05-01" : {
+    "equityValue" : -1398.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 1398.0
+  },
+  "2025-05-02" : {
+    "equityValue" : -962.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 962.0
+  },
+  "2025-05-05" : {
+    "equityValue" : 862.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-06" : {
+    "equityValue" : 862.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-07" : {
+    "equityValue" : 1710.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-08" : {
+    "equityValue" : 1710.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-09" : {
+    "equityValue" : 2228.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-12" : {
+    "equityValue" : 2806.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-13" : {
+    "equityValue" : 3405.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-14" : {
+    "equityValue" : 3405.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-15" : {
+    "equityValue" : 3405.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-16" : {
+    "equityValue" : 3073.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 332.0
+  },
+  "2025-05-19" : {
+    "equityValue" : 4567.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-20" : {
+    "equityValue" : 5162.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-21" : {
+    "equityValue" : 5266.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-22" : {
+    "equityValue" : 5266.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-23" : {
+    "equityValue" : 5266.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-27" : {
+    "equityValue" : 5266.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-28" : {
+    "equityValue" : 25309.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-29" : {
+    "equityValue" : 25309.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-05-30" : {
+    "equityValue" : 25679.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 0.0
+  },
+  "2025-06-02" : {
+    "equityValue" : 23680.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 1999.0
+  },
+  "2025-06-03" : {
+    "equityValue" : 15129.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 10550.0
+  },
+  "2025-06-04" : {
+    "equityValue" : 16465.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 9214.0
+  },
+  "2025-06-05" : {
+    "equityValue" : 17023.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 8656.0
+  },
+  "2025-06-06" : {
+    "equityValue" : 17023.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 8656.0
+  },
+  "2025-06-09" : {
+    "equityValue" : 17331.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 8348.0
+  },
+  "2025-06-10" : {
+    "equityValue" : 17580.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 8099.0
+  },
+  "2025-06-11" : {
+    "equityValue" : 17601.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 8078.0
+  },
+  "2025-06-12" : {
+    "equityValue" : 17765.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 7914.0
+  },
+  "2025-06-13" : {
+    "equityValue" : 18194.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 7485.0
+  },
+  "2025-06-16" : {
+    "equityValue" : 8185.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 17494.0
+  },
+  "2025-06-17" : {
+    "equityValue" : 8185.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 17494.0
+  },
+  "2025-06-18" : {
+    "equityValue" : 8185.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 17494.0
+  },
+  "2025-06-20" : {
+    "equityValue" : 8164.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 17515.0
+  },
+  "2025-06-23" : {
+    "equityValue" : 8164.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 17515.0
+  },
+  "2025-06-24" : {
+    "equityValue" : 5519.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 20160.0
+  },
+  "2025-06-25" : {
+    "equityValue" : 6916.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 18763.0
+  },
+  "2025-06-26" : {
+    "equityValue" : 6174.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 19505.0
+  },
+  "2025-06-27" : {
+    "equityValue" : 7113.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 18566.0
+  },
+  "2025-06-30" : {
+    "equityValue" : 7113.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 18566.0
+  },
+  "2025-07-01" : {
+    "equityValue" : 7044.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 18635.0
+  },
+  "2025-07-02" : {
+    "equityValue" : 10714.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 14965.0
+  },
+  "2025-07-03" : {
+    "equityValue" : 10584.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 15095.0
+  },
+  "2025-07-07" : {
+    "equityValue" : 11192.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 14487.0
+  },
+  "2025-07-08" : {
+    "equityValue" : 11873.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13806.0
+  },
+  "2025-07-09" : {
+    "equityValue" : 12387.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13292.0
+  },
+  "2025-07-10" : {
+    "equityValue" : 12841.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 12838.0
+  },
+  "2025-07-11" : {
+    "equityValue" : 13074.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 12605.0
+  },
+  "2025-07-14" : {
+    "equityValue" : 12572.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13107.0
+  },
+  "2025-07-15" : {
+    "equityValue" : 12450.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13229.0
+  },
+  "2025-07-16" : {
+    "equityValue" : 12450.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13229.0
+  },
+  "2025-07-17" : {
+    "equityValue" : 12450.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13229.0
+  },
+  "2025-07-18" : {
+    "equityValue" : 12280.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13399.0
+  },
+  "2025-07-21" : {
+    "equityValue" : 12378.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13301.0
+  },
+  "2025-07-22" : {
+    "equityValue" : 12378.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13301.0
+  },
+  "2025-07-23" : {
+    "equityValue" : 12645.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 13034.0
+  },
+  "2025-07-24" : {
+    "equityValue" : 9057.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 16622.0
+  },
+  "2025-07-25" : {
+    "equityValue" : 10221.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 15458.0
+  },
+  "2025-07-28" : {
+    "equityValue" : 10221.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 15458.0
+  },
+  "2025-07-29" : {
+    "equityValue" : 10221.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 15458.0
+  },
+  "2025-07-30" : {
+    "equityValue" : 10221.0,
+    "dayEndUtility" : 10,
+    "dayEndUtilityValue" : 100000.0,
+    "dailyDrawdown" : 15458.0
+  }
+}

@@ -1,0 +1,5257 @@
+{
+  "ADM_1754071534850_1" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 46.98735,
+    "entryValue" : 9961.318,
+    "entryReason" : "Entries",
+    "quantity" : 212,
+    "exitDate" : "2025-05-07",
+    "exitPrice" : 47.749523,
+    "exitValue" : 10123.0,
+    "exitReason" : "Exits",
+    "profit" : 161.68164,
+    "profitPercentage" : 0.016230948,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071534850_1" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALGN_1754071534850_2" : {
+    "symbol" : "ALGN",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 190.0,
+    "entryValue" : 11020.0,
+    "entryReason" : "Entries",
+    "quantity" : 58,
+    "exitDate" : "2025-05-05",
+    "exitPrice" : 177.93,
+    "exitValue" : 10320.0,
+    "exitReason" : "Exits",
+    "profit" : -700.0,
+    "profitPercentage" : -0.06352087,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALGN_1754071534850_2" : [ {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMCR_1754071534851_3" : {
+    "symbol" : "AMCR",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 9.062361,
+    "entryValue" : 9986.722,
+    "entryReason" : "Entries",
+    "quantity" : 1102,
+    "exitDate" : "2025-05-13",
+    "exitPrice" : 9.160973,
+    "exitValue" : 10095.0,
+    "exitReason" : "Exits",
+    "profit" : 108.27832,
+    "profitPercentage" : 0.010842228,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMCR_1754071534851_3" : [ {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMCR",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMZN_1754071534851_4" : {
+    "symbol" : "AMZN",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 190.63,
+    "entryValue" : 10294.0205,
+    "entryReason" : "Entries",
+    "quantity" : 54,
+    "exitDate" : "2025-05-02",
+    "exitPrice" : 191.435,
+    "exitValue" : 10337.0,
+    "exitReason" : "Exits",
+    "profit" : 42.979492,
+    "profitPercentage" : 0.00417519,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMZN_1754071534851_4" : [ {
+        "symbol" : "AMZN",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "APA_1754071534851_5" : {
+    "symbol" : "APA",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 15.232473,
+    "entryValue" : 9931.572,
+    "entryReason" : "Entries",
+    "quantity" : 652,
+    "exitDate" : "2025-05-05",
+    "exitPrice" : 15.883603,
+    "exitValue" : 10356.0,
+    "exitReason" : "Exits",
+    "profit" : 424.42773,
+    "profitPercentage" : 0.0427352,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "APA_1754071534851_5" : [ {
+        "symbol" : "APA",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ARE_1754071534851_6" : {
+    "symbol" : "ARE",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 71.68665,
+    "entryValue" : 10036.132,
+    "entryReason" : "Entries",
+    "quantity" : 140,
+    "exitDate" : "2025-05-05",
+    "exitPrice" : 72.66866,
+    "exitValue" : 10174.0,
+    "exitReason" : "Exits",
+    "profit" : 137.86816,
+    "profitPercentage" : 0.013737181,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ARE_1754071534851_6" : [ {
+        "symbol" : "ARE",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ARE",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BG_1754071534851_7" : {
+    "symbol" : "BG",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 77.9649,
+    "entryValue" : 9979.507,
+    "entryReason" : "Entries",
+    "quantity" : 128,
+    "exitDate" : "2025-05-12",
+    "exitPrice" : 77.76662,
+    "exitValue" : 9954.0,
+    "exitReason" : "Exits",
+    "profit" : -25.506836,
+    "profitPercentage" : -0.0025559214,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BG_1754071534851_7" : [ {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BKR_1754071534851_8" : {
+    "symbol" : "BKR",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 34.890266,
+    "entryValue" : 9908.836,
+    "entryReason" : "Entries",
+    "quantity" : 284,
+    "exitDate" : "2025-05-02",
+    "exitPrice" : 36.510063,
+    "exitValue" : 10369.0,
+    "exitReason" : "Exits",
+    "profit" : 460.16406,
+    "profitPercentage" : 0.04643977,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BKR_1754071534851_8" : [ {
+        "symbol" : "BKR",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BXP_1754071534851_9" : {
+    "symbol" : "BXP",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 63.50957,
+    "entryValue" : 10098.021,
+    "entryReason" : "Entries",
+    "quantity" : 159,
+    "exitDate" : "2025-05-05",
+    "exitPrice" : 63.59828,
+    "exitValue" : 10112.0,
+    "exitReason" : "Exits",
+    "profit" : 13.978516,
+    "profitPercentage" : 0.0013842826,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BXP_1754071534851_9" : [ {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "CCL_1754071534851_10" : {
+    "symbol" : "CCL",
+    "direction" : "long",
+    "entryDate" : "2025-05-01",
+    "entryPrice" : 18.68,
+    "entryValue" : 10180.601,
+    "entryReason" : "Entries",
+    "quantity" : 545,
+    "exitDate" : "2025-05-05",
+    "exitPrice" : 19.12,
+    "exitValue" : 10420.0,
+    "exitReason" : "Exits",
+    "profit" : 239.39941,
+    "profitPercentage" : 0.023515254,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "CCL_1754071534851_10" : [ {
+        "symbol" : "CCL",
+        "tradeDate" : "2025-05-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CCL",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACGL_1754071534860_11" : {
+    "symbol" : "ACGL",
+    "direction" : "long",
+    "entryDate" : "2025-05-02",
+    "entryPrice" : 90.86,
+    "entryValue" : 10176.32,
+    "entryReason" : "Entries",
+    "quantity" : 112,
+    "exitDate" : "2025-05-05",
+    "exitPrice" : 91.92,
+    "exitValue" : 10295.0,
+    "exitReason" : "Exits",
+    "profit" : 118.67969,
+    "profitPercentage" : 0.011662338,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACGL_1754071534860_11" : [ {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADM_1754071534860_12" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-05-02",
+    "entryPrice" : 47.610943,
+    "entryValue" : 10093.52,
+    "entryReason" : "Entries",
+    "quantity" : 212,
+    "exitDate" : "2025-05-07",
+    "exitPrice" : 47.749523,
+    "exitValue" : 10123.0,
+    "exitReason" : "Exits",
+    "profit" : 29.480469,
+    "profitPercentage" : 0.0029207324,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071534860_12" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMGN_1754071534864_13" : {
+    "symbol" : "AMGN",
+    "direction" : "long",
+    "entryDate" : "2025-05-05",
+    "entryPrice" : 279.10345,
+    "entryValue" : 10047.725,
+    "entryReason" : "Entries",
+    "quantity" : 36,
+    "exitDate" : "2025-05-13",
+    "exitPrice" : 271.43124,
+    "exitValue" : 9772.0,
+    "exitReason" : "Exits",
+    "profit" : -275.7246,
+    "profitPercentage" : -0.027441498,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMGN_1754071534864_13" : [ {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BDX_1754071534864_14" : {
+    "symbol" : "BDX",
+    "direction" : "long",
+    "entryDate" : "2025-05-05",
+    "entryPrice" : 167.41016,
+    "entryValue" : 10044.609,
+    "entryReason" : "Entries",
+    "quantity" : 60,
+    "exitDate" : "2025-05-13",
+    "exitPrice" : 173.82147,
+    "exitValue" : 10429.0,
+    "exitReason" : "Exits",
+    "profit" : 384.39062,
+    "profitPercentage" : 0.03826835,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BDX_1754071534864_14" : [ {
+        "symbol" : "BDX",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BDX",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BDX",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BDX",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BDX",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BDX",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "CAG_1754071534864_15" : {
+    "symbol" : "CAG",
+    "direction" : "long",
+    "entryDate" : "2025-05-05",
+    "entryPrice" : 23.330898,
+    "entryValue" : 9962.294,
+    "entryReason" : "Entries",
+    "quantity" : 427,
+    "exitDate" : "2025-05-13",
+    "exitPrice" : 22.830109,
+    "exitValue" : 9748.0,
+    "exitReason" : "Exits",
+    "profit" : -214.29395,
+    "profitPercentage" : -0.021510502,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "CAG_1754071534864_15" : [ {
+        "symbol" : "CAG",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CAG",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CAG",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CAG",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CAG",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CAG",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "TRGP_1754071534864_16" : {
+    "symbol" : "TRGP",
+    "direction" : "long",
+    "entryDate" : "2025-05-05",
+    "entryPrice" : 158.69612,
+    "entryValue" : 9839.159,
+    "entryReason" : "Entries",
+    "quantity" : 62,
+    "exitDate" : "2025-05-13",
+    "exitPrice" : 165.8034,
+    "exitValue" : 10280.0,
+    "exitReason" : "Exits",
+    "profit" : 440.84082,
+    "profitPercentage" : 0.044804726,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "TRGP_1754071534864_16" : [ {
+        "symbol" : "TRGP",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TRGP",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TRGP",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TRGP",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TRGP",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TRGP",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "TTWO_1754071534864_17" : {
+    "symbol" : "TTWO",
+    "direction" : "long",
+    "entryDate" : "2025-05-05",
+    "entryPrice" : 218.5,
+    "entryValue" : 10051.0,
+    "entryReason" : "Entries",
+    "quantity" : 46,
+    "exitDate" : "2025-05-07",
+    "exitPrice" : 232.11,
+    "exitValue" : 10677.0,
+    "exitReason" : "Exits",
+    "profit" : 626.0,
+    "profitPercentage" : 0.06228236,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "TTWO_1754071534864_17" : [ {
+        "symbol" : "TTWO",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TTWO",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "UNH_1754071534864_18" : {
+    "symbol" : "UNH",
+    "direction" : "long",
+    "entryDate" : "2025-05-05",
+    "entryPrice" : 396.30667,
+    "entryValue" : 9907.667,
+    "entryReason" : "Entries",
+    "quantity" : 25,
+    "exitDate" : "2025-05-20",
+    "exitPrice" : 318.65793,
+    "exitValue" : 7966.0,
+    "exitReason" : "Exits",
+    "profit" : -1941.667,
+    "profitPercentage" : -0.19597621,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "UNH_1754071534864_18" : [ {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALB_1754071534874_19" : {
+    "symbol" : "ALB",
+    "direction" : "long",
+    "entryDate" : "2025-05-07",
+    "entryPrice" : 57.62404,
+    "entryValue" : 10084.207,
+    "entryReason" : "Entries",
+    "quantity" : 175,
+    "exitDate" : "2025-05-12",
+    "exitPrice" : 62.19422,
+    "exitValue" : 10884.0,
+    "exitReason" : "Exits",
+    "profit" : 799.79297,
+    "profitPercentage" : 0.07931144,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALB_1754071534874_19" : [ {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALGN_1754071534874_20" : {
+    "symbol" : "ALGN",
+    "direction" : "long",
+    "entryDate" : "2025-05-07",
+    "entryPrice" : 172.66,
+    "entryValue" : 10014.28,
+    "entryReason" : "Entries",
+    "quantity" : 58,
+    "exitDate" : "2025-05-09",
+    "exitPrice" : 181.12,
+    "exitValue" : 10505.0,
+    "exitReason" : "Exits",
+    "profit" : 490.71973,
+    "profitPercentage" : 0.049001995,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALGN_1754071534874_20" : [ {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMGN_1754071534874_21" : {
+    "symbol" : "AMGN",
+    "direction" : "long",
+    "entryDate" : "2025-05-07",
+    "entryPrice" : 269.64703,
+    "entryValue" : 9976.94,
+    "entryReason" : "Entries",
+    "quantity" : 37,
+    "exitDate" : "2025-05-13",
+    "exitPrice" : 271.43124,
+    "exitValue" : 10043.0,
+    "exitReason" : "Exits",
+    "profit" : 66.05957,
+    "profitPercentage" : 0.0066212253,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMGN_1754071534874_21" : [ {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEE_1754071534880_22" : {
+    "symbol" : "AEE",
+    "direction" : "long",
+    "entryDate" : "2025-05-09",
+    "entryPrice" : 96.95705,
+    "entryValue" : 9986.576,
+    "entryReason" : "Entries",
+    "quantity" : 103,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 95.93467,
+    "exitValue" : 9881.0,
+    "exitReason" : "Exits",
+    "profit" : -105.57617,
+    "profitPercentage" : -0.010571809,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEE_1754071534880_22" : [ {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEE_1754071534882_23" : {
+    "symbol" : "AEE",
+    "direction" : "long",
+    "entryDate" : "2025-05-12",
+    "entryPrice" : 96.2126,
+    "entryValue" : 9909.897,
+    "entryReason" : "Entries",
+    "quantity" : 103,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 95.93467,
+    "exitValue" : 9881.0,
+    "exitReason" : "Exits",
+    "profit" : -28.89746,
+    "profitPercentage" : -0.00291602,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEE_1754071534882_23" : [ {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AKAM_1754071534882_24" : {
+    "symbol" : "AKAM",
+    "direction" : "long",
+    "entryDate" : "2025-05-12",
+    "entryPrice" : 79.01,
+    "entryValue" : 10350.311,
+    "entryReason" : "Entries",
+    "quantity" : 131,
+    "exitDate" : "2025-05-28",
+    "exitPrice" : 77.75,
+    "exitValue" : 10185.0,
+    "exitReason" : "Exits",
+    "profit" : -165.31055,
+    "profitPercentage" : -0.015971554,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AKAM_1754071534882_24" : [ {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071534885_25" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-05-13",
+    "entryPrice" : 131.16125,
+    "entryValue" : 9968.256,
+    "entryReason" : "Entries",
+    "quantity" : 76,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 132.55002,
+    "exitValue" : 10074.0,
+    "exitReason" : "Exits",
+    "profit" : 105.74414,
+    "profitPercentage" : 0.010608088,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071534885_25" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEE_1754071534885_26" : {
+    "symbol" : "AEE",
+    "direction" : "long",
+    "entryDate" : "2025-05-13",
+    "entryPrice" : 93.75095,
+    "entryValue" : 9937.602,
+    "entryReason" : "Entries",
+    "quantity" : 106,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 95.93467,
+    "exitValue" : 10169.0,
+    "exitReason" : "Exits",
+    "profit" : 231.39844,
+    "profitPercentage" : 0.02328514,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEE_1754071534885_26" : [ {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEP_1754071534885_27" : {
+    "symbol" : "AEP",
+    "direction" : "long",
+    "entryDate" : "2025-05-13",
+    "entryPrice" : 100.99,
+    "entryValue" : 9998.01,
+    "entryReason" : "Entries",
+    "quantity" : 99,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 101.58,
+    "exitValue" : 10056.0,
+    "exitReason" : "Exits",
+    "profit" : 57.990234,
+    "profitPercentage" : 0.005800178,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEP_1754071534885_27" : [ {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AFL_1754071534885_28" : {
+    "symbol" : "AFL",
+    "direction" : "long",
+    "entryDate" : "2025-05-13",
+    "entryPrice" : 104.60242,
+    "entryValue" : 9937.2295,
+    "entryReason" : "Entries",
+    "quantity" : 95,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 105.13945,
+    "exitValue" : 9988.0,
+    "exitReason" : "Exits",
+    "profit" : 50.770508,
+    "profitPercentage" : 0.005109121,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AFL_1754071534885_28" : [ {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AJG_1754071534885_29" : {
+    "symbol" : "AJG",
+    "direction" : "long",
+    "entryDate" : "2025-05-13",
+    "entryPrice" : 333.23853,
+    "entryValue" : 9997.156,
+    "entryReason" : "Entries",
+    "quantity" : 30,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 338.3384,
+    "exitValue" : 10150.0,
+    "exitReason" : "Exits",
+    "profit" : 152.84375,
+    "profitPercentage" : 0.015288723,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AJG_1754071534885_29" : [ {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMT_1754071534885_30" : {
+    "symbol" : "AMT",
+    "direction" : "long",
+    "entryDate" : "2025-05-13",
+    "entryPrice" : 206.87184,
+    "entryValue" : 9929.849,
+    "entryReason" : "Entries",
+    "quantity" : 48,
+    "exitDate" : "2025-05-16",
+    "exitPrice" : 211.29701,
+    "exitValue" : 10142.0,
+    "exitReason" : "Exits",
+    "profit" : 212.15137,
+    "profitPercentage" : 0.021365015,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMT_1754071534885_30" : [ {
+        "symbol" : "AMT",
+        "tradeDate" : "2025-05-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMT",
+        "tradeDate" : "2025-05-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMT",
+        "tradeDate" : "2025-05-15",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AKAM_1754071534894_31" : {
+    "symbol" : "AKAM",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 76.95,
+    "entryValue" : 10080.449,
+    "entryReason" : "Entries",
+    "quantity" : 131,
+    "exitDate" : "2025-05-28",
+    "exitPrice" : 77.75,
+    "exitValue" : 10185.0,
+    "exitReason" : "Exits",
+    "profit" : 104.55078,
+    "profitPercentage" : 0.010371639,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AKAM_1754071534894_31" : [ {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AKAM",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "TMO_1754071534894_32" : {
+    "symbol" : "TMO",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 404.5807,
+    "entryValue" : 10114.518,
+    "entryReason" : "Entries",
+    "quantity" : 25,
+    "exitDate" : "2025-05-28",
+    "exitPrice" : 403.42188,
+    "exitValue" : 10086.0,
+    "exitReason" : "Exits",
+    "profit" : -28.517578,
+    "profitPercentage" : -0.00281947,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "TMO_1754071534894_32" : [ {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TMO",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "UNH_1754071534894_33" : {
+    "symbol" : "UNH",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 277.32135,
+    "entryValue" : 10260.89,
+    "entryReason" : "Entries",
+    "quantity" : 37,
+    "exitDate" : "2025-05-20",
+    "exitPrice" : 318.65793,
+    "exitValue" : 11790.0,
+    "exitReason" : "Exits",
+    "profit" : 1529.1104,
+    "profitPercentage" : 0.14902318,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "UNH_1754071534894_33" : [ {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "RVTY_1754071534894_34" : {
+    "symbol" : "RVTY",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 90.34379,
+    "entryValue" : 10028.16,
+    "entryReason" : "Entries",
+    "quantity" : 111,
+    "exitDate" : "2025-05-20",
+    "exitPrice" : 93.95114,
+    "exitValue" : 10429.0,
+    "exitReason" : "Exits",
+    "profit" : 400.83984,
+    "profitPercentage" : 0.039971422,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "RVTY_1754071534894_34" : [ {
+        "symbol" : "RVTY",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "RVTY",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "MRNA_1754071534894_35" : {
+    "symbol" : "MRNA",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 23.87,
+    "entryValue" : 10097.011,
+    "entryReason" : "Entries",
+    "quantity" : 423,
+    "exitDate" : "2025-05-19",
+    "exitPrice" : 25.27,
+    "exitValue" : 10689.0,
+    "exitReason" : "Exits",
+    "profit" : 591.98926,
+    "profitPercentage" : 0.05863015,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "MRNA_1754071534894_35" : [ {
+        "symbol" : "MRNA",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "NUE_1754071534894_36" : {
+    "symbol" : "NUE",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 114.61834,
+    "entryValue" : 9971.796,
+    "entryReason" : "Entries",
+    "quantity" : 87,
+    "exitDate" : "2025-06-03",
+    "exitPrice" : 118.541855,
+    "exitValue" : 10313.0,
+    "exitReason" : "Exits",
+    "profit" : 341.2041,
+    "profitPercentage" : 0.034216914,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "NUE_1754071534894_36" : [ {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "NUE",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "FI_1754071534894_37" : {
+    "symbol" : "FI",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 159.5,
+    "entryValue" : 10048.5,
+    "entryReason" : "Entries",
+    "quantity" : 63,
+    "exitDate" : "2025-06-02",
+    "exitPrice" : 161.76,
+    "exitValue" : 10191.0,
+    "exitReason" : "Exits",
+    "profit" : 142.5,
+    "profitPercentage" : 0.014181221,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "FI_1754071534894_37" : [ {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "FI",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "HUM_1754071534894_38" : {
+    "symbol" : "HUM",
+    "direction" : "long",
+    "entryDate" : "2025-05-16",
+    "entryPrice" : 228.89249,
+    "entryValue" : 10071.27,
+    "entryReason" : "Entries",
+    "quantity" : 44,
+    "exitDate" : "2025-05-19",
+    "exitPrice" : 244.09618,
+    "exitValue" : 10740.0,
+    "exitReason" : "Exits",
+    "profit" : 668.73047,
+    "profitPercentage" : 0.06639982,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "HUM_1754071534894_38" : [ {
+        "symbol" : "HUM",
+        "tradeDate" : "2025-05-16",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMAT_1754071534895_39" : {
+    "symbol" : "AMAT",
+    "direction" : "long",
+    "entryDate" : "2025-05-19",
+    "entryPrice" : 162.07912,
+    "entryValue" : 9886.826,
+    "entryReason" : "Entries",
+    "quantity" : 61,
+    "exitDate" : "2025-06-04",
+    "exitPrice" : 162.5,
+    "exitValue" : 9913.0,
+    "exitReason" : "Exits",
+    "profit" : 26.173828,
+    "profitPercentage" : 0.0026473438,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMAT_1754071534895_39" : [ {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "PARA_1754071534895_40" : {
+    "symbol" : "PARA",
+    "direction" : "long",
+    "entryDate" : "2025-05-19",
+    "entryPrice" : 11.7105465,
+    "entryValue" : 10047.648,
+    "entryReason" : "Entries",
+    "quantity" : 858,
+    "exitDate" : "2025-05-21",
+    "exitPrice" : 11.800168,
+    "exitValue" : 10125.0,
+    "exitReason" : "Exits",
+    "profit" : 77.35156,
+    "profitPercentage" : 0.0076984745,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "PARA_1754071534895_40" : [ {
+        "symbol" : "PARA",
+        "tradeDate" : "2025-05-19",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "PARA",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AES_1754071534896_41" : {
+    "symbol" : "AES",
+    "direction" : "long",
+    "entryDate" : "2025-05-20",
+    "entryPrice" : 11.28,
+    "entryValue" : 9633.12,
+    "entryReason" : "Entries",
+    "quantity" : 854,
+    "exitDate" : "2025-06-02",
+    "exitPrice" : 10.02,
+    "exitValue" : 8557.0,
+    "exitReason" : "Exits",
+    "profit" : -1076.1201,
+    "profitPercentage" : -0.111710444,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AES_1754071534896_41" : [ {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALB_1754071534896_42" : {
+    "symbol" : "ALB",
+    "direction" : "long",
+    "entryDate" : "2025-05-20",
+    "entryPrice" : 58.73678,
+    "entryValue" : 9985.252,
+    "entryReason" : "Entries",
+    "quantity" : 170,
+    "exitDate" : "2025-05-28",
+    "exitPrice" : 58.22015,
+    "exitValue" : 9897.0,
+    "exitReason" : "Exits",
+    "profit" : -88.25195,
+    "profitPercentage" : -0.00883823,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALB_1754071534896_42" : [ {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALGN_1754071534896_43" : {
+    "symbol" : "ALGN",
+    "direction" : "long",
+    "entryDate" : "2025-05-20",
+    "entryPrice" : 184.66,
+    "entryValue" : 9971.641,
+    "entryReason" : "Entries",
+    "quantity" : 54,
+    "exitDate" : "2025-05-28",
+    "exitPrice" : 178.66,
+    "exitValue" : 9648.0,
+    "exitReason" : "Exits",
+    "profit" : -323.64062,
+    "profitPercentage" : -0.032456107,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALGN_1754071534896_43" : [ {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALGN",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AES_1754071534899_44" : {
+    "symbol" : "AES",
+    "direction" : "long",
+    "entryDate" : "2025-05-21",
+    "entryPrice" : 11.26,
+    "entryValue" : 10021.4,
+    "entryReason" : "Entries",
+    "quantity" : 890,
+    "exitDate" : "2025-06-02",
+    "exitPrice" : 10.02,
+    "exitValue" : 8918.0,
+    "exitReason" : "Exits",
+    "profit" : -1103.4004,
+    "profitPercentage" : -0.11010441,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AES_1754071534899_44" : [ {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AZO_1754071534926_45" : {
+    "symbol" : "AZO",
+    "direction" : "long",
+    "entryDate" : "2025-05-28",
+    "entryPrice" : 3702.96,
+    "entryValue" : 0.0,
+    "entryReason" : "Entries",
+    "quantity" : 0,
+    "exitDate" : "2025-06-03",
+    "exitPrice" : 3740.0,
+    "exitValue" : 0.0,
+    "exitReason" : "Exits",
+    "profit" : 0.0,
+    "profitPercentage" : "NaN",
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AZO_1754071534926_45" : [ {
+        "symbol" : "AZO",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AZO",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AZO",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AZO",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BA_1754071534926_46" : {
+    "symbol" : "BA",
+    "direction" : "long",
+    "entryDate" : "2025-05-28",
+    "entryPrice" : 201.95,
+    "entryValue" : 10097.5,
+    "entryReason" : "Entries",
+    "quantity" : 50,
+    "exitDate" : "2025-05-30",
+    "exitPrice" : 206.77,
+    "exitValue" : 10339.0,
+    "exitReason" : "Exits",
+    "profit" : 241.5,
+    "profitPercentage" : 0.02391681,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BA_1754071534926_46" : [ {
+        "symbol" : "BA",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BA",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "TPL_1754071534926_47" : {
+    "symbol" : "TPL",
+    "direction" : "long",
+    "entryDate" : "2025-05-28",
+    "entryPrice" : 1246.597,
+    "entryValue" : 0.0,
+    "entryReason" : "Entries",
+    "quantity" : 0,
+    "exitDate" : "2025-06-16",
+    "exitPrice" : 1104.58,
+    "exitValue" : 0.0,
+    "exitReason" : "Exits",
+    "profit" : 0.0,
+    "profitPercentage" : "NaN",
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "TPL_1754071534926_47" : [ {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "UNH_1754071534926_48" : {
+    "symbol" : "UNH",
+    "direction" : "long",
+    "entryDate" : "2025-05-28",
+    "entryPrice" : 291.92764,
+    "entryValue" : 9925.54,
+    "entryReason" : "Entries",
+    "quantity" : 34,
+    "exitDate" : "2025-06-02",
+    "exitPrice" : 300.98337,
+    "exitValue" : 10233.0,
+    "exitReason" : "Exits",
+    "profit" : 307.45996,
+    "profitPercentage" : 0.030976648,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "UNH_1754071534926_48" : [ {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "UNH",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "VRSN_1754071534926_49" : {
+    "symbol" : "VRSN",
+    "direction" : "long",
+    "entryDate" : "2025-05-28",
+    "entryPrice" : 268.49,
+    "entryValue" : 9934.13,
+    "entryReason" : "Entries",
+    "quantity" : 37,
+    "exitDate" : "2025-06-02",
+    "exitPrice" : 271.0,
+    "exitValue" : 10027.0,
+    "exitReason" : "Exits",
+    "profit" : 92.87012,
+    "profitPercentage" : 0.009348591,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "VRSN_1754071534926_49" : [ {
+        "symbol" : "VRSN",
+        "tradeDate" : "2025-05-28",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "VRSN",
+        "tradeDate" : "2025-05-29",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "VRSN",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ANET_1754071534930_50" : {
+    "symbol" : "ANET",
+    "direction" : "long",
+    "entryDate" : "2025-05-30",
+    "entryPrice" : 85.94,
+    "entryValue" : 9969.04,
+    "entryReason" : "Entries",
+    "quantity" : 116,
+    "exitDate" : "2025-06-03",
+    "exitPrice" : 90.46,
+    "exitValue" : 10493.0,
+    "exitReason" : "Exits",
+    "profit" : 523.95996,
+    "profitPercentage" : 0.052558716,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ANET_1754071534930_50" : [ {
+        "symbol" : "ANET",
+        "tradeDate" : "2025-05-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ANET",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALB_1754071534933_51" : {
+    "symbol" : "ALB",
+    "direction" : "long",
+    "entryDate" : "2025-06-02",
+    "entryPrice" : 56.034412,
+    "entryValue" : 10142.229,
+    "entryReason" : "Entries",
+    "quantity" : 181,
+    "exitDate" : "2025-06-04",
+    "exitPrice" : 57.39553,
+    "exitValue" : 10389.0,
+    "exitReason" : "Exits",
+    "profit" : 246.77148,
+    "profitPercentage" : 0.024331091,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALB_1754071534933_51" : [ {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMAT_1754071534933_52" : {
+    "symbol" : "AMAT",
+    "direction" : "long",
+    "entryDate" : "2025-06-02",
+    "entryPrice" : 155.79,
+    "entryValue" : 9970.56,
+    "entryReason" : "Entries",
+    "quantity" : 64,
+    "exitDate" : "2025-06-04",
+    "exitPrice" : 162.5,
+    "exitValue" : 10400.0,
+    "exitReason" : "Exits",
+    "profit" : 429.44043,
+    "profitPercentage" : 0.043070845,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMAT_1754071534933_52" : [ {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMAT",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMD_1754071534933_53" : {
+    "symbol" : "AMD",
+    "direction" : "long",
+    "entryDate" : "2025-06-02",
+    "entryPrice" : 111.06,
+    "entryValue" : 9995.399,
+    "entryReason" : "Entries",
+    "quantity" : 90,
+    "exitDate" : "2025-06-03",
+    "exitPrice" : 114.5,
+    "exitValue" : 10305.0,
+    "exitReason" : "Exits",
+    "profit" : 309.6006,
+    "profitPercentage" : 0.030974308,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMD_1754071534933_53" : [ {
+        "symbol" : "AMD",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ANET_1754071534933_54" : {
+    "symbol" : "ANET",
+    "direction" : "long",
+    "entryDate" : "2025-06-02",
+    "entryPrice" : 86.31,
+    "entryValue" : 9925.649,
+    "entryReason" : "Entries",
+    "quantity" : 115,
+    "exitDate" : "2025-06-03",
+    "exitPrice" : 90.46,
+    "exitValue" : 10403.0,
+    "exitReason" : "Exits",
+    "profit" : 477.3506,
+    "profitPercentage" : 0.04809263,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ANET_1754071534933_54" : [ {
+        "symbol" : "ANET",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AOS_1754071534933_55" : {
+    "symbol" : "AOS",
+    "direction" : "long",
+    "entryDate" : "2025-06-02",
+    "entryPrice" : 63.40418,
+    "entryValue" : 9891.052,
+    "entryReason" : "Entries",
+    "quantity" : 156,
+    "exitDate" : "2025-06-09",
+    "exitPrice" : 64.06101,
+    "exitValue" : 9994.0,
+    "exitReason" : "Exits",
+    "profit" : 102.94824,
+    "profitPercentage" : 0.01040822,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AOS_1754071534933_55" : [ {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACN_1754071534937_56" : {
+    "symbol" : "ACN",
+    "direction" : "long",
+    "entryDate" : "2025-06-03",
+    "entryPrice" : 311.44238,
+    "entryValue" : 9966.156,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-06-05",
+    "exitPrice" : 315.72095,
+    "exitValue" : 10103.0,
+    "exitReason" : "Exits",
+    "profit" : 136.84375,
+    "profitPercentage" : 0.013730845,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACN_1754071534937_56" : [ {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADBE_1754071534937_57" : {
+    "symbol" : "ADBE",
+    "direction" : "long",
+    "entryDate" : "2025-06-03",
+    "entryPrice" : 403.455,
+    "entryValue" : 10086.375,
+    "entryReason" : "Entries",
+    "quantity" : 25,
+    "exitDate" : "2025-06-05",
+    "exitPrice" : 415.0,
+    "exitValue" : 10375.0,
+    "exitReason" : "Exits",
+    "profit" : 288.625,
+    "profitPercentage" : 0.028615335,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADBE_1754071534937_57" : [ {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADM_1754071534937_58" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-06-03",
+    "entryPrice" : 47.94,
+    "entryValue" : 9971.52,
+    "entryReason" : "Entries",
+    "quantity" : 208,
+    "exitDate" : "2025-06-10",
+    "exitPrice" : 48.0,
+    "exitValue" : 9984.0,
+    "exitReason" : "Exits",
+    "profit" : 12.480469,
+    "profitPercentage" : 0.0012516115,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071534937_58" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADSK_1754071534937_59" : {
+    "symbol" : "ADSK",
+    "direction" : "long",
+    "entryDate" : "2025-06-03",
+    "entryPrice" : 295.12,
+    "entryValue" : 10034.08,
+    "entryReason" : "Entries",
+    "quantity" : 34,
+    "exitDate" : "2025-06-04",
+    "exitPrice" : 299.1,
+    "exitValue" : 10169.0,
+    "exitReason" : "Exits",
+    "profit" : 134.91992,
+    "profitPercentage" : 0.013446167,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADSK_1754071534937_59" : [ {
+        "symbol" : "ADSK",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALB_1754071534937_60" : {
+    "symbol" : "ALB",
+    "direction" : "long",
+    "entryDate" : "2025-06-03",
+    "entryPrice" : 54.683228,
+    "entryValue" : 10007.03,
+    "entryReason" : "Entries",
+    "quantity" : 183,
+    "exitDate" : "2025-06-04",
+    "exitPrice" : 57.39553,
+    "exitValue" : 10503.0,
+    "exitReason" : "Exits",
+    "profit" : 495.96973,
+    "profitPercentage" : 0.04956213,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALB_1754071534937_60" : [ {
+        "symbol" : "ALB",
+        "tradeDate" : "2025-06-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACN_1754071534939_61" : {
+    "symbol" : "ACN",
+    "direction" : "long",
+    "entryDate" : "2025-06-04",
+    "entryPrice" : 313.54187,
+    "entryValue" : 10033.34,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-06-05",
+    "exitPrice" : 315.72095,
+    "exitValue" : 10103.0,
+    "exitReason" : "Exits",
+    "profit" : 69.66016,
+    "profitPercentage" : 0.006942868,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACN_1754071534939_61" : [ {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADM_1754071534939_62" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-06-04",
+    "entryPrice" : 47.18,
+    "entryValue" : 10002.16,
+    "entryReason" : "Entries",
+    "quantity" : 212,
+    "exitDate" : "2025-06-10",
+    "exitPrice" : 48.0,
+    "exitValue" : 10176.0,
+    "exitReason" : "Exits",
+    "profit" : 173.83984,
+    "profitPercentage" : 0.01738023,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071534939_62" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ALLE_1754071534939_63" : {
+    "symbol" : "ALLE",
+    "direction" : "long",
+    "entryDate" : "2025-06-04",
+    "entryPrice" : 138.76776,
+    "entryValue" : 9991.279,
+    "entryReason" : "Entries",
+    "quantity" : 72,
+    "exitDate" : "2025-06-09",
+    "exitPrice" : 139.1364,
+    "exitValue" : 10018.0,
+    "exitReason" : "Exits",
+    "profit" : 26.720703,
+    "profitPercentage" : 0.0026744027,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ALLE_1754071534939_63" : [ {
+        "symbol" : "ALLE",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALLE",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ALLE",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BF.B_1754071534939_64" : {
+    "symbol" : "BF.B",
+    "direction" : "long",
+    "entryDate" : "2025-06-04",
+    "entryPrice" : 33.01184,
+    "entryValue" : 10035.6,
+    "entryReason" : "Entries",
+    "quantity" : 304,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 26.57,
+    "exitValue" : 8077.0,
+    "exitReason" : "Exits",
+    "profit" : -1958.5996,
+    "profitPercentage" : -0.19516519,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BF.B_1754071534939_64" : [ {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BG_1754071534939_65" : {
+    "symbol" : "BG",
+    "direction" : "long",
+    "entryDate" : "2025-06-04",
+    "entryPrice" : 76.15,
+    "entryValue" : 9975.65,
+    "entryReason" : "Entries",
+    "quantity" : 131,
+    "exitDate" : "2025-06-11",
+    "exitPrice" : 76.02,
+    "exitValue" : 9959.0,
+    "exitReason" : "Exits",
+    "profit" : -16.65039,
+    "profitPercentage" : -0.0016691033,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BG_1754071534939_65" : [ {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-04",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADM_1754071534942_66" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-06-05",
+    "entryPrice" : 47.37,
+    "entryValue" : 10042.439,
+    "entryReason" : "Entries",
+    "quantity" : 212,
+    "exitDate" : "2025-06-10",
+    "exitPrice" : 48.0,
+    "exitValue" : 10176.0,
+    "exitReason" : "Exits",
+    "profit" : 133.56055,
+    "profitPercentage" : 0.013299611,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071534942_66" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEP_1754071534942_67" : {
+    "symbol" : "AEP",
+    "direction" : "long",
+    "entryDate" : "2025-06-05",
+    "entryPrice" : 101.8,
+    "entryValue" : 9976.4,
+    "entryReason" : "Entries",
+    "quantity" : 98,
+    "exitDate" : "2025-06-12",
+    "exitPrice" : 102.19,
+    "exitValue" : 10015.0,
+    "exitReason" : "Exits",
+    "profit" : 38.59961,
+    "profitPercentage" : 0.0038690919,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEP_1754071534942_67" : [ {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AFL_1754071534942_68" : {
+    "symbol" : "AFL",
+    "direction" : "long",
+    "entryDate" : "2025-06-05",
+    "entryPrice" : 103.14,
+    "entryValue" : 10004.58,
+    "entryReason" : "Entries",
+    "quantity" : 97,
+    "exitDate" : "2025-06-09",
+    "exitPrice" : 103.41,
+    "exitValue" : 10031.0,
+    "exitReason" : "Exits",
+    "profit" : 26.419922,
+    "profitPercentage" : 0.0026407826,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AFL_1754071534942_68" : [ {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-06-05",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-06-06",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEE_1754071534949_69" : {
+    "symbol" : "AEE",
+    "direction" : "long",
+    "entryDate" : "2025-06-09",
+    "entryPrice" : 95.11082,
+    "entryValue" : 9986.636,
+    "entryReason" : "Entries",
+    "quantity" : 105,
+    "exitDate" : "2025-06-11",
+    "exitPrice" : 95.81,
+    "exitValue" : 10060.0,
+    "exitReason" : "Exits",
+    "profit" : 73.36426,
+    "profitPercentage" : 0.0073462436,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEE_1754071534949_69" : [ {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEP_1754071534949_70" : {
+    "symbol" : "AEP",
+    "direction" : "long",
+    "entryDate" : "2025-06-09",
+    "entryPrice" : 101.55,
+    "entryValue" : 9951.9,
+    "entryReason" : "Entries",
+    "quantity" : 98,
+    "exitDate" : "2025-06-12",
+    "exitPrice" : 102.19,
+    "exitValue" : 10015.0,
+    "exitReason" : "Exits",
+    "profit" : 63.09961,
+    "profitPercentage" : 0.0063404585,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEP_1754071534949_70" : [ {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEP",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AJG_1754071534949_71" : {
+    "symbol" : "AJG",
+    "direction" : "long",
+    "entryDate" : "2025-06-09",
+    "entryPrice" : 326.53,
+    "entryValue" : 9795.9,
+    "entryReason" : "Entries",
+    "quantity" : 30,
+    "exitDate" : "2025-06-13",
+    "exitPrice" : 318.89,
+    "exitValue" : 9567.0,
+    "exitReason" : "Exits",
+    "profit" : -228.90039,
+    "profitPercentage" : -0.023366958,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AJG_1754071534949_71" : [ {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-06-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AJG",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACGL_1754071534952_72" : {
+    "symbol" : "ACGL",
+    "direction" : "long",
+    "entryDate" : "2025-06-10",
+    "entryPrice" : 90.73,
+    "entryValue" : 9798.841,
+    "entryReason" : "Entries",
+    "quantity" : 108,
+    "exitDate" : "2025-06-13",
+    "exitPrice" : 91.54,
+    "exitValue" : 9886.0,
+    "exitReason" : "Exits",
+    "profit" : 87.15918,
+    "profitPercentage" : 0.008894846,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACGL_1754071534952_72" : [ {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADP_1754071534952_73" : {
+    "symbol" : "ADP",
+    "direction" : "long",
+    "entryDate" : "2025-06-10",
+    "entryPrice" : 316.94635,
+    "entryValue" : 10142.283,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 311.25,
+    "exitValue" : 9960.0,
+    "exitReason" : "Exits",
+    "profit" : -182.2832,
+    "profitPercentage" : -0.0179726,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADP_1754071534952_73" : [ {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADSK_1754071534952_74" : {
+    "symbol" : "ADSK",
+    "direction" : "long",
+    "entryDate" : "2025-06-10",
+    "entryPrice" : 298.41,
+    "entryValue" : 10145.94,
+    "entryReason" : "Entries",
+    "quantity" : 34,
+    "exitDate" : "2025-06-13",
+    "exitPrice" : 294.09,
+    "exitValue" : 9999.0,
+    "exitReason" : "Exits",
+    "profit" : -146.94043,
+    "profitPercentage" : -0.014482682,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADSK_1754071534952_74" : [ {
+        "symbol" : "ADSK",
+        "tradeDate" : "2025-06-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADSK",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADSK",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACGL_1754071534956_75" : {
+    "symbol" : "ACGL",
+    "direction" : "long",
+    "entryDate" : "2025-06-11",
+    "entryPrice" : 89.98,
+    "entryValue" : 9987.78,
+    "entryReason" : "Entries",
+    "quantity" : 111,
+    "exitDate" : "2025-06-13",
+    "exitPrice" : 91.54,
+    "exitValue" : 10161.0,
+    "exitReason" : "Exits",
+    "profit" : 173.21973,
+    "profitPercentage" : 0.017343165,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACGL_1754071534956_75" : [ {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADP_1754071534956_76" : {
+    "symbol" : "ADP",
+    "direction" : "long",
+    "entryDate" : "2025-06-11",
+    "entryPrice" : 312.812,
+    "entryValue" : 10009.984,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 311.25,
+    "exitValue" : 9960.0,
+    "exitReason" : "Exits",
+    "profit" : -49.984375,
+    "profitPercentage" : -0.0049934518,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADP_1754071534956_76" : [ {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACGL_1754071534959_77" : {
+    "symbol" : "ACGL",
+    "direction" : "long",
+    "entryDate" : "2025-06-12",
+    "entryPrice" : 89.21,
+    "entryValue" : 9991.52,
+    "entryReason" : "Entries",
+    "quantity" : 112,
+    "exitDate" : "2025-06-13",
+    "exitPrice" : 91.54,
+    "exitValue" : 10252.0,
+    "exitReason" : "Exits",
+    "profit" : 260.48047,
+    "profitPercentage" : 0.026070155,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACGL_1754071534959_77" : [ {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADBE_1754071534959_78" : {
+    "symbol" : "ADBE",
+    "direction" : "long",
+    "entryDate" : "2025-06-12",
+    "entryPrice" : 411.43,
+    "entryValue" : 9874.32,
+    "entryReason" : "Entries",
+    "quantity" : 24,
+    "exitDate" : "2025-06-26",
+    "exitPrice" : 387.2,
+    "exitValue" : 9293.0,
+    "exitReason" : "Exits",
+    "profit" : -581.3203,
+    "profitPercentage" : -0.058871932,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADBE_1754071534959_78" : [ {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-12",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADP_1754071534961_79" : {
+    "symbol" : "ADP",
+    "direction" : "long",
+    "entryDate" : "2025-06-13",
+    "entryPrice" : 307.07,
+    "entryValue" : 9826.24,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 311.25,
+    "exitValue" : 9960.0,
+    "exitReason" : "Exits",
+    "profit" : 133.75977,
+    "profitPercentage" : 0.013612507,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADP_1754071534961_79" : [ {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADP",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AOS_1754071534961_80" : {
+    "symbol" : "AOS",
+    "direction" : "long",
+    "entryDate" : "2025-06-13",
+    "entryPrice" : 63.692787,
+    "entryValue" : 9936.075,
+    "entryReason" : "Entries",
+    "quantity" : 156,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 64.08092,
+    "exitValue" : 9997.0,
+    "exitReason" : "Exits",
+    "profit" : 60.924805,
+    "profitPercentage" : 0.006131677,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AOS_1754071534961_80" : [ {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AOS",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AXP_1754071534961_81" : {
+    "symbol" : "AXP",
+    "direction" : "long",
+    "entryDate" : "2025-06-13",
+    "entryPrice" : 291.8083,
+    "entryValue" : 9921.481,
+    "entryReason" : "Entries",
+    "quantity" : 34,
+    "exitDate" : "2025-06-20",
+    "exitPrice" : 296.83557,
+    "exitValue" : 10092.0,
+    "exitReason" : "Exits",
+    "profit" : 170.51855,
+    "profitPercentage" : 0.017186804,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AXP_1754071534961_81" : [ {
+        "symbol" : "AXP",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AXP",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AXP",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AXP",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BA_1754071534961_82" : {
+    "symbol" : "BA",
+    "direction" : "long",
+    "entryDate" : "2025-06-13",
+    "entryPrice" : 200.675,
+    "entryValue" : 9833.075,
+    "entryReason" : "Entries",
+    "quantity" : 49,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 203.0,
+    "exitValue" : 9947.0,
+    "exitReason" : "Exits",
+    "profit" : 113.924805,
+    "profitPercentage" : 0.011585877,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BA_1754071534961_82" : [ {
+        "symbol" : "BA",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BA",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BA",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BA",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BA",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BA",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BF.B_1754071534961_83" : {
+    "symbol" : "BF.B",
+    "direction" : "long",
+    "entryDate" : "2025-06-13",
+    "entryPrice" : 27.105,
+    "entryValue" : 9920.43,
+    "entryReason" : "Entries",
+    "quantity" : 366,
+    "exitDate" : "2025-06-24",
+    "exitPrice" : 26.57,
+    "exitValue" : 9725.0,
+    "exitReason" : "Exits",
+    "profit" : -195.42969,
+    "profitPercentage" : -0.01969972,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BF.B_1754071534961_83" : [ {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-13",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BF.B",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACN_1754071534969_84" : {
+    "symbol" : "ACN",
+    "direction" : "long",
+    "entryDate" : "2025-06-16",
+    "entryPrice" : 312.76575,
+    "entryValue" : 10008.504,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-07-01",
+    "exitPrice" : 296.6364,
+    "exitValue" : 9492.0,
+    "exitReason" : "Exits",
+    "profit" : -516.5039,
+    "profitPercentage" : -0.051606506,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACN_1754071534969_84" : [ {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071534983_85" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-06-20",
+    "entryPrice" : 133.06271,
+    "entryValue" : 10112.767,
+    "entryReason" : "Entries",
+    "quantity" : 76,
+    "exitDate" : "2025-06-25",
+    "exitPrice" : 137.25389,
+    "exitValue" : 10431.0,
+    "exitReason" : "Exits",
+    "profit" : 318.2334,
+    "profitPercentage" : 0.03146848,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071534983_85" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-06-20",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-06-23",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADM_1754071534989_86" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 52.4,
+    "entryValue" : 9903.601,
+    "entryReason" : "Entries",
+    "quantity" : 189,
+    "exitDate" : "2025-06-27",
+    "exitPrice" : 53.175,
+    "exitValue" : 10050.0,
+    "exitReason" : "Exits",
+    "profit" : 146.39941,
+    "profitPercentage" : 0.014782444,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071534989_86" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AES_1754071534989_87" : {
+    "symbol" : "AES",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 10.2,
+    "entryValue" : 10047.0,
+    "entryReason" : "Entries",
+    "quantity" : 985,
+    "exitDate" : "2025-06-27",
+    "exitPrice" : 10.85,
+    "exitValue" : 10687.0,
+    "exitReason" : "Exits",
+    "profit" : 640.0,
+    "profitPercentage" : 0.06370061,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AES_1754071534989_87" : [ {
+        "symbol" : "AES",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AES",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMGN_1754071534989_88" : {
+    "symbol" : "AMGN",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 273.13,
+    "entryValue" : 10105.811,
+    "entryReason" : "Entries",
+    "quantity" : 37,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 291.03,
+    "exitValue" : 10768.0,
+    "exitReason" : "Exits",
+    "profit" : 662.18945,
+    "profitPercentage" : 0.06552561,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMGN_1754071534989_88" : [ {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMGN",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMZN_1754071534989_89" : {
+    "symbol" : "AMZN",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 212.135,
+    "entryValue" : 10182.4795,
+    "entryReason" : "Entries",
+    "quantity" : 48,
+    "exitDate" : "2025-06-25",
+    "exitPrice" : 214.615,
+    "exitValue" : 10302.0,
+    "exitReason" : "Exits",
+    "profit" : 119.52051,
+    "profitPercentage" : 0.011737859,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMZN_1754071534989_89" : [ {
+        "symbol" : "AMZN",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ANSS-202507_1754071534989_90" : {
+    "symbol" : "ANSS-202507",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 337.74,
+    "entryValue" : 10132.199,
+    "entryReason" : "Entries",
+    "quantity" : 30,
+    "exitDate" : "2025-06-25",
+    "exitPrice" : 338.81,
+    "exitValue" : 10164.0,
+    "exitReason" : "Exits",
+    "profit" : 31.800781,
+    "profitPercentage" : 0.0031385862,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ANSS-202507_1754071534989_90" : [ {
+        "symbol" : "ANSS-202507",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "APA_1754071534989_91" : {
+    "symbol" : "APA",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 17.767931,
+    "entryValue" : 9790.13,
+    "entryReason" : "Entries",
+    "quantity" : 551,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 19.030727,
+    "exitValue" : 10486.0,
+    "exitReason" : "Exits",
+    "profit" : 695.8701,
+    "profitPercentage" : 0.07107874,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "APA_1754071534989_91" : [ {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "APTV_1754071534989_92" : {
+    "symbol" : "APTV",
+    "direction" : "long",
+    "entryDate" : "2025-06-24",
+    "entryPrice" : 67.4,
+    "entryValue" : 10110.0,
+    "entryReason" : "Entries",
+    "quantity" : 150,
+    "exitDate" : "2025-06-25",
+    "exitPrice" : 68.36,
+    "exitValue" : 10254.0,
+    "exitReason" : "Exits",
+    "profit" : 144.0,
+    "profitPercentage" : 0.014243323,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "APTV_1754071534989_92" : [ {
+        "symbol" : "APTV",
+        "tradeDate" : "2025-06-24",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "APA_1754071534990_93" : {
+    "symbol" : "APA",
+    "direction" : "long",
+    "entryDate" : "2025-06-25",
+    "entryPrice" : 17.856722,
+    "entryValue" : 9964.051,
+    "entryReason" : "Entries",
+    "quantity" : 558,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 19.030727,
+    "exitValue" : 10619.0,
+    "exitReason" : "Exits",
+    "profit" : 654.9492,
+    "profitPercentage" : 0.06573122,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "APA_1754071534990_93" : [ {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "APA",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BG_1754071534990_94" : {
+    "symbol" : "BG",
+    "direction" : "long",
+    "entryDate" : "2025-06-25",
+    "entryPrice" : 82.88,
+    "entryValue" : 9945.6,
+    "entryReason" : "Entries",
+    "quantity" : 120,
+    "exitDate" : "2025-07-03",
+    "exitPrice" : 81.5,
+    "exitValue" : 9780.0,
+    "exitReason" : "Exits",
+    "profit" : -165.59961,
+    "profitPercentage" : -0.01665054,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BG_1754071534990_94" : [ {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BKR_1754071534990_95" : {
+    "symbol" : "BKR",
+    "direction" : "long",
+    "entryDate" : "2025-06-25",
+    "entryPrice" : 38.01,
+    "entryValue" : 9996.63,
+    "entryReason" : "Entries",
+    "quantity" : 263,
+    "exitDate" : "2025-06-27",
+    "exitPrice" : 38.4,
+    "exitValue" : 10099.0,
+    "exitReason" : "Exits",
+    "profit" : 102.37012,
+    "profitPercentage" : 0.010240463,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BKR_1754071534990_95" : [ {
+        "symbol" : "BKR",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BKR",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BXP_1754071534990_96" : {
+    "symbol" : "BXP",
+    "direction" : "long",
+    "entryDate" : "2025-06-25",
+    "entryPrice" : 68.379,
+    "entryValue" : 9846.576,
+    "entryReason" : "Entries",
+    "quantity" : 144,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 68.01,
+    "exitValue" : 9793.0,
+    "exitReason" : "Exits",
+    "profit" : -53.57617,
+    "profitPercentage" : -0.0054410966,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BXP_1754071534990_96" : [ {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-06-25",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BXP",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACGL_1754071534994_97" : {
+    "symbol" : "ACGL",
+    "direction" : "long",
+    "entryDate" : "2025-06-26",
+    "entryPrice" : 89.6,
+    "entryValue" : 10035.2,
+    "entryReason" : "Entries",
+    "quantity" : 112,
+    "exitDate" : "2025-07-01",
+    "exitPrice" : 91.4,
+    "exitValue" : 10237.0,
+    "exitReason" : "Exits",
+    "profit" : 201.7998,
+    "profitPercentage" : 0.020109195,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACGL_1754071534994_97" : [ {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-26",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMT_1754071534997_98" : {
+    "symbol" : "AMT",
+    "direction" : "long",
+    "entryDate" : "2025-06-27",
+    "entryPrice" : 216.3,
+    "entryValue" : 9949.8,
+    "entryReason" : "Entries",
+    "quantity" : 46,
+    "exitDate" : "2025-07-01",
+    "exitPrice" : 220.9,
+    "exitValue" : 10161.0,
+    "exitReason" : "Exits",
+    "profit" : 211.2002,
+    "profitPercentage" : 0.021226577,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMT_1754071534997_98" : [ {
+        "symbol" : "AMT",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMT",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AON_1754071534997_99" : {
+    "symbol" : "AON",
+    "direction" : "long",
+    "entryDate" : "2025-06-27",
+    "entryPrice" : 353.51,
+    "entryValue" : 9898.28,
+    "entryReason" : "Entries",
+    "quantity" : 28,
+    "exitDate" : "2025-07-01",
+    "exitPrice" : 357.13,
+    "exitValue" : 10000.0,
+    "exitReason" : "Exits",
+    "profit" : 101.71973,
+    "profitPercentage" : 0.010276505,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AON_1754071534997_99" : [ {
+        "symbol" : "AON",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AON",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AVY_1754071534997_100" : {
+    "symbol" : "AVY",
+    "direction" : "long",
+    "entryDate" : "2025-06-27",
+    "entryPrice" : 176.3,
+    "entryValue" : 10049.101,
+    "entryReason" : "Entries",
+    "quantity" : 57,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 181.99,
+    "exitValue" : 10373.0,
+    "exitReason" : "Exits",
+    "profit" : 323.8994,
+    "profitPercentage" : 0.03223168,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AVY_1754071534997_100" : [ {
+        "symbol" : "AVY",
+        "tradeDate" : "2025-06-27",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AVY",
+        "tradeDate" : "2025-06-30",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AVY",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AVY_1754071535000_101" : {
+    "symbol" : "AVY",
+    "direction" : "long",
+    "entryDate" : "2025-07-01",
+    "entryPrice" : 175.95,
+    "entryValue" : 10029.149,
+    "entryReason" : "Entries",
+    "quantity" : 57,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 181.99,
+    "exitValue" : 10373.0,
+    "exitReason" : "Exits",
+    "profit" : 343.8506,
+    "profitPercentage" : 0.03428512,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AVY_1754071535000_101" : [ {
+        "symbol" : "AVY",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BALL_1754071535000_102" : {
+    "symbol" : "BALL",
+    "direction" : "long",
+    "entryDate" : "2025-07-01",
+    "entryPrice" : 56.09,
+    "entryValue" : 9984.0205,
+    "entryReason" : "Entries",
+    "quantity" : 178,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 58.12,
+    "exitValue" : 10345.0,
+    "exitReason" : "Exits",
+    "profit" : 360.9795,
+    "profitPercentage" : 0.036155723,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BALL_1754071535000_102" : [ {
+        "symbol" : "BALL",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BAX_1754071535000_103" : {
+    "symbol" : "BAX",
+    "direction" : "long",
+    "entryDate" : "2025-07-01",
+    "entryPrice" : 30.06,
+    "entryValue" : 9919.8,
+    "entryReason" : "Entries",
+    "quantity" : 330,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 31.42,
+    "exitValue" : 10369.0,
+    "exitReason" : "Exits",
+    "profit" : 449.2002,
+    "profitPercentage" : 0.04528319,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BAX_1754071535000_103" : [ {
+        "symbol" : "BAX",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BBY_1754071535000_104" : {
+    "symbol" : "BBY",
+    "direction" : "long",
+    "entryDate" : "2025-07-01",
+    "entryPrice" : 67.29,
+    "entryValue" : 10026.21,
+    "entryReason" : "Entries",
+    "quantity" : 149,
+    "exitDate" : "2025-07-02",
+    "exitPrice" : 71.33,
+    "exitValue" : 10628.0,
+    "exitReason" : "Exits",
+    "profit" : 601.79004,
+    "profitPercentage" : 0.060021687,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BBY_1754071535000_104" : [ {
+        "symbol" : "BBY",
+        "tradeDate" : "2025-07-01",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMD_1754071535001_105" : {
+    "symbol" : "AMD",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 135.53,
+    "entryValue" : 9893.689,
+    "entryReason" : "Entries",
+    "quantity" : 73,
+    "exitDate" : "2025-07-10",
+    "exitPrice" : 143.0,
+    "exitValue" : 10439.0,
+    "exitReason" : "Exits",
+    "profit" : 545.31055,
+    "profitPercentage" : 0.055117007,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AMD_1754071535001_105" : [ {
+        "symbol" : "AMD",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMD",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMD",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMD",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AMD",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AXON_1754071535001_106" : {
+    "symbol" : "AXON",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 774.68,
+    "entryValue" : 10070.84,
+    "entryReason" : "Entries",
+    "quantity" : 13,
+    "exitDate" : "2025-07-08",
+    "exitPrice" : 802.72,
+    "exitValue" : 10435.0,
+    "exitReason" : "Exits",
+    "profit" : 364.16016,
+    "profitPercentage" : 0.036159858,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AXON_1754071535001_106" : [ {
+        "symbol" : "AXON",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AXON",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AXON",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BG_1754071535001_107" : {
+    "symbol" : "BG",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 81.0,
+    "entryValue" : 10125.0,
+    "entryReason" : "Entries",
+    "quantity" : 125,
+    "exitDate" : "2025-07-03",
+    "exitPrice" : 81.5,
+    "exitValue" : 10188.0,
+    "exitReason" : "Exits",
+    "profit" : 63.0,
+    "profitPercentage" : 0.006222222,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BG_1754071535001_107" : [ {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "CEG_1754071535001_108" : {
+    "symbol" : "CEG",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 306.88,
+    "entryValue" : 9820.16,
+    "entryReason" : "Entries",
+    "quantity" : 32,
+    "exitDate" : "2025-07-08",
+    "exitPrice" : 320.685,
+    "exitValue" : 10262.0,
+    "exitReason" : "Exits",
+    "profit" : 441.83984,
+    "profitPercentage" : 0.04499314,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "CEG_1754071535001_108" : [ {
+        "symbol" : "CEG",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CEG",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "CEG",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "TSLA_1754071535001_109" : {
+    "symbol" : "TSLA",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 312.63,
+    "entryValue" : 10316.79,
+    "entryReason" : "Entries",
+    "quantity" : 33,
+    "exitDate" : "2025-07-11",
+    "exitPrice" : 307.89,
+    "exitValue" : 10160.0,
+    "exitReason" : "Exits",
+    "profit" : -156.79004,
+    "profitPercentage" : -0.01519756,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "TSLA_1754071535001_109" : [ {
+        "symbol" : "TSLA",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TSLA",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TSLA",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TSLA",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TSLA",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "TSLA",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "VST_1754071535001_110" : {
+    "symbol" : "VST",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 184.7,
+    "entryValue" : 9973.8,
+    "entryReason" : "Entries",
+    "quantity" : 54,
+    "exitDate" : "2025-07-07",
+    "exitPrice" : 191.0,
+    "exitValue" : 10314.0,
+    "exitReason" : "Exits",
+    "profit" : 340.2002,
+    "profitPercentage" : 0.034109388,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "VST_1754071535001_110" : [ {
+        "symbol" : "VST",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "VST",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "WMB_1754071535001_111" : {
+    "symbol" : "WMB",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 58.76,
+    "entryValue" : 9989.2,
+    "entryReason" : "Entries",
+    "quantity" : 170,
+    "exitDate" : "2025-07-14",
+    "exitPrice" : 58.02,
+    "exitValue" : 9863.0,
+    "exitReason" : "Exits",
+    "profit" : -126.200195,
+    "profitPercentage" : -0.012633664,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "WMB_1754071535001_111" : [ {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "WMB",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "PANW_1754071535001_112" : {
+    "symbol" : "PANW",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 196.44,
+    "entryValue" : 10018.44,
+    "entryReason" : "Entries",
+    "quantity" : 51,
+    "exitDate" : "2025-07-07",
+    "exitPrice" : 200.89,
+    "exitValue" : 10245.0,
+    "exitReason" : "Exits",
+    "profit" : 226.55957,
+    "profitPercentage" : 0.022614256,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "PANW_1754071535001_112" : [ {
+        "symbol" : "PANW",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "PANW",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "PM_1754071535001_113" : {
+    "symbol" : "PM",
+    "direction" : "long",
+    "entryDate" : "2025-07-02",
+    "entryPrice" : 176.35,
+    "entryValue" : 9875.601,
+    "entryReason" : "Entries",
+    "quantity" : 56,
+    "exitDate" : "2025-07-08",
+    "exitPrice" : 179.91,
+    "exitValue" : 10075.0,
+    "exitReason" : "Exits",
+    "profit" : 199.39941,
+    "profitPercentage" : 0.020191118,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "PM_1754071535001_113" : [ {
+        "symbol" : "PM",
+        "tradeDate" : "2025-07-02",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "PM",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "PM",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535003_114" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-03",
+    "entryPrice" : 134.0682,
+    "entryValue" : 10055.115,
+    "entryReason" : "Entries",
+    "quantity" : 75,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 9396.0,
+    "exitReason" : "Exits",
+    "profit" : -659.11523,
+    "profitPercentage" : -0.065550245,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535003_114" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACGL_1754071535003_115" : {
+    "symbol" : "ACGL",
+    "direction" : "long",
+    "entryDate" : "2025-07-03",
+    "entryPrice" : 88.88,
+    "entryValue" : 10043.439,
+    "entryReason" : "Entries",
+    "quantity" : 113,
+    "exitDate" : "2025-07-09",
+    "exitPrice" : 89.61,
+    "exitValue" : 10126.0,
+    "exitReason" : "Exits",
+    "profit" : 82.56055,
+    "profitPercentage" : 0.008220346,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACGL_1754071535003_115" : [ {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-07-03",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACGL",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "BG_1754071535004_116" : {
+    "symbol" : "BG",
+    "direction" : "long",
+    "entryDate" : "2025-07-07",
+    "entryPrice" : 78.53,
+    "entryValue" : 9973.31,
+    "entryReason" : "Entries",
+    "quantity" : 127,
+    "exitDate" : "2025-07-14",
+    "exitPrice" : 76.61,
+    "exitValue" : 9729.0,
+    "exitReason" : "Exits",
+    "profit" : -244.30957,
+    "profitPercentage" : -0.02449634,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "BG_1754071535004_116" : [ {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "BG",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "STE_1754071535004_117" : {
+    "symbol" : "STE",
+    "direction" : "long",
+    "entryDate" : "2025-07-07",
+    "entryPrice" : 237.56,
+    "entryValue" : 9977.52,
+    "entryReason" : "Entries",
+    "quantity" : 42,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 225.84,
+    "exitValue" : 9485.0,
+    "exitReason" : "Exits",
+    "profit" : -492.51953,
+    "profitPercentage" : -0.049362924,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "STE_1754071535004_117" : [ {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-07",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "STE",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535007_118" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-08",
+    "entryPrice" : 132.64459,
+    "entryValue" : 9948.345,
+    "entryReason" : "Entries",
+    "quantity" : 75,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 9396.0,
+    "exitReason" : "Exits",
+    "profit" : -552.3447,
+    "profitPercentage" : -0.05552127,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535007_118" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADBE_1754071535007_119" : {
+    "symbol" : "ADBE",
+    "direction" : "long",
+    "entryDate" : "2025-07-08",
+    "entryPrice" : 378.5,
+    "entryValue" : 10219.5,
+    "entryReason" : "Entries",
+    "quantity" : 27,
+    "exitDate" : "2025-07-09",
+    "exitPrice" : 383.5,
+    "exitValue" : 10355.0,
+    "exitReason" : "Exits",
+    "profit" : 135.5,
+    "profitPercentage" : 0.013258966,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADBE_1754071535007_119" : [ {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AFL_1754071535007_120" : {
+    "symbol" : "AFL",
+    "direction" : "long",
+    "entryDate" : "2025-07-08",
+    "entryPrice" : 102.3,
+    "entryValue" : 9923.101,
+    "entryReason" : "Entries",
+    "quantity" : 97,
+    "exitDate" : "2025-07-15",
+    "exitPrice" : 102.08,
+    "exitValue" : 9902.0,
+    "exitReason" : "Exits",
+    "profit" : -21.100586,
+    "profitPercentage" : -0.0021264106,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AFL_1754071535007_120" : [ {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-07-08",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AFL",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535011_121" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-09",
+    "entryPrice" : 132.87357,
+    "entryValue" : 9965.518,
+    "entryReason" : "Entries",
+    "quantity" : 75,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 9396.0,
+    "exitReason" : "Exits",
+    "profit" : -569.5176,
+    "profitPercentage" : -0.05714882,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535011_121" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AEE_1754071535011_122" : {
+    "symbol" : "AEE",
+    "direction" : "long",
+    "entryDate" : "2025-07-09",
+    "entryPrice" : 95.25,
+    "entryValue" : 10001.25,
+    "entryReason" : "Entries",
+    "quantity" : 105,
+    "exitDate" : "2025-07-11",
+    "exitPrice" : 95.82,
+    "exitValue" : 10061.0,
+    "exitReason" : "Exits",
+    "profit" : 59.75,
+    "profitPercentage" : 0.005974253,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AEE_1754071535011_122" : [ {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-07-09",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AEE",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535013_123" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-10",
+    "entryPrice" : 133.1324,
+    "entryValue" : 9984.93,
+    "entryReason" : "Entries",
+    "quantity" : 75,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 9396.0,
+    "exitReason" : "Exits",
+    "profit" : -588.9297,
+    "profitPercentage" : -0.058981854,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535013_123" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-10",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACN_1754071535016_124" : {
+    "symbol" : "ACN",
+    "direction" : "long",
+    "entryDate" : "2025-07-11",
+    "entryPrice" : 287.21,
+    "entryValue" : 10052.35,
+    "entryReason" : "Entries",
+    "quantity" : 35,
+    "exitDate" : "2025-07-18",
+    "exitPrice" : 283.24,
+    "exitValue" : 9913.0,
+    "exitReason" : "Exits",
+    "profit" : -139.34961,
+    "profitPercentage" : -0.013862392,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACN_1754071535016_124" : [ {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADBE_1754071535016_125" : {
+    "symbol" : "ADBE",
+    "direction" : "long",
+    "entryDate" : "2025-07-11",
+    "entryPrice" : 368.0,
+    "entryValue" : 9936.0,
+    "entryReason" : "Entries",
+    "quantity" : 27,
+    "exitDate" : "2025-07-18",
+    "exitPrice" : 367.065,
+    "exitValue" : 9911.0,
+    "exitReason" : "Exits",
+    "profit" : -25.0,
+    "profitPercentage" : -0.002516103,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADBE_1754071535016_125" : [ {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-07-11",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ADBE",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535020_126" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-14",
+    "entryPrice" : 131.43005,
+    "entryValue" : 9988.684,
+    "entryReason" : "Entries",
+    "quantity" : 76,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 9521.0,
+    "exitReason" : "Exits",
+    "profit" : -467.6836,
+    "profitPercentage" : -0.046821345,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535020_126" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACN_1754071535020_127" : {
+    "symbol" : "ACN",
+    "direction" : "long",
+    "entryDate" : "2025-07-14",
+    "entryPrice" : 280.69,
+    "entryValue" : 10104.84,
+    "entryReason" : "Entries",
+    "quantity" : 36,
+    "exitDate" : "2025-07-18",
+    "exitPrice" : 283.24,
+    "exitValue" : 10197.0,
+    "exitReason" : "Exits",
+    "profit" : 92.16016,
+    "profitPercentage" : 0.009120397,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ACN_1754071535020_127" : [ {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-14",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ACN",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535025_128" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-15",
+    "entryPrice" : 131.895,
+    "entryValue" : 10024.0205,
+    "entryReason" : "Entries",
+    "quantity" : 76,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 9521.0,
+    "exitReason" : "Exits",
+    "profit" : -503.0205,
+    "profitPercentage" : -0.05018151,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535025_128" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-15",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-16",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-17",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ABT_1754071535040_129" : {
+    "symbol" : "ABT",
+    "direction" : "long",
+    "entryDate" : "2025-07-18",
+    "entryPrice" : 122.63,
+    "entryValue" : 10178.29,
+    "entryReason" : "Entries",
+    "quantity" : 83,
+    "exitDate" : "2025-07-24",
+    "exitPrice" : 125.28,
+    "exitValue" : 10398.0,
+    "exitReason" : "Exits",
+    "profit" : 219.70996,
+    "profitPercentage" : 0.021586137,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ABT_1754071535040_129" : [ {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "ABT",
+        "tradeDate" : "2025-07-23",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ADM_1754071535040_130" : {
+    "symbol" : "ADM",
+    "direction" : "long",
+    "entryDate" : "2025-07-18",
+    "entryPrice" : 53.63,
+    "entryValue" : 10028.811,
+    "entryReason" : "Entries",
+    "quantity" : 187,
+    "exitDate" : "2025-07-21",
+    "exitPrice" : 54.6,
+    "exitValue" : 10210.0,
+    "exitReason" : "Exits",
+    "profit" : 181.18945,
+    "profitPercentage" : 0.018066894,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "ADM_1754071535040_130" : [ {
+        "symbol" : "ADM",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AIG_1754071535040_131" : {
+    "symbol" : "AIG",
+    "direction" : "long",
+    "entryDate" : "2025-07-18",
+    "entryPrice" : 81.17,
+    "entryValue" : 9983.91,
+    "entryReason" : "Entries",
+    "quantity" : 123,
+    "exitDate" : "2025-07-23",
+    "exitPrice" : 80.97,
+    "exitValue" : 9959.0,
+    "exitReason" : "Exits",
+    "profit" : -24.910156,
+    "profitPercentage" : -0.0024950302,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "AIG_1754071535040_131" : [ {
+        "symbol" : "AIG",
+        "tradeDate" : "2025-07-18",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AIG",
+        "tradeDate" : "2025-07-21",
+        "endOfDayValue" : 0.0
+      }, {
+        "symbol" : "AIG",
+        "tradeDate" : "2025-07-22",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AMAT_1754071535043_132" : {
+    "symbol" : "AMAT",
+    "direction" : "long",
+    "entryDate" : "2025-07-21",
+    "entryPrice" : 190.79,
+    "entryValue" : 10111.87,
+    "entryReason" : "Entries",
+    "quantity" : 53,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "ADI_1754071535049_133" : {
+    "symbol" : "ADI",
+    "direction" : "long",
+    "entryDate" : "2025-07-23",
+    "entryPrice" : 230.77,
+    "entryValue" : 9692.34,
+    "entryReason" : "Entries",
+    "quantity" : 42,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "ADI_1754071535050_134" : {
+    "symbol" : "ADI",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 228.47,
+    "entryValue" : 10052.68,
+    "entryReason" : "Entries",
+    "quantity" : 44,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "AIG_1754071535050_135" : {
+    "symbol" : "AIG",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 79.04,
+    "entryValue" : 9959.04,
+    "entryReason" : "Entries",
+    "quantity" : 126,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "AMAT_1754071535050_136" : {
+    "symbol" : "AMAT",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 188.16,
+    "entryValue" : 9972.48,
+    "entryReason" : "Entries",
+    "quantity" : 53,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "APH_1754071535050_137" : {
+    "symbol" : "APH",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 102.79,
+    "entryValue" : 10176.21,
+    "entryReason" : "Entries",
+    "quantity" : 99,
+    "exitDate" : "2025-07-25",
+    "exitPrice" : 104.79,
+    "exitValue" : 10374.0,
+    "exitReason" : "Exits",
+    "profit" : 197.79004,
+    "profitPercentage" : 0.019436514,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "APH_1754071535050_137" : [ {
+        "symbol" : "APH",
+        "tradeDate" : "2025-07-24",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "AXON_1754071535050_138" : {
+    "symbol" : "AXON",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 705.22,
+    "entryValue" : 9873.08,
+    "entryReason" : "Entries",
+    "quantity" : 14,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "CB_1754071535050_139" : {
+    "symbol" : "CB",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 270.0,
+    "entryValue" : 9990.0,
+    "entryReason" : "Entries",
+    "quantity" : 37,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "TDY_1754071535050_140" : {
+    "symbol" : "TDY",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 548.98,
+    "entryValue" : 9881.64,
+    "entryReason" : "Entries",
+    "quantity" : 18,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "TPL_1754071535050_141" : {
+    "symbol" : "TPL",
+    "direction" : "long",
+    "entryDate" : "2025-07-24",
+    "entryPrice" : 926.54,
+    "entryValue" : 10191.939,
+    "entryReason" : "Entries",
+    "quantity" : 11,
+    "exitDate" : "2025-07-25",
+    "exitPrice" : 965.87,
+    "exitValue" : 10625.0,
+    "exitReason" : "Exits",
+    "profit" : 433.06055,
+    "profitPercentage" : 0.042490494,
+    "entryTiming" : "open",
+    "exitTiming" : "open",
+    "capital" : 0,
+    "valueTracker" : {
+      "TPL_1754071535050_141" : [ {
+        "symbol" : "TPL",
+        "tradeDate" : "2025-07-24",
+        "endOfDayValue" : 0.0
+      } ]
+    }
+  },
+  "ACN_1754071535052_142" : {
+    "symbol" : "ACN",
+    "direction" : "long",
+    "entryDate" : "2025-07-25",
+    "entryPrice" : 281.8,
+    "entryValue" : 9863.0,
+    "entryReason" : "Entries",
+    "quantity" : 35,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  },
+  "ADI_1754071535052_143" : {
+    "symbol" : "ADI",
+    "direction" : "long",
+    "entryDate" : "2025-07-25",
+    "entryPrice" : 226.64,
+    "entryValue" : 9972.16,
+    "entryReason" : "Entries",
+    "quantity" : 44,
+    "exitDate" : null,
+    "exitPrice" : 0.0,
+    "exitValue" : 0.0,
+    "exitReason" : null,
+    "profit" : 0.0,
+    "profitPercentage" : 0.0,
+    "entryTiming" : "open",
+    "exitTiming" : null,
+    "capital" : 0,
+    "valueTracker" : null
+  }
+}
