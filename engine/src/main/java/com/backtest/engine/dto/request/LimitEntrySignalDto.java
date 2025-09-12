@@ -3,14 +3,17 @@ package com.backtest.engine.dto.request;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.backtest.engine.entity.LimitOrder;
+
 import lombok.Builder;
 import lombok.Data;
 @Builder
 @Data
-public class EntrySignalsRequestDto {
+public class LimitEntrySignalDto {
+
 	private LocalDate tradeDate;
 	private LocalDate previousDate;
-	private List<String> entries;
+	private List<LimitOrder> limitOrders;
 	private int maxSingleStock;
 	private String reasonForEntry;
 	private String entryTime;
@@ -22,4 +25,5 @@ public class EntrySignalsRequestDto {
 	private int maxQuantitites;
 	private String direction;
 	private float minStockPricePerSlot;
+
 }

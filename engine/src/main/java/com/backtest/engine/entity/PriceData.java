@@ -21,5 +21,8 @@ public class PriceData {
 	private final List<LocalDate> trading_dates;
 	private final List<LocalDate> all_dates;
 	
+	// this would have data only if it has Limit Order type is ATR based
+	private final Map<LocalDate, Map<String, Double>> daily_atr;
+	
 	
 }

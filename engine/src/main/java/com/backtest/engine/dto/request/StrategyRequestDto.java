@@ -49,5 +49,29 @@ public class StrategyRequestDto {
 	
 	@JsonProperty("ranking_order")
 	private String rankingOrder;
-
-}
+	
+	@JsonProperty("min_quantity")
+	private float minQuantity;
+	
+	@JsonProperty("min_price")
+	private float minPrice;
+	
+	@JsonProperty("stoploss_type")
+	private String stoplossType;
+	
+	@JsonProperty("takeprofit_type")
+	private String takeprofitType;
+	
+	@JsonProperty("system_type")
+	private String systemType;
+    
+	@JsonProperty("order_type")
+	private String orderType;
+    
+	@JsonProperty("limit_pct")
+	private float limitPct;
+	
+	@JsonProperty("atr_limit_lookback")
+	private int atrLimitLookback;
+	
+}	

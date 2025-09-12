@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +14,6 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 import com.backtest.engine.entity.BuySellData;
 import com.backtest.engine.entity.PriceData;
@@ -26,7 +24,6 @@ import com.backtest.engine.service.StrategyBuilderService;
 
 @Service
 public class StrategyBuilderServiceImpl implements StrategyBuilderService {
-	List<Integer> list = new LinkedList<>();
 
 	@Override
 	public BuySellData generateSignals(StrategyData strategyData) {
@@ -47,7 +44,7 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 
 			if (rule.getIndicator() != null && rule.getIndicatorLookBack() > -1) {
 				exitRuleMap.put(rule, evaluateRule(
-						strategyData.getEntryIndicators().get(rule.getIndicator() + "_" + rule.getIndicatorLookBack()),
+						strategyData.getExitIndicators().get(rule.getIndicator() + "_" + rule.getIndicatorLookBack()),
 						rule));
 
 			}
@@ -104,18 +101,13 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 	}
 
 	// 1) Define a reusable operator → lambda map
-	private static final Map<String, BiPredicate<Double, Double>> OPERATOR_MAP = Map.of(
-		    "<",  (v, t) -> v < t,
-		    "<=", (v, t) -> v <= t,
-		    ">",  (v, t) -> v > t,
-		    ">=", (v, t) -> v >= t,
-		    "==", (v, t) -> Double.compare(v, t) == 0,
-		    "!=", (v, t) -> Double.compare(v, t) != 0
-		);
-
+	private static final Map<String, BiPredicate<Double, Double>> OPERATOR_MAP = Map.of("<", (v, t) -> v < t, "<=",
+			(v, t) -> v <= t, ">", (v, t) -> v > t, ">=", (v, t) -> v >= t, "==", (v, t) -> Double.compare(v, t) == 0,
+			"!=", (v, t) -> Double.compare(v, t) != 0);
 
 	@Override
-	public Map<String, List<String>> signalsForTheDay(LocalDate date, PriceData priceData, BuySellData buySellData, PortfolioService portfolioService) {
+	public Map<String, List<String>> signalsForTheDay(LocalDate date, PriceData priceData, BuySellData buySellData,
+			PortfolioService portfolioService) {
 
 		Map<String, List<String>> entryExitMap = new HashMap<>();
 		entryExitMap.put("entry", Collections.EMPTY_LIST);
@@ -185,10 +177,9 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 		}
 		entrySet.retainAll(todayUniverse);
 
-			//		Validation fro next Day
+		// Validation fro next Day
 		validEntriesTommorow(date, entrySet, priceData);
-		
-		
+
 //		
 //		portfolioService.getLiveHoldingsLogger().
 		entrySet.removeAll(portfolioService.getLiveHoldingsLogger());
@@ -196,19 +187,18 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 		List<String> entries_list = new ArrayList<>(entrySet);
 		Map<String, Double> rank = buySellData.getStrategyData().getRanking().get(date);
 		if (rank != null && !rank.isEmpty()) {
-		    if ("asc".equals(buySellData.getStrategyData().getRankingOrder())) {
-		        entries_list.sort(Comparator.comparingDouble(e -> {
-		            Double v = rank.get(e);
-		            return v != null ? v : Double.MAX_VALUE;
-		        }));
-		    } else if ("desc".equals(buySellData.getStrategyData().getRankingOrder())) {
-		        entries_list.sort(Comparator.comparingDouble((String e) -> {
-		            Double v = rank.get(e);
-		            return v != null ? v : Double.MAX_VALUE;
-		        }).reversed());
-		    }
+			if ("Ascending".equals(buySellData.getStrategyData().getRankingOrder())) {
+				entries_list.sort(Comparator.comparingDouble(e -> {
+					Double v = rank.get(e);
+					return v != null ? v : Double.MAX_VALUE;
+				}));
+			} else if ("Descending".equals(buySellData.getStrategyData().getRankingOrder())) {
+				entries_list.sort(Comparator.comparingDouble((String e) -> {
+					Double v = rank.get(e);
+					return v != null ? v : Double.MAX_VALUE;
+				}).reversed());
+			}
 		}
-
 
 		entryExitMap.put("entry", entries_list);
 		entryExitMap.put("exit", new ArrayList<>(exitSet));
@@ -224,7 +214,7 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 
 			// Retain only those in the next day's universe
 			Set<String> nextDayUniverse = priceData.getDaily_universes().get(nextDate);
-			System.err.println(date);
+
 			entrySet.retainAll(nextDayUniverse);
 
 			// Get the row in daily_closes for nextDate
@@ -232,8 +222,7 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 
 			Map<String, Double> nextDayCloses = dailyCloses.get(nextDate);
 			entrySet.removeIf(ticker -> {
-				return nextDayCloses.get(ticker).isNaN() || nextDayCloses.get(ticker).isInfinite()
-						|| nextDayCloses.get(ticker) == null;
+				return nextDayCloses.get(ticker) == null ||nextDayCloses.get(ticker).isNaN() || nextDayCloses.get(ticker).isInfinite() ;
 			});
 
 		}

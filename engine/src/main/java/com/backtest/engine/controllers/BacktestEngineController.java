@@ -73,12 +73,21 @@ public class BacktestEngineController {
 		this.portfolioService = portfolioService;
 	}
 
-	public Map<String, Map<LocalDate, Map<String, Double>>> loadTables(List<RuleCondition> conditions, String universe, String dataDir) {
+	public Map<String, Map<LocalDate, Map<String, Double>>> loadTables(List<RuleCondition> conditions, String universe,
+			String dataDir) {
 
 		Map<String, Map<LocalDate, Map<String, Double>>> tableMap = new HashMap<>();
 		for (RuleCondition rc : conditions) {
 			// build filename: e.g. "rsi_14_sp500.parquet"
-			String fileName = RuleParser.buildParquetFileName(rc.getIndicator(), rc.getIndicatorLookBack());
+			String fileName = "";
+			
+			if(rc.getIndicator().equals("unadjusted_close")) {
+				fileName = RuleParser.buildParquetFileName("DAILY_unadjusted_closes");
+			}else {
+				fileName = RuleParser.buildParquetFileName(rc.getIndicator(), rc.getIndicatorLookBack());
+			}
+			
+			
 			Path parquetPath = Paths.get(dataDir, fileName);
 			Map<LocalDate, Map<String, Double>> indicatorMap;
 			try {
@@ -89,7 +98,6 @@ public class BacktestEngineController {
 				e.printStackTrace();
 			}
 
-			
 		}
 		return tableMap;
 	}
@@ -257,19 +265,18 @@ public class BacktestEngineController {
 			throws InterruptedException, ExecutionException {
 		Instant start = Instant.now();
 
-		Map<LocalDate, Map<String, Double>> ranking = Collections.emptyMap();
 		Instant start_prices_time = Instant.now();
 
 		Map<String, String> files = PriceLoader.getFilesForRebalance(strategyRequest.getRebalance(),
-				strategyRequest.getUniverse(), strategyRequest.getRanking(), strategyRequest.getRankingLookback());
+				strategyRequest.getUniverse(), strategyRequest.getRanking(), strategyRequest.getRankingLookback(),strategyRequest.getAtrLimitLookback());
 
 		Map<String, Map<LocalDate, Map<String, Double>>> parquetFileValueMap = new HashMap<>();
 		Map<String, List<LocalDate>> parquetDatesMapList = new HashMap<>();
 		Map<String, Map<LocalDate, Set<String>>> parquetMapSet = new HashMap<>();
+		
 
 		for (String keyFile : files.keySet()) {
 
-			String key_path = path(files.get(keyFile));
 			try {
 				if (keyFile.equals("trading_dates") || keyFile.equals("all_dates")) {
 
@@ -277,10 +284,15 @@ public class BacktestEngineController {
 					parquetDatesMapList.put(keyFile, eachList);
 
 				} else if (keyFile.equals("universes")) {
-					Map<LocalDate, Set<String>> universe = ParquetToMap.loadParquetToMapList(path(files.get(keyFile)));
+					Map<LocalDate, Set<String>> universe = ParquetToMap.loadParquetToMapListTickers(path(files.get(keyFile)));
 
 					parquetMapSet.put(keyFile, universe);
-				} else {
+				}
+				else {
+					
+					if(keyFile.equals("atr_limit") && (files.get(keyFile).isBlank() || files.get(keyFile).isEmpty() )) {
+						continue;
+					}
 
 					Map<LocalDate, Map<String, Double>> parquetIter = ParquetToMap
 							.loadParquetToMap(path(files.get(keyFile)));
@@ -293,18 +305,18 @@ public class BacktestEngineController {
 			}
 
 		}
-
-
+		
+		System.err.println(parquetFileValueMap.keySet());
 		PriceData priceData = this.priceDataService.loadPricesMarketData(parquetFileValueMap.get("closes"),
 				parquetFileValueMap.get("opens"), parquetFileValueMap.get("highs"), parquetFileValueMap.get("lows"),
-				parquetMapSet.get("universes"), parquetDatesMapList.get("trading_dates"), parquetDatesMapList.get("all_dates"));
-		
-		
+				parquetMapSet.get("universes"), parquetDatesMapList.get("trading_dates"),
+				parquetDatesMapList.get("all_dates"), 
+				!parquetFileValueMap.get("atr_limit").isEmpty() ? parquetFileValueMap.get("atr_limit") : null );
 
 		long end_prices_time = Duration.between(start_prices_time, Instant.now()).toMillis();
 		System.err.println("Read Prices Timing : " + end_prices_time);
 
-//		-------------------------------------------------------------------------Logic Of backtesting------------------------
+//		-------------------------------------------------------------Logic Of backtesting------------------------------
 
 		Instant priceDate_time = Instant.now();
 
@@ -316,9 +328,11 @@ public class BacktestEngineController {
 
 		Instant indicator_load_start_time = Instant.now();
 
-		Map<String, Map<LocalDate, Map<String, Double>>> entryMap = loadTables(entryRuleConditions, strategyRequest.getUniverse(), backtestDataPath);
+		Map<String, Map<LocalDate, Map<String, Double>>> entryMap = loadTables(entryRuleConditions,
+				strategyRequest.getUniverse(), backtestDataPath);
 
-		Map<String, Map<LocalDate, Map<String, Double>>> exitMap = loadTables(exitRuleConditions, strategyRequest.getUniverse(), backtestDataPath);
+		Map<String, Map<LocalDate, Map<String, Double>>> exitMap = loadTables(exitRuleConditions,
+				strategyRequest.getUniverse(), backtestDataPath);
 
 		StrategyData strategyData = StrategyData.builder().entryRulesList(entryRuleConditions)
 				.exitRuleList(exitRuleConditions).entryIndicators(entryMap).exitIndicators(exitMap)
@@ -326,19 +340,27 @@ public class BacktestEngineController {
 				.stopLossPct(strategyRequest.getStoplossPct()).takeProfitPct(strategyRequest.getTakeprofitPct())
 				.stoplossTiming(strategyRequest.getStoplossTiming())
 				.takeprofitTiming(strategyRequest.getTakeprofitTiming()).entryTiming(strategyRequest.getEntryTiming())
-				.exitTiming(strategyRequest.getExitTiming()).ranking(parquetFileValueMap.get("ranking")).rankingOrder(strategyRequest.getRankingOrder()).startDate(strategyRequest.getStartDate()).endDate(strategyRequest.getEndDate()).build();
+				.exitTiming(strategyRequest.getExitTiming()).ranking(parquetFileValueMap.get("ranking"))
+				.rankingOrder(strategyRequest.getRankingOrder()).startDate(strategyRequest.getStartDate())
+				.endDate(strategyRequest.getEndDate()).minPrice(strategyRequest.getMinPrice())
+				.minQuantity(strategyRequest.getMinQuantity())
+				.stoplossType(strategyRequest.getStoplossType())
+				.takeprofitType(strategyRequest.getTakeprofitType())
+				.systemType(strategyRequest.getSystemType())
+				.orderType(strategyRequest.getOrderType())
+				.atrLimitLookback(strategyRequest.getAtrLimitLookback())
+				.limitPct(strategyRequest.getLimitPct())
+				.build();
 
 		long indicator_load_end_time = Duration.between(indicator_load_start_time, Instant.now()).toMillis();
 		System.err.println("Read Indicator : " + indicator_load_end_time);
 
 		BuySellData buySellData = this.strategyBuilderService.generateSignals(strategyData);
 		buySellData.setStrategyData(strategyData);
-		
-//		Max Single Same Slot
+
+		//Max Single Same Slot
 		buySellData.getStrategyData().setMaxSameTicker(1);
-		
-		
-		
+
 		Instant backtest_start = Instant.now();
 		backtestService.runBacktest(priceData, buySellData);
 
@@ -355,13 +377,12 @@ public class BacktestEngineController {
 		mapper.enable(SerializationFeature.INDENT_OUTPUT); // Pretty print
 
 		try {
-//			// Serialize to JSON files
+			// Serialize to JSON files
 			mapper.writeValue(Paths.get(String.format("%s%s.json", backtestOPath, "/Equity")).toFile(),
 					this.portfolioService.getPortfolio().getEquityLogger());
 
 			mapper.writeValue(Paths.get(String.format("%s%s.json", backtestOPath, "/TradeList")).toFile(),
 					this.portfolioService.getPortfolio().getTradeLogger());
-//			writeToCsvWithTablesaw(backtestOPath);
 
 		} catch (Exception e) {
 			e.printStackTrace();

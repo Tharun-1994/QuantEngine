@@ -12,33 +12,36 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import org.apache.commons.math3.util.Precision;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.WebApplicationContext;
 
+import com.backtest.engine.config.StaticConfig;
 import com.backtest.engine.dto.request.EntrySignalsRequestDto;
 import com.backtest.engine.dto.request.ExitSignalsRequestDto;
+import com.backtest.engine.dto.request.LimitEntrySignalDto;
 import com.backtest.engine.dto.request.TradeEnterRequestDto;
 import com.backtest.engine.dto.request.TradeExitRequestDto;
 import com.backtest.engine.dto.response.BacktestReponseDto;
 import com.backtest.engine.entity.EquityLog;
+import com.backtest.engine.entity.LimitOrder;
 import com.backtest.engine.entity.LiveHoldingsTracker;
 import com.backtest.engine.entity.PriceData;
 import com.backtest.engine.entity.TradeLog;
 import com.backtest.engine.service.PortfolioService;
 
 @Service
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class PortfolioServiceImpl implements PortfolioService {
 
 	private PriceData priceData;
 
-	private Map<String, TradeLog> tradeLogger = new LinkedHashMap<>();
-	private Map<LocalDate, EquityLog> equityLogger = new LinkedHashMap<>();
-	private Map<String, List<LiveHoldingsTracker>> liveHoldingsLogger = new HashMap<>();
+	private Map<String, TradeLog> tradeLogger;
+	private Map<LocalDate, EquityLog> equityLogger;
+	private Map<String, List<LiveHoldingsTracker>> liveHoldingsLogger;
 
-
-
-	private float maxEquity = Float.MIN_VALUE;
-	private LocalDate maxEquityDate = null;
+	private float maxEquity;
 
 	private final AtomicLong tradeCounter = new AtomicLong();
 
@@ -46,21 +49,30 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 	private float startingCapital;
 	private int maxSlots;
-	
-	
+
+	private LocalDate maxEquityDate;
+
+	private int stoplossPct;
+	private int takeProfitPct;
+
 	@Override
 	public Set<String> getLiveHoldingsLogger() {
 		return liveHoldingsLogger.keySet().stream().map(key -> key.split("_")[0]).collect(Collectors.toSet());
 	}
-	
 
 	@Override
-	public void setPriceDate(PriceData priceData, float startingCapital, int maxSlots) {
+	public void setPriceDate(PriceData priceData, float startingCapital, int maxSlots, int stoplossPct,
+			int takeProfitPct) {
 		this.priceData = priceData;
 		this.startingCapital = startingCapital;
 		this.unusedCapital = startingCapital;
 		this.maxSlots = maxSlots;
-
+		this.tradeLogger = new LinkedHashMap<>();
+		this.equityLogger = new LinkedHashMap<>();
+		this.liveHoldingsLogger = new HashMap<>();
+		this.maxEquity = Float.MIN_VALUE;
+		this.stoplossPct = stoplossPct;
+		this.takeProfitPct = takeProfitPct;
 	}
 
 	@Override
@@ -72,7 +84,6 @@ public class PortfolioServiceImpl implements PortfolioService {
 		LocalDate tradeDate = entrySignalsRequest.getTradeDate();
 		LocalDate previousDate = entrySignalsRequest.getPreviousDate();
 		List<LocalDate> allDates = priceData.getAll_dates();
-		
 
 		// if it's the last bar, skip
 		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
@@ -85,8 +96,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 				if (this.liveHoldingsLogger.size() >= this.maxSlots) {
 					break;
 				}
-				
-				
+
 				TradeEnterRequestDto trade = new TradeEnterRequestDto();
 				trade.setTradeDate(tradeDate);
 				trade.setTicker(tick);
@@ -99,17 +109,17 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 					double openPrice = this.priceData.getDaily_opens().get(tradeDate).get(tick);
 
-					trade.setEntryprice((float)openPrice);
+					trade.setEntryprice((float) openPrice);
 				}
 
 				int quantity = (int) Math.floor(entrySignalsRequest.getSlotCapital() / yesterdayClosePrice);
 
-				if (quantity > entrySignalsRequest.getMaxQuantitites()) {
+				if (quantity > entrySignalsRequest.getMaxQuantitites()
+						&& yesterdayClosePrice > entrySignalsRequest.getMinStockPricePerSlot()) {
 					trade.setQuantity(quantity);
 					this.enterTrade(trade);
 				}
 
-				
 			} catch (Exception e) {
 				System.err.println(e);
 			}
@@ -149,7 +159,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 					System.err.println(tick);
 					System.err.println(tradeDate);
 					double openPrice = this.priceData.getDaily_opens().get(tradeDate).get(tick);
-					trade.setExitPrice( openPrice);
+					trade.setExitPrice(openPrice);
 					trade.setPriceUsed(exitSignalsRequest.getExitTime());
 				}
 
@@ -230,8 +240,8 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 				todayEquity += amount * closePrice;
 
-				eachTradeList.add(LiveHoldingsTracker.builder().symbol(symbol).endOfDayValue((float)(amount * closePrice))
-						.tradeDate(tradeDate).build());
+				eachTradeList.add(LiveHoldingsTracker.builder().symbol(symbol)
+						.endOfDayValue((float) (amount * closePrice)).tradeDate(tradeDate).build());
 
 			}
 			if (todayEquity > this.maxEquity) {
@@ -256,9 +266,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
 
 		for (String tradeId : liveTradeIds) {
-			
+
 			String symbol = tradeId.split("_")[0];
-			
+
 			Double todayClosePrice = closePriceSeries.get(symbol);
 			TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
 			tradeExitRequest.setExitPrice(todayClosePrice);
@@ -289,19 +299,16 @@ public class PortfolioServiceImpl implements PortfolioService {
 	public void checkLivePositionsOnTommorow(LocalDate date) {
 		int idx = Collections.binarySearch(this.priceData.getTrading_dates(), date);
 
-
 		if (idx >= 0 && idx + 1 < priceData.getTrading_dates().size()) {
 			LocalDate nextDate = priceData.getTrading_dates().get(idx + 1);
 			Set<String> nextDayUniverse = priceData.getDaily_universes().get(nextDate);
-			
+
 			Map<String, Double> tomorow_closes = priceData.getDaily_closes().get(nextDate);
 
 			List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
 
 			for (String tradeId : liveTradeIds) {
 				String symbol = tradeId.split("_")[0];
-				
-				
 
 				if (tomorow_closes.get(symbol) == null) {
 
@@ -310,7 +317,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 					trade.setTradeDate(date);
 
 					double closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
-					trade.setExitPrice( closePrice);
+					trade.setExitPrice(closePrice);
 					trade.setPriceUsed("close");
 
 					trade.setExitReason("No Price tommorow");
@@ -322,8 +329,356 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 		}
 	}
+
+	// Stoploss and Takeprofit implementations
+
+	@Override
+	public void checkStoplossHit(LocalDate date, String systemType, String timing) {
+
+		if (systemType.equals(StaticConfig.systemType.get("long"))) {
+			stoplossHitLong(date, timing);
+		} else if (systemType.equals(StaticConfig.systemType.get("short"))) {
+			stoplossHitShort(date, timing);
+		}
+
+	}
+
+	private void stoplossHitShort(LocalDate date, String timing) {
+		if(this.liveHoldingsLogger.isEmpty()) {
+			return;
+		}
+		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+		for (String tradeId : liveTradeIds) {
+			TradeLog tradeRow = this.tradeLogger.get(tradeId);
+			String symbol = tradeRow.getSymbol();
+			float tickerEntryPrice = tradeRow.getEntryPrice();
+
+			double stopLossPrice = tickerEntryPrice * (1 + (this.stoplossPct / 100));
+
+			if (timing.equals("eod")) {
+				double closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+
+				if (closePrice >= stopLossPrice) {
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(closePrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", stopLossPrice));
+					tradeExitRequest.setPriceUsed("close");
+					this.exitTrade(tradeExitRequest);
+				}
+
+			} else if (timing.equals("intraday")) {
+				double lowPrice = this.priceData.getDaily_lows().get(date).get(symbol);
+				double highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
+				double openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+
+				if (openPrice >= stopLossPrice) {
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(openPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", stopLossPrice));
+					tradeExitRequest.setPriceUsed("open");
+					this.exitTrade(tradeExitRequest);
+
+				} else if (lowPrice <= stopLossPrice && stopLossPrice <= highPrice) {
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(stopLossPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", stopLossPrice));
+					tradeExitRequest.setPriceUsed("stoploss price");
+					this.exitTrade(tradeExitRequest);
+
+				}
+
+			}
+
+		}
+
+	}
+
+	private void stoplossHitLong(LocalDate date, String timing) {
+		
+		if(this.liveHoldingsLogger.isEmpty()) {
+			return;
+		}
+		
+		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+		for (String tradeId : liveTradeIds) {
+			TradeLog tradeRow = this.tradeLogger.get(tradeId);
+			String symbol = tradeRow.getSymbol();
+			float tickerEntryPrice = tradeRow.getEntryPrice();
+
+			double stopLossPrice = tickerEntryPrice * (1 - (this.stoplossPct / 100));
+
+			if (timing.toLowerCase().equals("EOD".toLowerCase())) {
+				double closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+
+				if (closePrice < stopLossPrice) {
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(closePrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", stopLossPrice));
+					tradeExitRequest.setPriceUsed("close");
+					this.exitTrade(tradeExitRequest);
+				}
+
+			} else if (timing.toLowerCase().equals("intraday".toLowerCase())) {
+				double lowPrice = this.priceData.getDaily_lows().get(date).get(symbol);
+				double highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
+				double openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+
+				if (openPrice <= stopLossPrice) {
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(openPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", stopLossPrice));
+					tradeExitRequest.setPriceUsed("open");
+					this.exitTrade(tradeExitRequest);
+
+				} else if (lowPrice <= stopLossPrice && stopLossPrice <= highPrice) {
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(stopLossPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", stopLossPrice));
+					tradeExitRequest.setPriceUsed("stoploss price");
+					this.exitTrade(tradeExitRequest);
+
+				}
+
+			}
+
+		}
+
+	}
+
+	// Stoploss and Takeprofit implementations
+
+	@Override
+	public void checkTakeProfit(LocalDate date, String systemType, String timing) {
+		if (systemType.equals(StaticConfig.systemType.get("LONG"))) {
+			takeProfitHitLong(date, timing);
+		} else if (systemType.equals(StaticConfig.systemType.get("SHORT"))) {
+			takeProfitHitShort(date, timing);
+		}
+	}
+
+	private void takeProfitHitShort(LocalDate date, String timing) {
+		if(this.liveHoldingsLogger.isEmpty()) {
+			return;
+		}
+		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+		for (String tradeId : liveTradeIds) {
+			TradeLog tradeRow = this.tradeLogger.get(tradeId);
+			String symbol = tradeRow.getSymbol();
+			float tickerEntryPrice = tradeRow.getEntryPrice();
+
+			double takeProfitPrice = tickerEntryPrice * (1 - (this.stoplossPct / 100));
+
+			if (timing.toLowerCase().equals("eod".toLowerCase())) {
+				double closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+
+				if (closePrice <= takeProfitPrice) {
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(closePrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("TakeProfit Hit: %.2f", takeProfitPrice));
+					tradeExitRequest.setPriceUsed("close");
+					this.exitTrade(tradeExitRequest);
+				}
+
+			} else if (timing.toLowerCase().equals("intraday".toLowerCase())) {
+				double lowPrice = this.priceData.getDaily_lows().get(date).get(symbol);
+				double highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
+				double openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+
+				if (openPrice <= takeProfitPrice) {
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(openPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("TakeProfit Hit: %.2f", takeProfitPrice));
+					tradeExitRequest.setPriceUsed("open");
+					this.exitTrade(tradeExitRequest);
+
+				} else if (lowPrice <= takeProfitPrice) {
+					// Low price intraday 
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(takeProfitPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("TakeProfit Hit: %.2f", takeProfitPrice));
+					tradeExitRequest.setPriceUsed("TakeProfit price");
+					this.exitTrade(tradeExitRequest);
+
+				}
+
+			}
+
+		}
+
+	}
+
+	private void takeProfitHitLong(LocalDate date, String timing) {
+		if(this.liveHoldingsLogger.isEmpty()) {
+			return;
+		}
+		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+		for (String tradeId : liveTradeIds) {
+			TradeLog tradeRow = this.tradeLogger.get(tradeId);
+			String symbol = tradeRow.getSymbol();
+			float tickerEntryPrice = tradeRow.getEntryPrice();
+
+			double takeProfitPrice = tickerEntryPrice * (1 + (this.takeProfitPct / 100));
+
+			if (timing.toLowerCase().equals("eod".toLowerCase())) {
+				double closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+
+				if (closePrice >= takeProfitPrice) {
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(closePrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("TakeProfit Hit: %.2f", takeProfitPrice));
+					tradeExitRequest.setPriceUsed("close");
+					this.exitTrade(tradeExitRequest);
+				}
+
+			} else if (timing.toLowerCase().equals("intraday".toLowerCase())) {
+
+				double highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
+				double openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+
+				if (openPrice >= takeProfitPrice) {
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(openPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", takeProfitPrice));
+					tradeExitRequest.setPriceUsed("open");
+					this.exitTrade(tradeExitRequest);
+
+				} else if (highPrice >= takeProfitPrice) {
+//					Intraday TakeProfit for Long
+
+					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
+					tradeExitRequest.setExitPrice(takeProfitPrice);
+					tradeExitRequest.setTradeDate(date);
+					tradeExitRequest.setTradeId(tradeId);
+					tradeExitRequest.setExitReason(String.format("StopLoss Hit: %.2f", takeProfitPrice));
+					tradeExitRequest.setPriceUsed("stoploss price");
+					this.exitTrade(tradeExitRequest);
+
+				}
+
+			}
+
+		}
+
+	}
+
+	@Override
+	public void executeLimitOrdersLong(LimitEntrySignalDto limitEntrySignalsRequest) {
+		
+
+
+		if (limitEntrySignalsRequest.getLimitOrders().isEmpty() || limitEntrySignalsRequest.getLimitOrders() == null) {
+			return;
+		}
+		LocalDate tradeDate = limitEntrySignalsRequest.getTradeDate();
+		LocalDate previousDate = limitEntrySignalsRequest.getPreviousDate();
+		List<LocalDate> allDates = priceData.getAll_dates();
+
+		// if it's the last bar, skip
+		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+			return;
+		}
+
+		for (LimitOrder limitOrder : limitEntrySignalsRequest.getLimitOrders()) {
+			
+			double yesterdayClosePrice = this.priceData.getDaily_closes().get(previousDate).get(limitOrder.getTicker());
+			try {
+				if (this.liveHoldingsLogger.size() >= this.maxSlots) {
+					break;
+				}
+				
+				
+				double openPrice = this.priceData.getDaily_opens().get(tradeDate).get(limitOrder.getTicker());
+				double lowPrice = this.priceData.getDaily_lows().get(tradeDate).get(limitOrder.getTicker());
+				// Limit Order hit on OPEN
+				if(openPrice < limitOrder.getLimitPrice()) {
+					TradeEnterRequestDto trade = new TradeEnterRequestDto();
+					trade.setTradeDate(tradeDate);
+					trade.setTicker(limitOrder.getTicker());
+					trade.setReason(limitEntrySignalsRequest.getReasonForEntry());
+					trade.setDirection(limitEntrySignalsRequest.getDirection());
+
+					if (limitEntrySignalsRequest.getEntryTime().equals("open")) {
+						trade.setEntryTiming(limitEntrySignalsRequest.getEntryTime());
+						trade.setPriceUsed(limitEntrySignalsRequest.getEntryTime());
+
+						
+
+						trade.setEntryprice((float) openPrice);
+					}
+
+					int quantity = (int) Math.floor(limitEntrySignalsRequest.getSlotCapital() / yesterdayClosePrice);
+
+					if (quantity > limitEntrySignalsRequest.getMaxQuantitites()
+							&& yesterdayClosePrice > limitEntrySignalsRequest.getMinStockPricePerSlot()) {
+						trade.setQuantity(quantity);
+						
+						this.enterTrade(trade);
+					}
+				}else if(lowPrice < limitOrder.getLimitPrice()) {
+
+					TradeEnterRequestDto trade = new TradeEnterRequestDto();
+					trade.setTradeDate(tradeDate);
+					trade.setTicker(limitOrder.getTicker());
+					trade.setReason(limitEntrySignalsRequest.getReasonForEntry());
+					trade.setDirection(limitEntrySignalsRequest.getDirection());
+
+					if (limitEntrySignalsRequest.getEntryTime().equals("open")) {
+						trade.setEntryTiming("intraday");
+						trade.setPriceUsed("limit price");
+
+						
+
+						trade.setEntryprice((float) limitOrder.getLimitPrice());
+					}
+
+					int quantity = (int) Math.floor(limitEntrySignalsRequest.getSlotCapital() / yesterdayClosePrice);
+
+					if (quantity > limitEntrySignalsRequest.getMaxQuantitites()
+							&& yesterdayClosePrice > limitEntrySignalsRequest.getMinStockPricePerSlot()) {
+						trade.setQuantity(quantity);
+						
+						this.enterTrade(trade);
+					}
+				
+				}
+
+				
+
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+
+		}
+
 	
-
-
+	}
 
 }
