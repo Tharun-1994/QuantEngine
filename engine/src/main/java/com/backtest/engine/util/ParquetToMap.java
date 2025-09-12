@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -134,7 +135,7 @@ public class ParquetToMap {
 		return out;
 	}
 
-	public static Map<LocalDate, Set<String>> loadParquetToMapList(String path) throws SQLException {
+	public static Map<LocalDate, Set<String>> loadParquetToMapListTickers(String path) throws SQLException {
 		Map<LocalDate, Set<String>> out = new LinkedHashMap<>();
 
 		// 1) DuckDB in-memory
@@ -207,5 +208,6 @@ public class ParquetToMap {
 
 		return out;
 	}
-
+	
+	
 }

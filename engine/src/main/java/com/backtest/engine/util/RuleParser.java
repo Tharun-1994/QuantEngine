@@ -72,5 +72,10 @@ public class RuleParser {
 	}
 	
 	
+	public static String buildParquetFileName(String indicator) {
+		return String.format("%s.parquet", indicator);
+	}
+	
+	
 	
 }

@@ -1,17 +1,11 @@
 package com.backtest.engine.entity;
 
-import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import com.backtest.engine.util.ParquetToMap;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Builder;
 import lombok.Data;
-import tech.tablesaw.api.Table;
 
 @Builder
 @Data
@@ -26,7 +20,7 @@ public class StrategyData {
 	private int maxSameTicker;
 	private int startingCapital;
 	private int slots;
-	private LocalDate startDate; 
+	private LocalDate startDate;
 	private LocalDate endDate;
 	private String stoplossTiming;
 
@@ -36,7 +30,16 @@ public class StrategyData {
 
 	private String exitTiming;
 
-	private Map<LocalDate, Map<String,Double>> ranking;
+	private Map<LocalDate, Map<String, Double>> ranking;
 	private String rankingOrder;
+	private float minQuantity;
+	private float minPrice;
+	private String stoplossType;
+	private String takeprofitType;
+	private String systemType;
+
+	private String orderType;
+	private float limitPct;
+	private int atrLimitLookback;
 
 }

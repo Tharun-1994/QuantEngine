@@ -2,9 +2,11 @@ package com.backtest.engine.util;
 
 import java.util.Map;
 
+import com.backtest.engine.config.StaticConfig;
+
 public class PriceLoader {
 
-    public static Map<String, String> getFilesForRebalance(String rebalance, String universe,String rankingIndicator,int rankingLookback) {
+    public static Map<String, String> getFilesForRebalance(String rebalance, String universe,String rankingIndicator,int rankingLookback, int atrLimitLookback) {
 
         String prefix = switch (rebalance.toLowerCase()) {
             case "daily" -> "daily_";
@@ -16,10 +18,15 @@ public class PriceLoader {
         String univ =  switch (universe.toLowerCase()) {
         case "sp500" -> "sp500_";
         case "r3000" -> "r3000_";
-        case "liquid500" -> "liquid500_";
+        case "liquid 500" -> "liquid500_";
         default -> throw new IllegalArgumentException("Unknown Universe: " + universe);
        
     };
+    
+    
+    if(atrLimitLookback > 0 ) {
+    	
+    }
     
     String ranking = rankingIndicator+"_"+rankingLookback;
     
@@ -31,9 +38,13 @@ public class PriceLoader {
             "universes", univ + "universe.parquet",
             "trading_dates", "trading_dates.parquet",
             "all_dates", "all_dates.parquet",
-            "ranking", ranking+".parquet"
+            "ranking", ranking+".parquet",
+            "atr_limit", atrLimitLookback > 0  ? String.format("%s_%d.parquet", StaticConfig.AVGTRUERANGE, atrLimitLookback) : ""
         );
+    
+    
     }
     
+   
 
 }

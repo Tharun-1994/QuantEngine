@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.backtest.engine.dto.request.EntrySignalsRequestDto;
 import com.backtest.engine.dto.request.ExitSignalsRequestDto;
+import com.backtest.engine.dto.request.LimitEntrySignalDto;
 import com.backtest.engine.dto.request.TradeEnterRequestDto;
 import com.backtest.engine.dto.request.TradeExitRequestDto;
 import com.backtest.engine.dto.response.BacktestReponseDto;
@@ -15,7 +16,6 @@ import com.backtest.engine.entity.PriceData;
 public interface PortfolioService {
 
 	public BacktestReponseDto getPortfolio();
-	public void setPriceDate(PriceData priceData, float startingCapital, int maxSlots);
 
 	public void executeEntrySignals(EntrySignalsRequestDto entrySignalsRequest);
 	
@@ -32,6 +32,13 @@ public interface PortfolioService {
 	
 	public Set<String> getLiveHoldingsLogger();
 	public void checkLivePositionsOnTommorow(LocalDate date);
+	
+	
+	public void checkStoplossHit(LocalDate date, String systemType,String timing);
+	public void checkTakeProfit(LocalDate date, String systemType,String timing);
+	void setPriceDate(PriceData priceData, float startingCapital, int maxSlots, int stoplossPct, int takeProfitPct);
+
+	public void executeLimitOrdersLong(LimitEntrySignalDto entrySignals);
 	
 	
 

@@ -29,15 +29,18 @@ public class PriceDataLoaderServiceImpl implements PriceDataLoaderService {
 	public PriceData loadPricesMarketData(Map<LocalDate, Map<String, Double>> daily_closes,
 			Map<LocalDate, Map<String, Double>> daily_opens, Map<LocalDate, Map<String, Double>> daily_highs,
 			Map<LocalDate, Map<String, Double>> daily_lows, Map<LocalDate, Set<String>> daily_universes,
-			List<LocalDate> trading_dates, List<LocalDate> all_dates) {
+			List<LocalDate> trading_dates, List<LocalDate> all_dates,Map<LocalDate, Map<String, Double>> daily_atr) {
 
 		Instant priceDataObjectStart = Instant.now();
 		PriceData priceData = PriceData.builder().daily_closes(daily_closes).all_dates(all_dates)
 				.daily_highs(daily_highs).daily_lows(daily_lows).daily_opens(daily_opens)
-				.daily_universes(daily_universes).trading_dates(trading_dates).all_dates(all_dates).build();
+				.daily_universes(daily_universes).trading_dates(trading_dates).all_dates(all_dates)
+				
+				// This DAILY ATR would have data only if it has Limit Order type is ATR based
+				.daily_atr(daily_atr)
+				.build();
 
 		long priceDataObjectend = Duration.between(priceDataObjectStart, Instant.now()).toMillis();
-		System.err.println("Price Pojo Time  : " + priceDataObjectend);
 
 		return priceData;
 	}
