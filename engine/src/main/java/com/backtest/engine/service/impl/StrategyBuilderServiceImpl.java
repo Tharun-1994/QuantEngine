@@ -71,13 +71,13 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 		return entryRuleMap;
 	}
 
-	public Map<LocalDate, List<String>> evaluateRule(Map<LocalDate, Map<String, Double>> map, RuleCondition rule) {
+	public Map<LocalDate, List<String>> evaluateRule(Map<LocalDate, Map<String, Float>> map, RuleCondition rule) {
 
 		// 1) Parse the threshold once
-		double threshold = rule.getValue();
+		float threshold = rule.getValue();
 
 		// 2) Prepare operator test function
-		BiPredicate<Double, Double> test = OPERATOR_MAP.get(rule.getOperator());
+		BiPredicate<Float, Float> test = OPERATOR_MAP.get(rule.getOperator());
 		if (test == null) {
 			throw new IllegalArgumentException("Unknown operator: " + rule.getOperator());
 		}
@@ -85,12 +85,12 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 		// 3) Iterate over each date and evaluate the rule
 		Map<LocalDate, List<String>> eligibleByDate = new LinkedHashMap<>();
 
-		for (Map.Entry<LocalDate, Map<String, Double>> entry : map.entrySet()) {
+		for (Map.Entry<LocalDate, Map<String, Float>> entry : map.entrySet()) {
 			LocalDate date = entry.getKey();
-			Map<String, Double> tickerValues = entry.getValue();
+			Map<String, Float> tickerValues = entry.getValue();
 
 			List<String> eligibleTickers = tickerValues.entrySet().stream().filter(e -> {
-				Double val = e.getValue();
+				Float val = e.getValue();
 				return val != null && !val.isNaN() && !val.isInfinite() && test.test(val, threshold);
 			}).map(Map.Entry::getKey).collect(Collectors.toList());
 
@@ -101,9 +101,9 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 	}
 
 	// 1) Define a reusable operator → lambda map
-	private static final Map<String, BiPredicate<Double, Double>> OPERATOR_MAP = Map.of("<", (v, t) -> v < t, "<=",
-			(v, t) -> v <= t, ">", (v, t) -> v > t, ">=", (v, t) -> v >= t, "==", (v, t) -> Double.compare(v, t) == 0,
-			"!=", (v, t) -> Double.compare(v, t) != 0);
+	private static final Map<String, BiPredicate<Float, Float>> OPERATOR_MAP = Map.of("<", (v, t) -> v < t, "<=",
+			(v, t) -> v <= t, ">", (v, t) -> v > t, ">=", (v, t) -> v >= t, "==", (v, t) -> Float.compare(v, t) == 0,
+			"!=", (v, t) -> Float.compare(v, t) != 0);
 
 	@Override
 	public Map<String, List<String>> signalsForTheDay(LocalDate date, PriceData priceData, BuySellData buySellData,
@@ -185,16 +185,16 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 		entrySet.removeAll(portfolioService.getLiveHoldingsLogger());
 		// Ranking for ENtry Set
 		List<String> entries_list = new ArrayList<>(entrySet);
-		Map<String, Double> rank = buySellData.getStrategyData().getRanking().get(date);
+		Map<String, Float> rank = buySellData.getStrategyData().getRanking().get(date);
 		if (rank != null && !rank.isEmpty()) {
 			if ("Ascending".equals(buySellData.getStrategyData().getRankingOrder())) {
 				entries_list.sort(Comparator.comparingDouble(e -> {
-					Double v = rank.get(e);
-					return v != null ? v : Double.MAX_VALUE;
+					Float v = rank.get(e);
+					return v != null ? v : Float.MAX_VALUE;
 				}));
 			} else if ("Descending".equals(buySellData.getStrategyData().getRankingOrder())) {
 				entries_list.sort(Comparator.comparingDouble((String e) -> {
-					Double v = rank.get(e);
+					Float v = rank.get(e);
 					return v != null ? v : Double.MAX_VALUE;
 				}).reversed());
 			}
@@ -218,9 +218,9 @@ public class StrategyBuilderServiceImpl implements StrategyBuilderService {
 			entrySet.retainAll(nextDayUniverse);
 
 			// Get the row in daily_closes for nextDate
-			Map<LocalDate, Map<String, Double>> dailyCloses = priceData.getDaily_closes();
+			Map<LocalDate, Map<String, Float>> dailyCloses = priceData.getDaily_closes();
 
-			Map<String, Double> nextDayCloses = dailyCloses.get(nextDate);
+			Map<String, Float> nextDayCloses = dailyCloses.get(nextDate);
 			entrySet.removeIf(ticker -> {
 				return nextDayCloses.get(ticker) == null ||nextDayCloses.get(ticker).isNaN() || nextDayCloses.get(ticker).isInfinite() ;
 			});

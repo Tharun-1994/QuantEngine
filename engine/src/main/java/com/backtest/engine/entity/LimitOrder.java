@@ -7,5 +7,7 @@ import lombok.Data;
 @Data
 public class LimitOrder {
 	private String ticker;
-	private double limitPrice;
+	private float limitPrice;
+	
+	
 }

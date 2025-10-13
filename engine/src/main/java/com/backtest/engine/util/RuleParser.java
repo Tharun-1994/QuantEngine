@@ -60,7 +60,7 @@ public class RuleParser {
 
 			// 6) Build and add the RuleCondition
 			conditions.add(RuleCondition.builder().indicator(indicator).indicatorLookBack(Integer.valueOf(indicatorLookBack))
-					.operator(operator).value(Double.valueOf(value)).connectOperator(connectOp).build());
+					.operator(operator).value(Float.valueOf(value)).connectOperator(connectOp).build());
 
 		}
 
@@ -69,6 +69,10 @@ public class RuleParser {
 
 	public static String buildParquetFileName(String indicator, int i) {
 		return String.format("%s_%s.parquet", indicator, i);
+	}
+	
+	public static String buildParquetFileNameMarketTrend(String ticker, String indicator, int i) {
+		return String.format("%s_%s_%s.parquet", ticker,indicator, i);
 	}
 	
 	

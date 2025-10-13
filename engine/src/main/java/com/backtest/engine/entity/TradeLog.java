@@ -20,7 +20,7 @@ public class TradeLog {
 	private String entryReason;
 	private int quantity;
 	private LocalDate exitDate;
-	private Double exitPrice;
+	private float exitPrice;
 	private float exitValue;
 	private String exitReason;
 

@@ -1,0 +1,544 @@
+package com.backtest.engine.service.impl;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.backtest.engine.dto.request.RuleDto;
+import com.backtest.engine.entity.BuySellDataV2;
+import com.backtest.engine.entity.PriceDataV2;
+import com.backtest.engine.entity.StrategyDataV2;
+import com.backtest.engine.service.PortfolioServiceV2;
+import com.backtest.engine.service.StrategyBuilderServiceV2;
+import com.backtest.engine.util.ArrowDataFrame;
+
+@Service
+public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
+
+	@Override
+	public BuySellDataV2 generateSignals(StrategyDataV2 strategyData, PriceDataV2 priceData) {
+
+//		 This Will Create the buys and sells signal by filtering the entries and exits as a list of Strings.
+//		Example : RSI(2) < 10 will filter each date with List of tickers which pass the condition as entries.
+		Map<RuleDto, Map<LocalDate, List<String>>> buys = generateBuySignals(strategyData, priceData);
+//		Example : RSI(2) > 70 will filter each date with List of tickers which pass the condition as exits.
+		Map<RuleDto, Map<LocalDate, List<String>>> sells = generateSellSignals(strategyData, priceData);
+
+		return BuySellDataV2.builder().sells(sells).buys(buys).strategyData(strategyData).build();
+	}
+
+	private Map<RuleDto, Map<LocalDate, List<String>>> generateSellSignals(StrategyDataV2 strategyData,
+			PriceDataV2 priceData) {
+		strategyData.getExitRuleList().sort(Comparator.comparingInt(rule -> {
+			String conn = rule.getConnector();
+			if ("&&".equals(conn))
+				return 0; // highest priority
+			if ("||".equals(conn))
+				return 1; // lower priority
+			return 2; // no connector or others
+		}));
+		Map<RuleDto, Map<LocalDate, List<String>>> exitRuleMap = new HashMap<>();
+		for (RuleDto rule : strategyData.getExitRuleList()) {
+			Map<LocalDate, List<String>> list = evaluateRule(strategyData.getExitIndicators().get(rule.getIndicator() + "_" + rule.getLookback()),
+					rule, priceData);
+			
+//			System.err.println(list.get(LocalDate.of(2000, 1, 5)).size());
+			exitRuleMap.put(rule,list);
+		}
+
+		return exitRuleMap;
+	}
+
+	// 1) Define a reusable operator → lambda map
+	private static final Map<String, BiPredicate<Float, Float>> OPERATOR_MAP = Map.of("<", (v, t) -> v < t, "<=",
+			(v, t) -> v <= t, ">", (v, t) -> v > t, ">=", (v, t) -> v >= t, "==", (v, t) -> Float.compare(v, t) == 0,
+			"!=", (v, t) -> Float.compare(v, t) != 0);
+
+	private Map<RuleDto, Map<LocalDate, List<String>>> generateBuySignals(StrategyDataV2 strategyData,
+			PriceDataV2 priceData) {
+
+		strategyData.getEntryRulesList().sort(Comparator.comparingInt(rule -> {
+			String conn = rule.getConnector();
+			if ("&&".equals(conn))
+				return 0; // highest priority
+			if ("||".equals(conn))
+				return 1; // lower priority
+			return 2; // no connector or others
+		}));
+
+		Map<RuleDto, Map<LocalDate, List<String>>> entryRuleMap = new HashMap<>();
+		for (RuleDto rule : strategyData.getEntryRulesList()) {
+
+			if (rule.getIndicator() != null && rule.getLookback() > -1) {
+				entryRuleMap.put(rule,
+						evaluateRule(
+								strategyData.getEntryIndicators().get(rule.getIndicator() + "_" + rule.getLookback()),
+								rule, priceData));
+
+			}
+
+		}
+
+		return entryRuleMap;
+
+	}
+
+//	private Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule,PriceDataV2 priceData) {
+//
+//		// 1) Parse the threshold once
+//		float threshold = rule.getValue();
+//
+//		// 2) Prepare operator test function
+//		BiPredicate<Float, Float> test = OPERATOR_MAP.get(rule.getOperator());
+//		if (test == null) {
+//			throw new IllegalArgumentException("Unknown operator: " + rule.getOperator());
+//		}
+//
+//		// 3) Iterate over each date and evaluate the rule
+//
+//		Map<LocalDate, List<String>> eligibleByDate = new HashMap<>();
+//
+//		List<LocalDate> sortedDates = arrowDataFrame.getDates().stream().sorted().toList();
+//
+//		for (LocalDate d : sortedDates) {
+//			
+//			if (d.equals(LocalDate.of(2000, 1, 3))) {
+//				System.err.println();
+//			}
+//
+//			Map<String, Float> tickerValues = arrowDataFrame.getRow(d);
+//			;
+//
+//			List<String> eligibleTickers = tickerValues.entrySet().stream().filter(e -> {
+//				Float val = e.getValue();
+//				return val != null && !val.isNaN() && !val.isInfinite() && test.test(val, threshold);
+//			}).map(Map.Entry::getKey).collect(Collectors.toList());
+//
+//			eligibleByDate.put(d, eligibleTickers);
+//		}
+//
+//		return eligibleByDate;
+//	}
+
+	private Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule,
+			PriceDataV2 priceData) {
+
+		// 1) Parse the threshold once
+
+		// 2) Prepare operator test function
+		BiPredicate<Float, Float> test = OPERATOR_MAP.get(rule.getOperator());
+		if (test == null) {
+			throw new IllegalArgumentException("Unknown operator: " + rule.getOperator());
+		}
+
+		// 3) Iterate over each date and evaluate the rule
+
+		Map<LocalDate, List<String>> eligibleByDate = new HashMap<>();
+
+		List<LocalDate> sortedDates = arrowDataFrame.getDates().stream().sorted().toList();
+
+		if (rule.getValueType().equalsIgnoreCase("indicator_price")) {
+			
+			for (LocalDate d : sortedDates) {
+				
+				List<String> eligibleTickers = new ArrayList<>();
+				
+				if (d.equals(LocalDate.of(2000, 1, 5))) {
+					System.err.println("");
+//					continue;
+				}
+
+				Map<String, Float> tickerValues = arrowDataFrame.getRow(d);
+
+				for (Map.Entry<String, Float> entry : tickerValues.entrySet()) {
+
+					String ticker = entry.getKey();
+					if(ticker.equals("GE")) {
+						System.err.println();
+					}
+					Float indicatorValue = entry.getValue();
+					if (indicatorValue == null) {
+						continue;
+					}
+					float threshold = 0;
+					if (rule.getValueIndicator().equalsIgnoreCase("close")) {
+						threshold = priceData.getValue(ticker, d, rule.getValueIndicator());
+					}
+
+					if (test.test(indicatorValue, threshold)) {
+						eligibleTickers.add(ticker);
+					}
+
+				}
+				
+
+
+
+				eligibleByDate.put(d, eligibleTickers);
+			}
+
+		} else {
+			for (LocalDate d : sortedDates) {
+				if (d.equals(LocalDate.of(2000, 1, 5))) {
+					System.err.println();
+//					continue;
+				}
+				final float thresh = rule.getValue();
+
+				Map<String, Float> tickerValues = arrowDataFrame.getRow(d);
+//				tickerValues.get("ACV-201105")
+
+				List<String> eligibleTickers = tickerValues.entrySet().stream().filter(e -> {
+					Float val = e.getValue();
+					return val != null && !val.isNaN() && !val.isInfinite() && test.test(val, thresh);
+				}).map(Map.Entry::getKey).collect(Collectors.toList());
+//				eligibleTickers.contains("ACV-201105");
+				eligibleByDate.put(d, eligibleTickers);
+			}
+		}
+
+		return eligibleByDate;
+	}
+
+//	private Map<LocalDate, List<String>> evaluateRule(
+//	        ArrowDataFrame arrowDataFrame,
+//	        RuleDto rule,
+//	        PriceDataV2 priceData
+//	) {
+//	    // Get the operator function (>, <, >=, <=, ==, etc.)
+//	    BiPredicate<Float, Float> test = OPERATOR_MAP.get(rule.getOperator());
+//	    if (test == null) {
+//	        throw new IllegalArgumentException("Unknown operator: " + rule.getOperator());
+//	    }
+//
+//	    Map<LocalDate, List<String>> eligibleByDate = new HashMap<>();
+//	    List<LocalDate> sortedDates = arrowDataFrame.getDates().stream().sorted().toList();
+//
+//	    boolean isIndicatorPrice = "indicator_price".equalsIgnoreCase(rule.getValueType());
+//	    String valueIndicator = rule.getValueIndicator(); // e.g., "close", "open"
+//
+//	    for (LocalDate date : sortedDates) {
+//	        Map<String, Float> tickerValues = arrowDataFrame.getRow(date);
+//	        List<String> eligibleTickers = new ArrayList<>();
+//
+//	        for (Map.Entry<String, Float> entry : tickerValues.entrySet()) {
+//	            String ticker = entry.getKey();
+//	            Float indicatorValue = entry.getValue();
+//
+//	            if (indicatorValue == null || indicatorValue.isNaN() || indicatorValue.isInfinite()) {
+//	                continue;
+//	            }
+//
+//	            Float comparisonValue;
+//
+//	            if (isIndicatorPrice) {
+//	                // Compare indicator value to price (e.g. close or open)
+//	                comparisonValue = priceData.getValue(ticker, date, valueIndicator);
+//	            } else {
+//	                // Compare to numeric threshold
+//	                comparisonValue = rule.getValue();
+//	            }
+//
+//	            if (comparisonValue == null || comparisonValue.isNaN() || comparisonValue.isInfinite()) {
+//	                continue;
+//	            }
+//
+//	            // Apply operator test
+//	            if (test.test(indicatorValue, comparisonValue)) {
+//	                eligibleTickers.add(ticker);
+//	            }
+//	        }
+//
+//	        eligibleByDate.put(date, eligibleTickers);
+//	    }
+//
+//	    return eligibleByDate;
+//	}
+
+//	public Map<LocalDate, List<String>> evaluateRule(Map<LocalDate, Map<String, Float>> map, RuleDto rule) {
+//
+//		// 1) Parse the threshold once
+//		float threshold = rule.getValue();
+//
+//		// 2) Prepare operator test function
+//		BiPredicate<Float, Float> test = OPERATOR_MAP.get(rule.getOperator());
+//		if (test == null) {
+//			throw new IllegalArgumentException("Unknown operator: " + rule.getOperator());
+//		}
+//
+//		// 3) Iterate over each date and evaluate the rule
+//		Map<LocalDate, List<String>> eligibleByDate = new HashMap<>();
+//
+//		for (Map.Entry<LocalDate, Map<String, Float>> entry : map.entrySet()) {
+//			LocalDate date = entry.getKey();
+//			Map<String, Float> tickerValues = entry.getValue();
+//
+//			List<String> eligibleTickers = tickerValues.entrySet().stream().filter(e -> {
+//				Float val = e.getValue();
+//				return val != null && !val.isNaN() && !val.isInfinite() && test.test(val, threshold);
+//			}).map(Map.Entry::getKey).collect(Collectors.toList());
+//
+//			eligibleByDate.put(date, eligibleTickers);
+//		}
+//
+//		return eligibleByDate;
+//	}
+
+	@Override
+	public Map<String, List<String>> signalsForTheDay(LocalDate date, PriceDataV2 priceData, BuySellDataV2 buySellData,
+			PortfolioServiceV2 portfolioService) {
+
+		long startTotal = System.nanoTime(); // ⏱️ start timer for the whole function
+
+		Map<String, List<String>> entryExitMap = new HashMap<>();
+		entryExitMap.put("entry", Collections.EMPTY_LIST);
+		entryExitMap.put("exit", Collections.EMPTY_LIST);
+
+		List<RuleDto> entryrules = buySellData.getStrategyData().getEntryRulesList();
+		Map<RuleDto, Map<LocalDate, List<String>>> buysRules = buySellData.getBuys();
+		Map<RuleDto, Map<LocalDate, List<String>>> sellRules = buySellData.getSells();
+
+		Set<String> todayUniverse = priceData.getDaily_universes().getRow(date);
+		Set<String> entrySet = new HashSet<>();
+		long startBuys = System.nanoTime();
+		int i = 0;
+		for (Map.Entry<RuleDto, Map<LocalDate, List<String>>> ruleEntry : buysRules.entrySet()) {
+			List<String> todays = ruleEntry.getValue().get(date);
+			if (i == 0) {
+				
+				entrySet.addAll(todays);
+			} else {
+				RuleDto prev = entryrules.get(i - 1);
+				String conn = prev.getConnector(); // "&&" or "||"
+				if ("&&".equals(conn)) {
+					entrySet.retainAll(todays);
+				} else { // "||" or fallback
+					entrySet.addAll(todays);
+				}
+			}
+			i++;
+		}
+		long endBuys = System.nanoTime();
+
+		long startSells = System.nanoTime();
+		Set<String> exitSet = new HashSet<>();
+		List<RuleDto> exitrules = buySellData.getStrategyData().getExitRuleList();
+		i = 0;
+		for (Map.Entry<RuleDto, Map<LocalDate, List<String>>> ruleEntry : sellRules.entrySet()) {
+			List<String> todays = ruleEntry.getValue().get(date);
+			if (todays == null || todays.isEmpty()) {
+				continue;
+			}
+			if (i == 0) {
+				
+				
+				for(String live : portfolioService.getLiveHoldingsLogger()) {
+					if(todays.contains(live)) {
+						exitSet.add(live);
+					}
+				}
+				
+				
+				
+			} else {
+				RuleDto prev = exitrules.get(i - 1);
+				String conn = prev.getConnector();
+				if ("&&".equals(conn)) {
+					exitSet.retainAll(todays);
+				} else {
+					
+					for(String live : portfolioService.getLiveHoldingsLogger()) {
+						if(todays.contains(live)) {
+							exitSet.add(live);
+						}
+					}
+
+				}
+			}
+			i++;
+		}
+		long endSells = System.nanoTime();
+
+		long startRank = System.nanoTime();
+
+		entrySet.retainAll(todayUniverse);
+		validEntriesTommorow(date, entrySet, priceData);
+		entrySet.removeAll(portfolioService.getLiveHoldingsLogger());
+
+		List<String> entries_list = new ArrayList<>(entrySet);
+		Map<String, Float> rank = buySellData.getStrategyData().getRanking().getRow(date);
+		if (rank != null && !rank.isEmpty()) {
+			if ("Ascending".equals(buySellData.getStrategyData().getRankingOrder())) {
+				
+				
+				entries_list.sort(Comparator.comparingDouble(e -> {
+					Float v = rank.get(e);
+					return v != null ? v : Float.MAX_VALUE;
+				}));
+			} else if ("Descending".equals(buySellData.getStrategyData().getRankingOrder())) {
+				entries_list.sort(Comparator.comparingDouble((String e) -> {
+					Float v = rank.get(e);
+//					Float v = rank.get("STI-201912");
+					return v != null ? v : Float.MIN_VALUE;
+				}).reversed());
+			}
+		}
+		long endRank = System.nanoTime();
+
+		entryExitMap.put("entry", entries_list);
+		entryExitMap.put("exit", new ArrayList<>(exitSet));
+
+		long endTotal = System.nanoTime();
+
+		// ⏱️ Timing report (you can later disable or log every 100 days)
+		double totalSec = (endTotal - startTotal) / 1_000_000_000.0;
+		double buysSec = (endBuys - startBuys) / 1_000_000_000.0;
+		double sellsSec = (endSells - startSells) / 1_000_000_000.0;
+		double rankSec = (endRank - startRank) / 1_000_000_000.0;
+
+		System.err.printf("   ⚙️ [%s] signalsForTheDay → total: %.4fs (buys: %.4fs | sells: %.4fs | rank: %.4fs)%n",
+				date, totalSec, buysSec, sellsSec, rankSec);
+
+		return entryExitMap;
+	}
+
+//	@Override
+//	public Map<String, List<String>> signalsForTheDay(LocalDate date, PriceDataV2 priceData, BuySellDataV2 buySellData,
+//			PortfolioServiceV2 portfolioService) {
+//
+//		Map<String, List<String>> entryExitMap = new HashMap<>();
+//		entryExitMap.put("entry", Collections.EMPTY_LIST);
+//		entryExitMap.put("exit", Collections.EMPTY_LIST);
+//
+//		List<RuleDto> rules = buySellData.getStrategyData().getEntryRulesList();
+//		Map<RuleDto, Map<LocalDate, List<String>>> buysRules = buySellData.getBuys();
+//		Map<RuleDto, Map<LocalDate, List<String>>> sellRules = buySellData.getSells();
+//
+//		Set<String> entrySet = new LinkedHashSet<>();
+//
+//		Set<String> todayUniverse = priceData.getDaily_universes().getRow(date);
+//		int i = 0;
+//		for (Map.Entry<RuleDto, Map<LocalDate, List<String>>> ruleEntry : buysRules.entrySet()) {
+//
+////			List<String> todays = ruleEntry.getValue().getOrDefault(date, Collections.emptyList());
+//			List<String> todays = ruleEntry.getValue().get(date);
+//
+//			if (i == 0) {
+//				// seed with the first rule’s hits
+//				entrySet.addAll(todays);
+//			} else {
+//				// look at the *previous* rule’s connector
+//				RuleDto prev = rules.get(i - 1);
+//				String conn = prev.getConnector(); // e.g. "&&" or "||"
+//
+//				if ("&&".equals(conn)) {
+//					// AND = intersection
+//					entrySet.retainAll(todays);
+//				} else if ("||".equals(conn)) {
+//					// OR = union
+//					entrySet.addAll(todays);
+//				} else {
+//					// fallback: treat as OR
+//					entrySet.addAll(todays);
+//				}
+//			}
+//			i++;
+//		}
+//
+//		Set<String> exitSet = new LinkedHashSet<>();
+//
+//		i = 0;
+//		for (Map.Entry<RuleDto, Map<LocalDate, List<String>>> ruleEntry : sellRules.entrySet()) {
+//
+////			List<String> todays = ruleEntry.getValue().getOrDefault(date, Collections.emptyList());
+//			List<String> todays = ruleEntry.getValue().get(date);
+//
+//			if (i == 0) {
+//				// seed with the first rule’s hits
+//				exitSet.addAll(todays);
+//			} else {
+//				// look at the *previous* rule’s connector
+//				RuleDto prev = rules.get(i - 1);
+//				String conn = prev.getConnector(); // e.g. "&&" or "||"
+//
+//				if ("&&".equals(conn)) {
+//					// AND = intersection
+//					exitSet.retainAll(todays);
+//				} else if ("||".equals(conn)) {
+//					// OR = union
+//					exitSet.addAll(todays);
+//				} else {
+//					// fallback: treat as OR
+//					exitSet.addAll(todays);
+//				}
+//			}
+//			i++;
+//		}
+//		entrySet.retainAll(todayUniverse);
+//
+//		// Validation fro next Day
+//		validEntriesTommorow(date, entrySet, priceData);
+//
+////		
+////		portfolioService.getLiveHoldingsLogger().
+//		entrySet.removeAll(portfolioService.getLiveHoldingsLogger());
+//		// Ranking for ENtry Set
+//		List<String> entries_list = new ArrayList<>(entrySet);
+//
+//		Map<String, Float> rank = buySellData.getStrategyData().getRanking().getRow(date);
+//		if (rank != null && !rank.isEmpty()) {
+//			if ("Ascending".equals(buySellData.getStrategyData().getRankingOrder())) {
+//				entries_list.sort(Comparator.comparingDouble(e -> {
+//					Float v = rank.get(e);
+//					return v != null ? v : Float.MAX_VALUE;
+//				}));
+//			} else if ("Descending".equals(buySellData.getStrategyData().getRankingOrder())) {
+//				entries_list.sort(Comparator.comparingDouble((String e) -> {
+//					Float v = rank.get(e);
+//					return v != null ? v : Double.MAX_VALUE;
+//				}).reversed());
+//			}
+//		}
+//
+//		entryExitMap.put("entry", entries_list);
+//		entryExitMap.put("exit", new ArrayList<>(exitSet));
+//
+//		return entryExitMap;
+//	}
+
+	private void validEntriesTommorow(LocalDate date, Set<String> entrySet, PriceDataV2 priceData) {
+
+		int idx = Collections.binarySearch(priceData.getTrading_dates(), date);
+		if (idx >= 0 && idx + 1 < priceData.getTrading_dates().size()) {
+			LocalDate nextDate = priceData.getTrading_dates().get(idx + 1);
+
+			// Retain only those in the next day's universe
+			Set<String> nextDayUniverse = priceData.getDaily_universes().getRow(nextDate);
+
+			entrySet.retainAll(nextDayUniverse);
+
+			// Get the row in daily_closes for nextDate
+			ArrowDataFrame dailyCloses = priceData.getDaily_closes();
+
+			Map<String, Float> nextDayCloses = dailyCloses.getRow(nextDate);
+			entrySet.removeIf(ticker -> {
+				return nextDayCloses.get(ticker) == null || nextDayCloses.get(ticker).isNaN()
+						|| nextDayCloses.get(ticker).isInfinite();
+			});
+
+		}
+	}
+
+}

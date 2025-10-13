@@ -7,7 +7,7 @@ import lombok.Data;
 public class TradeExitRequestDto {
 	private String tradeId;
 	private LocalDate tradeDate;
-	private Double exitPrice;
+	private Float exitPrice;
 	private String exitReason;
 	private String priceUsed;
 }

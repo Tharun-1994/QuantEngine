@@ -13,16 +13,20 @@ import tech.tablesaw.api.Table;
 @Builder
 @Data
 public class PriceData {
-	private final Map<LocalDate, Map<String, Double>> daily_closes;
-	private final Map<LocalDate, Map<String, Double>> daily_opens;
-	private final Map<LocalDate, Map<String, Double>> daily_highs;
-	private final Map<LocalDate, Map<String, Double>> daily_lows;
+	private final Map<LocalDate, Map<String, Float>> daily_closes;
+	private final Map<LocalDate, Map<String, Float>> daily_opens;
+	private final Map<LocalDate, Map<String, Float>> daily_highs;
+	private final Map<LocalDate, Map<String, Float>> daily_lows;
 	private final Map<LocalDate, Set<String>> daily_universes;
 	private final List<LocalDate> trading_dates;
 	private final List<LocalDate> all_dates;
 	
 	// this would have data only if it has Limit Order type is ATR based
-	private final Map<LocalDate, Map<String, Double>> daily_atr;
+	private final Map<LocalDate, Map<String, Float>> daily_atr;
+	
+	private Map<String,String> paths;
+	
+	
 	
 	
 }

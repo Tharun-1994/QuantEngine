@@ -4,21 +4,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.backtest.engine.dto.request.RuleDto;
+import com.backtest.engine.util.ArrowDataFrame;
+
 import lombok.Builder;
 import lombok.Data;
 
 @Builder
 @Data
-public class StrategyData {
+public class StrategyDataV2 {
 
-	private List<RuleCondition> entryRulesList;
-	private List<RuleCondition> exitRuleList;
-	private Map<String, Map<LocalDate, Map<String, Float>>> entryIndicators;
-	private Map<String, Map<LocalDate, Map<String, Float>>> exitIndicators;
-	private int stopLossPct;
-	private int takeProfitPct;
+	private List<RuleDto> entryRulesList;
+	private List<RuleDto> exitRuleList;
+	private Map<String, ArrowDataFrame> entryIndicators;
+	private Map<String, ArrowDataFrame> exitIndicators;
+	private float stopLossPct;
+	private float takeProfitPct;
 	private int maxSameTicker;
-	private int startingCapital;
+	private float startingCapital;
 	private int slots;
 	private LocalDate startDate;
 	private LocalDate endDate;
@@ -30,7 +33,7 @@ public class StrategyData {
 
 	private String exitTiming;
 
-	private Map<LocalDate, Map<String, Float>> ranking;
+	private ArrowDataFrame ranking;
 	private String rankingOrder;
 	private float minQuantity;
 	private float minPrice;

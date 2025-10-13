@@ -27,15 +27,15 @@ import com.backtest.engine.dto.response.BacktestReponseDto;
 import com.backtest.engine.entity.EquityLog;
 import com.backtest.engine.entity.LimitOrder;
 import com.backtest.engine.entity.LiveHoldingsTracker;
-import com.backtest.engine.entity.PriceData;
+import com.backtest.engine.entity.PriceDataV2;
 import com.backtest.engine.entity.TradeLog;
-import com.backtest.engine.service.PortfolioService;
+import com.backtest.engine.service.PortfolioServiceV2;
 
 @Service
 @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class PortfolioServiceImpl implements PortfolioService {
-
-	private PriceData priceData;
+public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
+	
+	private PriceDataV2 priceData;
 
 	private Map<String, TradeLog> tradeLogger;
 	private Map<LocalDate, EquityLog> equityLogger;
@@ -52,28 +52,17 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 	private LocalDate maxEquityDate;
 
-	private int stoplossPct;
-	private int takeProfitPct;
+	private float stoplossPct;
+	private float takeProfitPct;
+	
 
 	@Override
-	public Set<String> getLiveHoldingsLogger() {
-		return liveHoldingsLogger.keySet().stream().map(key -> key.split("_")[0]).collect(Collectors.toSet());
+	public BacktestReponseDto getPortfolio() {
+
+		return BacktestReponseDto.builder().equityLogger(this.equityLogger).tradeLogger(this.tradeLogger).build();
 	}
 
-	@Override
-	public void setPriceDate(PriceData priceData, float startingCapital, int maxSlots, int stoplossPct,
-			int takeProfitPct) {
-		this.priceData = priceData;
-		this.startingCapital = startingCapital;
-		this.unusedCapital = startingCapital;
-		this.maxSlots = maxSlots;
-		this.tradeLogger = new LinkedHashMap<>();
-		this.equityLogger = new LinkedHashMap<>();
-		this.liveHoldingsLogger = new HashMap<>();
-		this.maxEquity = Float.MIN_VALUE;
-		this.stoplossPct = stoplossPct;
-		this.takeProfitPct = takeProfitPct;
-	}
+
 
 	@Override
 	public void executeEntrySignals(EntrySignalsRequestDto entrySignalsRequest) {
@@ -91,7 +80,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 		}
 
 		for (String tick : entrySignalsRequest.getEntries()) {
-			double yesterdayClosePrice = this.priceData.getDaily_closes().get(previousDate).get(tick);
+			double yesterdayClosePrice = this.priceData.getDaily_closes().getValue(previousDate,tick);
 			try {
 				if (this.liveHoldingsLogger.size() >= this.maxSlots) {
 					break;
@@ -107,7 +96,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 					trade.setEntryTiming(entrySignalsRequest.getEntryTime());
 					trade.setPriceUsed(entrySignalsRequest.getEntryTime());
 
-					double openPrice = this.priceData.getDaily_opens().get(tradeDate).get(tick);
+					double openPrice = this.priceData.getDaily_opens().getValue(tradeDate,tick);
 
 					trade.setEntryprice((float) openPrice);
 				}
@@ -130,6 +119,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 	@Override
 	public void executeExitSignals(ExitSignalsRequestDto exitSignalsRequest) {
+
 
 		if (exitSignalsRequest.getExits().isEmpty() || exitSignalsRequest.getExits() == null) {
 			return;
@@ -156,9 +146,8 @@ public class PortfolioServiceImpl implements PortfolioService {
 				trade.setTradeId(id);
 				trade.setTradeDate(tradeDate);
 				if (exitSignalsRequest.getExitTime().equals("open")) {
-					System.err.println(tick);
-					System.err.println(tradeDate);
-					float openPrice = this.priceData.getDaily_opens().get(tradeDate).get(tick);
+
+					float openPrice = this.priceData.getDaily_opens().getValue(tradeDate,tick);
 					trade.setExitPrice(openPrice);
 					trade.setPriceUsed(exitSignalsRequest.getExitTime());
 				}
@@ -170,11 +159,13 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 		}
 
+	
+
 	}
-//	private static final Logger log = LoggerFactory.getLogger(PortfolioServiceImpl.class);
 
 	@Override
 	public void enterTrade(TradeEnterRequestDto tradeEnterRequest) {
+
 		TradeLog tradeLog;
 		if (tradeEnterRequest != null) {
 			tradeLog = TradeLog.builder().entryDate(tradeEnterRequest.getTradeDate())
@@ -194,6 +185,8 @@ public class PortfolioServiceImpl implements PortfolioService {
 			this.unusedCapital -= Math.round(tradeEnterRequest.getEntryprice() * tradeEnterRequest.getQuantity());
 
 		}
+
+	
 
 	}
 
@@ -236,7 +229,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 				TradeLog tradeRow = this.tradeLogger.get(tradeId);
 				String symbol = tradeRow.getSymbol();
 				int amount = tradeRow.getQuantity();
-				Float closePrice = this.priceData.getDaily_closes().get(tradeDate).get(symbol);
+				Float closePrice = this.priceData.getDaily_closes().getValue(tradeDate,symbol);
 
 				todayEquity += amount * closePrice;
 
@@ -262,7 +255,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 	@Override
 	public void endOfBacktest(LocalDate tradeDate) {
 
-		Map<String, Float> closePriceSeries = this.priceData.getDaily_closes().get(tradeDate);
+		Map<String, Float> closePriceSeries = this.priceData.getDaily_closes().getRow(tradeDate);
 		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
 
 		for (String tradeId : liveTradeIds) {
@@ -290,10 +283,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 	}
 
 	@Override
-	public BacktestReponseDto getPortfolio() {
-
-		return BacktestReponseDto.builder().equityLogger(this.equityLogger).tradeLogger(this.tradeLogger).build();
-	}
+	public Set<String> getLiveHoldingsLogger() {
+		return liveHoldingsLogger.keySet().stream().map(key -> key.split("_")[0]).collect(Collectors.toSet());
+		}
 
 	@Override
 	public void checkLivePositionsOnTommorow(LocalDate date) {
@@ -301,9 +293,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 		if (idx >= 0 && idx + 1 < priceData.getTrading_dates().size()) {
 			LocalDate nextDate = priceData.getTrading_dates().get(idx + 1);
-			Set<String> nextDayUniverse = priceData.getDaily_universes().get(nextDate);
+			Set<String> nextDayUniverse = priceData.getDaily_universes().getRow(nextDate);
 
-			Map<String, Float> tomorow_closes = priceData.getDaily_closes().get(nextDate);
+			Map<String, Float> tomorow_closes = priceData.getDaily_closes().getRow(nextDate);
 
 			List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
 
@@ -316,7 +308,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 					trade.setTradeId(tradeId);
 					trade.setTradeDate(date);
 
-					float closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+					float closePrice = this.priceData.getDaily_closes().getValue(date,symbol);
 					trade.setExitPrice(closePrice);
 					trade.setPriceUsed("close");
 
@@ -330,8 +322,6 @@ public class PortfolioServiceImpl implements PortfolioService {
 		}
 	}
 
-	// Stoploss and Takeprofit implementations
-
 	@Override
 	public void checkStoplossHit(LocalDate date, String systemType, String timing) {
 
@@ -342,7 +332,6 @@ public class PortfolioServiceImpl implements PortfolioService {
 		}
 
 	}
-
 	private void stoplossHitShort(LocalDate date, String timing) {
 		if(this.liveHoldingsLogger.isEmpty()) {
 			return;
@@ -356,7 +345,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 			float stopLossPrice = tickerEntryPrice * (1 + (this.stoplossPct / 100));
 
 			if (timing.equals("eod")) {
-				float closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+				float closePrice = this.priceData.getDaily_closes().getValue(date,symbol);
 
 				if (closePrice >= stopLossPrice) {
 					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
@@ -369,9 +358,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 				}
 
 			} else if (timing.equals("intraday")) {
-				float lowPrice = this.priceData.getDaily_lows().get(date).get(symbol);
-				float highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
-				float openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+				float lowPrice = this.priceData.getDaily_lows().getValue(date,symbol);
+				float highPrice = this.priceData.getDaily_highs().getValue(date,symbol);
+				float openPrice = this.priceData.getDaily_opens().getValue(date,symbol);
 
 				if (openPrice >= stopLossPrice) {
 
@@ -416,7 +405,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 			float stopLossPrice = tickerEntryPrice * (1 - (this.stoplossPct / 100));
 
 			if (timing.toLowerCase().equals("EOD".toLowerCase())) {
-				float closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+				float closePrice = this.priceData.getDaily_closes().getValue(date,symbol);
 
 				if (closePrice < stopLossPrice) {
 					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
@@ -429,9 +418,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 				}
 
 			} else if (timing.toLowerCase().equals("intraday".toLowerCase())) {
-				float lowPrice = this.priceData.getDaily_lows().get(date).get(symbol);
-				float highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
-				float openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+				float lowPrice = this.priceData.getDaily_lows().getValue(date,symbol);
+				float highPrice = this.priceData.getDaily_highs().getValue(date,symbol);
+				float openPrice = this.priceData.getDaily_opens().getValue(date,symbol);
 
 				if (openPrice <= stopLossPrice) {
 
@@ -461,8 +450,6 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 	}
 
-	// Stoploss and Takeprofit implementations
-
 	@Override
 	public void checkTakeProfit(LocalDate date, String systemType, String timing) {
 		if (systemType.equals(StaticConfig.systemType.get("LONG"))) {
@@ -471,7 +458,6 @@ public class PortfolioServiceImpl implements PortfolioService {
 			takeProfitHitShort(date, timing);
 		}
 	}
-
 	private void takeProfitHitShort(LocalDate date, String timing) {
 		if(this.liveHoldingsLogger.isEmpty()) {
 			return;
@@ -485,7 +471,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 			float takeProfitPrice = tickerEntryPrice * (1 - (this.stoplossPct / 100));
 
 			if (timing.toLowerCase().equals("eod".toLowerCase())) {
-				float closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+				float closePrice = this.priceData.getDaily_closes().getValue(date,symbol);
 
 				if (closePrice <= takeProfitPrice) {
 					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
@@ -498,9 +484,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 				}
 
 			} else if (timing.toLowerCase().equals("intraday".toLowerCase())) {
-				float lowPrice = this.priceData.getDaily_lows().get(date).get(symbol);
-				float highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
-				float openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+				float lowPrice = this.priceData.getDaily_lows().getValue(date,symbol);
+				float highPrice = this.priceData.getDaily_highs().getValue(date,symbol);
+				float openPrice = this.priceData.getDaily_opens().getValue(date,symbol);
 
 				if (openPrice <= takeProfitPrice) {
 
@@ -543,7 +529,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 			float takeProfitPrice = tickerEntryPrice * (1 + (this.takeProfitPct / 100));
 
 			if (timing.toLowerCase().equals("eod".toLowerCase())) {
-				float closePrice = this.priceData.getDaily_closes().get(date).get(symbol);
+				float closePrice = this.priceData.getDaily_closes().getValue(date,symbol);
 
 				if (closePrice >= takeProfitPrice) {
 					TradeExitRequestDto tradeExitRequest = new TradeExitRequestDto();
@@ -557,8 +543,8 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 			} else if (timing.toLowerCase().equals("intraday".toLowerCase())) {
 
-				float highPrice = this.priceData.getDaily_highs().get(date).get(symbol);
-				float openPrice = this.priceData.getDaily_opens().get(date).get(symbol);
+				float highPrice = this.priceData.getDaily_highs().getValue(date,symbol);
+				float openPrice = this.priceData.getDaily_opens().getValue(date,symbol);
 
 				if (openPrice >= takeProfitPrice) {
 
@@ -589,6 +575,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 	}
 
+
 	@Override
 	public void executeLimitOrdersLong(LimitEntrySignalDto limitEntrySignalsRequest) {
 		
@@ -608,15 +595,15 @@ public class PortfolioServiceImpl implements PortfolioService {
 
 		for (LimitOrder limitOrder : limitEntrySignalsRequest.getLimitOrders()) {
 			
-			float yesterdayClosePrice = this.priceData.getDaily_closes().get(previousDate).get(limitOrder.getTicker());
+			float yesterdayClosePrice = this.priceData.getDaily_closes().getValue(previousDate, limitOrder.getTicker());
 			try {
 				if (this.liveHoldingsLogger.size() >= this.maxSlots) {
 					break;
 				}
 				
 				
-				float openPrice = this.priceData.getDaily_opens().get(tradeDate).get(limitOrder.getTicker());
-				float lowPrice = this.priceData.getDaily_lows().get(tradeDate).get(limitOrder.getTicker());
+				float openPrice = this.priceData.getDaily_opens().getValue(tradeDate, limitOrder.getTicker());
+				float lowPrice = this.priceData.getDaily_lows().getValue(tradeDate, limitOrder.getTicker());
 				
 				openPrice = Math.round(openPrice * 100f) / 100f;
 				lowPrice = Math.round(lowPrice * 100f) / 100f;
@@ -683,6 +670,34 @@ public class PortfolioServiceImpl implements PortfolioService {
 		}
 
 	
+	}
+
+
+
+	@Override
+	public void setPriceDate(PriceDataV2 priceData, float startingCapital, int maxSlots, float stoplossPct,
+			float takeProfitPct) {
+		this.priceData = priceData;
+		this.startingCapital = startingCapital;
+		this.unusedCapital = startingCapital;
+		this.maxSlots = maxSlots;
+		this.tradeLogger = new LinkedHashMap<>();
+		this.equityLogger = new LinkedHashMap<>();
+		this.liveHoldingsLogger = new HashMap<>();
+		this.maxEquity = Float.MIN_VALUE;
+		this.stoplossPct = stoplossPct;
+		this.takeProfitPct = takeProfitPct;
+		
+	}
+	
+	
+	@Override
+	public void setBasicDeatils(PriceDataV2 priceData, float startingCapital, int maxSlots, float stoplossPct,
+			float takeProfitPct) {
+		this.startingCapital = startingCapital;
+		this.maxSlots = maxSlots;
+		this.stoplossPct = stoplossPct;
+		this.takeProfitPct = takeProfitPct;
 	}
 
 }

@@ -53,19 +53,18 @@ public class BacktestServiceImpl implements BacktestService {
 		for (LocalDate date : priceData.getAll_dates()) {
 			System.err.println("current_ date " + date.toString() + " previous date " + previousDate );
 			
-			if(date.equals(LocalDate.of(2000, 9, 12))) {
+			if(date.equals(LocalDate.of(2000, 1, 19))) {
 				System.err.println();
 			}
 			
 
-			if ((date.isAfter(priceData.getTrading_dates().get(0)) && date.isBefore(buySellData.getStrategyData().getEndDate()) )
+			if (((date.isEqual(priceData.getTrading_dates().get(0))||date.isAfter(priceData.getTrading_dates().get(0)))  && date.isBefore(buySellData.getStrategyData().getEndDate()) )
 					
 					|| date.isEqual(buySellData.getStrategyData().getEndDate())) {
 				
 				if (priceData.getTrading_dates().contains(date)) {
 					
-					
-					
+
 					// Exit Orders 					
 					if (buySellData.getStrategyData().getExitTiming().equals("open")) {
 
@@ -131,10 +130,10 @@ public class BacktestServiceImpl implements BacktestService {
 
 						if (!livePositions.contains(entry) && targetSec > 0 ) {
 
-							Double atrValue = priceData.getDaily_atr().get(date).get(entry);
-							Double closePrice = priceData.getDaily_closes().get(date).get(entry);
-							Double limit_price = closePrice - (buySellData.getStrategyData().getLimitPct() * atrValue);
-
+							float atrValue = priceData.getDaily_atr().get(date).get(entry);
+							float closePrice = priceData.getDaily_closes().get(date).get(entry);
+							float limit_price = closePrice - (buySellData.getStrategyData().getLimitPct() * atrValue);
+							limit_price = Math.round(limit_price * 100f) / 100f;
 							limitOrdersList.add(LimitOrder.builder().ticker(entry).limitPrice(limit_price).build());
 							
 							targetSec--;
