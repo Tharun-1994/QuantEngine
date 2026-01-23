@@ -3,8 +3,11 @@ package com.backtest.engine.entity;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.backtest.engine.dto.request.RuleDto;
+import com.backtest.engine.dto.request.RuleGroupNodeDto;
+import com.backtest.engine.ruleBuilder.LeafCacheResult;
 import com.backtest.engine.util.ArrowDataFrame;
 
 import lombok.Builder;
@@ -45,8 +48,27 @@ public class StrategyDataV2 {
 	private float limitPct;
 	private int atrLimitLookback;
 	
+	private int maxTime;
+	
 	private Map<String,String> paths;
 	
+	private List<Integer> bannedMonths;
 	
+    // ---------------- NEW: rule trees + caches ----------------
+    private RuleGroupNodeDto entryRulesTree;
+    private RuleGroupNodeDto exitRulesTree;
+    
+ // leafId -> rule
+    private Map<String, RuleDto> entryLeafRulesById;
+    private Map<String, RuleDto> exitLeafRulesById;
+
+
+    // leafId -> (date -> eligible tickers)
+    private Map<String, Map<LocalDate, Set<String>>> entryLeafCache;
+    private Map<String, Map<LocalDate, Set<String>>> exitLeafCache;
+    
+    private LeafCacheResult entryLeafCacheResult;
+    private LeafCacheResult exitLeafCacheResult;
+
 
 }

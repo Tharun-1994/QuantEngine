@@ -45,4 +45,8 @@ public class StrategyBucketRequestDto {
 
 	// Regimes
 	private List<MarketRegimeDto> regimes;
+	
+	
+	
+	
 }

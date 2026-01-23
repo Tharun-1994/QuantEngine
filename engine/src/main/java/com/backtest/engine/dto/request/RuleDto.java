@@ -1,5 +1,7 @@
 package com.backtest.engine.dto.request;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Builder;
@@ -19,7 +21,12 @@ public class RuleDto {
     private String valueIndicator;
 	@JsonProperty("value_type")
     private String valueType;
+	
+	@JsonProperty("value_lookback")
+    private Integer valueLookback;
     
     private String label;  // optional
+    
+    private Map<String, Object> params; // params?: Record<string, any>
 }
 

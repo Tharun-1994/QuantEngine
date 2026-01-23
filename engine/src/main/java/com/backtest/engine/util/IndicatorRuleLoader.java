@@ -2,24 +2,52 @@ package com.backtest.engine.util;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.backtest.engine.config.StaticConfig;
 import com.backtest.engine.dto.request.MarketRegimeDto;
 import com.backtest.engine.dto.request.RuleDto;
+import com.backtest.engine.ruleBuilder.RuleParser;
 
 public class IndicatorRuleLoader {
+
+	// 1. Declare it as a static constant
+	private static final Map<String, String> PRICE_MAP = Map.of("unadjusted_close", "DAILY_unadjusted_closes", "close",
+			"DAILY_closes");
+	
+	private static final Set<String> PATTERN_INDICATORS = buildPatternIndicators();
+
+	private static Set<String> buildPatternIndicators() {
+	    Set<String> m = new HashSet<>();
+
+	    // --- Pattern / price-action style ---
+	    m.add("n_week_high_recent");
+
+	    return Collections.unmodifiableSet(m);
+	}
+	
+	
+
 	public static Map<String, ArrowDataFrame> loadTables(List<RuleDto> conditions, String dataDir) {
 		Map<String, ArrowDataFrame> tableMap = new HashMap<>();
 
 		for (RuleDto rc : conditions) {
 			String fileName;
-			if (rc.getIndicator().equals("unadjusted_close")) {
-				fileName = RuleParser.buildParquetFileName("DAILY_unadjusted_closes");
+			String valueIndicatorFileName;
+			
+			if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
+			    int nWeeks = (Integer) rc.getParams().get("n_week_days");
+			    int within = (Integer) rc.getParams().get("within_days");
+			    fileName = String.format("%s_%s_%s.parquet", rc.getIndicator(), nWeeks, within);
+			}
+			else if (PRICE_MAP.containsKey(rc.getIndicator())) {
+				fileName = RuleParser.buildParquetFileName(PRICE_MAP.get(rc.getIndicator()));
 			} else {
 				fileName = RuleParser.buildParquetFileName(rc.getIndicator(), rc.getLookback());
 			}
@@ -28,7 +56,35 @@ public class IndicatorRuleLoader {
 			try {
 				if (!tableMap.containsKey(rc.getIndicator() + "_" + rc.getLookback())) {
 					ArrowDataFrame indicatorMap = ArrowDataFrame.load(parquetPath.toUri().toString());
-					tableMap.put(rc.getIndicator() + "_" + rc.getLookback(), indicatorMap);
+					if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
+					    int nWeeks = (Integer) rc.getParams().get("n_week_days");
+					    int within = (Integer) rc.getParams().get("within_days");
+					    String indicatorSave = String.format("%s_%s_%s", rc.getIndicator(), nWeeks, within);
+						tableMap.put(indicatorSave, indicatorMap);
+					}else {
+						tableMap.put(rc.getIndicator() + "_" + rc.getLookback(), indicatorMap);
+					}
+					
+				}
+
+//				Value Type indicator price
+				if (rc.getValueType().equals("indicator_price")) {
+
+					if (PRICE_MAP.containsKey(rc.getValueIndicator())) {
+						valueIndicatorFileName = RuleParser.buildParquetFileName(PRICE_MAP.get(rc.getIndicator()));
+					} else {
+						valueIndicatorFileName = RuleParser.buildParquetFileName(rc.getValueIndicator(),
+								rc.getValueLookback());
+
+					}
+
+					Path valueIndicatorParquetPath = Paths.get(dataDir, valueIndicatorFileName);
+
+					if (!tableMap.containsKey(rc.getValueIndicator() + "_" + rc.getValueLookback())) {
+						ArrowDataFrame indicatorMap = ArrowDataFrame.load(valueIndicatorParquetPath.toUri().toString());
+						tableMap.put(rc.getValueIndicator() + "_" + rc.getValueLookback(), indicatorMap);
+					}
+
 				}
 
 			} catch (Exception e) {
@@ -37,6 +93,7 @@ public class IndicatorRuleLoader {
 				System.err.println("Failed to load parquet file: " + parquetPath + " - " + e.getMessage());
 				e.printStackTrace();
 			}
+
 		}
 
 		return tableMap;
@@ -89,58 +146,50 @@ public class IndicatorRuleLoader {
 		return tableMap;
 	}
 
-	public static Map<String, ArrowDataFrame> loadTablesMarketTrend(
-	        List<MarketRegimeDto> regimes,
-	        String dataDir,
-	        Map<String, Set<Integer>> indicatorLookbackMap) {
+	public static Map<String, ArrowDataFrame> loadTablesMarketTrend(List<MarketRegimeDto> regimes, String dataDir,
+			Map<String, Set<Integer>> indicatorLookbackMap) {
 
-	    Map<String, ArrowDataFrame> tableMap = new HashMap<>();
+		Map<String, ArrowDataFrame> tableMap = new HashMap<>();
 
-	    for (MarketRegimeDto regime : regimes) {
-	        for (RuleDto rule : regime.getMarketTrendRules()) {
+		for (MarketRegimeDto regime : regimes) {
+			for (RuleDto rule : regime.getMarketTrendRules()) {
 
-	            // Key for lookup in indicatorLookbackMap
-	            String lookupKey = String.format("%s_%s", 
-	                    regime.getRegimeTicker().toLowerCase(),
-	                    rule.getIndicator());
+				// Key for lookup in indicatorLookbackMap
+				String lookupKey = String.format("%s_%s", regime.getRegimeTicker().toLowerCase(), rule.getIndicator());
 
-	            // Skip if not found in the indicatorLookbackMap
-	            if (!indicatorLookbackMap.containsKey(lookupKey)) {
-	                continue;
-	            }
+				// Skip if not found in the indicatorLookbackMap
+				if (!indicatorLookbackMap.containsKey(lookupKey)) {
+					continue;
+				}
 
-	            // Unique key for storing in tableMap
-	            String tableKey = String.format("%s_%s_%d",
-	                    regime.getRegimeTicker().toLowerCase(),
-	                    rule.getIndicator(),
-	                    rule.getLookback());
+				// Unique key for storing in tableMap
+				String tableKey = String.format("%s_%s_%d", regime.getRegimeTicker().toLowerCase(), rule.getIndicator(),
+						rule.getLookback());
 
-	            // Build file path
-	            String fileName = RuleParser.buildParquetFileNameMarketTrend(
-	                    regime.getRegimeTicker().toLowerCase(),
-	                    rule.getIndicator(),
-	                    rule.getLookback());
-	            Path parquetPath = Paths.get(dataDir, fileName);
+				// Build file path
+				String fileName = RuleParser.buildParquetFileNameMarketTrend(regime.getRegimeTicker().toLowerCase(),
+						rule.getIndicator(), rule.getLookback());
+				Path parquetPath = Paths.get(dataDir, fileName);
 
-	            // Load ArrowDataFrame only if not already loaded
-	            tableMap.computeIfAbsent(tableKey, k -> {
-	                try {
-	                    return ArrowDataFrame.load(parquetPath.toUri().toString());
-	                } catch (Exception e) {
-	                    e.printStackTrace();
-	                    return null;
-	                }
-	            });
+				// Load ArrowDataFrame only if not already loaded
+				tableMap.computeIfAbsent(tableKey, k -> {
+					try {
+						return ArrowDataFrame.load(parquetPath.toUri().toString());
+					} catch (Exception e) {
+						e.printStackTrace();
+						return null;
+					}
+				});
 
-	            // Remove entry from indicatorLookbackMap (if intentional)
-	            indicatorLookbackMap.remove(lookupKey);
-	        }
-	    }
+				// Remove entry from indicatorLookbackMap (if intentional)
+				indicatorLookbackMap.remove(lookupKey);
+			}
+		}
 
-	    // Clean up null entries if load failed
-	    tableMap.values().removeIf(Objects::isNull);
+		// Clean up null entries if load failed
+		tableMap.values().removeIf(Objects::isNull);
 
-	    return tableMap;
+		return tableMap;
 	}
 
 	public static Map<String, ArrowDataFrame> loadTables(List<RuleDto> conditions, String dataDir,
@@ -172,8 +221,7 @@ public class IndicatorRuleLoader {
 		}
 
 		return tableMap;
-	
-	}
 
+	}
 
 }

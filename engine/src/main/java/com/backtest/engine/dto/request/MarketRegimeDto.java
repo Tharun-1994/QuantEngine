@@ -2,12 +2,14 @@ package com.backtest.engine.dto.request;
 
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
@@ -93,5 +95,24 @@ public class MarketRegimeDto {
 
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
+    
+    @JsonProperty("max_time")
+    private int maxTime;    
+    
+    @JsonProperty("banned_months")
+    private List<Integer> bannedMonths;
+    
+ // --- New Rule Tree Integration (Dict[str, Any] equivalent) ---
+    @JsonProperty("market_trend_rules_tree")
+    private Map<String, Object> marketTrendRulesTree;
+
+    @JsonProperty("volatility_rules_tree")
+    private Map<String, Object> volatilityRulesTree;
+
+    @JsonProperty("entry_rules_tree")
+    private Map<String, Object> entryRulesTree;
+
+    @JsonProperty("exit_rules_tree")
+    private Map<String, Object> exitRulesTree;
 }
 

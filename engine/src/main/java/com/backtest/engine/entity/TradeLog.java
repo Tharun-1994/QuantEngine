@@ -28,6 +28,8 @@ public class TradeLog {
 	private float profitPercentage;
 	private String entryTiming;
 	private String exitTiming;
+	
+	private int dayCount;
 
 	private int capital;
 

@@ -24,13 +24,19 @@ import com.backtest.engine.service.StrategyBuilderServiceV2;
 @Service
 public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
+    private final PortfolioServiceImpl portfolioServiceImpl;
+
+    private final PortfolioServiceImplV2 portfolioServiceImplV2;
+
 	@Autowired
 	PortfolioServiceV2 portfolioService;
 
 	StrategyBuilderServiceV2 strategyBuilderService;
 
-	BacktestServiceImplV2(StrategyBuilderServiceImplV2 strategyBuilderServiceImpl) {
+	BacktestServiceImplV2(StrategyBuilderServiceImplV2 strategyBuilderServiceImpl, PortfolioServiceImplV2 portfolioServiceImplV2, PortfolioServiceImpl portfolioServiceImpl) {
 		this.strategyBuilderService = strategyBuilderServiceImpl;
+		this.portfolioServiceImplV2 = portfolioServiceImplV2;
+		this.portfolioServiceImpl = portfolioServiceImpl;
 	}
 
 	private void processLimitOrdersLong(LocalDate date, LocalDate previousDate,
@@ -172,7 +178,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 				this.portfolioService.checkLivePositionsOnTommorow(date);
 
-				entryExitMap = strategyBuilderService.signalsForTheDay(date, priceData, buySellData,
+				entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
 						this.portfolioService);
 
 				if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit_atr"))) {
@@ -386,6 +392,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		
 		BuySellDataV2 buySellData = null; 
 		
+		String marketTrendOfDay = "";
+		String previousDayMarketTrend = "";
+		
 		for (LocalDate date : priceData.getAll_dates()) {
 //			System.err.println(date);
 			
@@ -393,7 +402,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				System.err.println();
 				continue;
 			}
-			if (date.equals(LocalDate.of(2000, 1, 6))) {
+			if (date.equals(LocalDate.of(2000, 2, 18))) {
 				System.err.println();
 			}
 			if (((date.isEqual(priceData.getTrading_dates().get(0))
@@ -417,6 +426,19 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						}
 					}
 					
+					// Max Time is Enabled
+					if(buySellData.getStrategyData().getMaxTime() > 0 ) {
+						this.portfolioService.checkMaxTime(date,buySellData.getStrategyData().getMaxTime(),priceData);
+					}
+					
+					// REGIME SHIFT
+					if(!previousDayMarketTrend.equalsIgnoreCase(marketTrendOfDay)) {
+						
+						String reason = String.format("%s %s %s %s", "Market Shift", previousDayMarketTrend,"to", marketTrendOfDay);
+						this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, reason);
+						
+					}
+					
 					
 					// Entry Orders
 					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
@@ -433,7 +455,11 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 							if (buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("long"))) {
-								processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+								
+								if(!buySellData.getStrategyData().getBannedMonths().contains(date.getMonthValue())) {
+									processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+								}
+								
 							}
 
 						}
@@ -461,7 +487,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				
 				this.portfolioService.checkLivePositionsOnTommorow(date);
 				
-				String marketTrendOfDay = marketTrends.get(date);
+				previousDayMarketTrend = marketTrendOfDay;
+				marketTrendOfDay = marketTrends.get(date);
 				buySellData = rulesOfDayRegimes.get(marketTrendOfDay);
 				
 				this.portfolioService.setBasicDeatils(priceData, buySellData.getStrategyData().getStartingCapital(),
@@ -475,6 +502,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 //				double elapsedSeconds = (end - start) / 1_000_000_000.0;
 //				System.err.printf("⏱️ Signals For the Day: %.3f seconds%n", elapsedSeconds);
 				
+				this.portfolioService.updateTradeDayCount(date);
 				
 				if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit_atr"))) {
 
@@ -541,8 +569,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 			previousDate = date;
 			
 			if(buySellData == null) {
-				
-				String marketTrendOfDay = marketTrends.get(date);
+				previousDayMarketTrend = marketTrendOfDay;
+				 marketTrendOfDay = marketTrends.get(date);
 				if(marketTrendOfDay != null) {
 					buySellData = rulesOfDayRegimes.get(marketTrendOfDay);
 					this.portfolioService.setPriceDate(priceData, buySellData.getStrategyData().getStartingCapital(),

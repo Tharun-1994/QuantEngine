@@ -162,6 +162,7 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 	
 
 	}
+	
 
 	@Override
 	public void enterTrade(TradeEnterRequestDto tradeEnterRequest) {
@@ -230,7 +231,9 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 				String symbol = tradeRow.getSymbol();
 				int amount = tradeRow.getQuantity();
 				Float closePrice = this.priceData.getDaily_closes().getValue(tradeDate,symbol);
-
+				
+//				tradeRow.setDayCount(tradeRow.getDayCount()+1);
+				
 				todayEquity += amount * closePrice;
 
 				eachTradeList.add(LiveHoldingsTracker.builder().symbol(symbol)
@@ -250,6 +253,16 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 			this.equityLogger.put(tradeDate, eqLog);
 		}
 
+	}
+	
+	@Override
+	public void updateTradeDayCount(LocalDate tradeDate) {
+		if (!this.liveHoldingsLogger.isEmpty()) {
+			for (String tradeId : this.liveHoldingsLogger.keySet()) {
+				TradeLog tradeRow = this.tradeLogger.get(tradeId);
+				tradeRow.setDayCount(tradeRow.getDayCount()+1);
+			}
+		}
 	}
 
 	@Override
@@ -698,6 +711,81 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 		this.maxSlots = maxSlots;
 		this.stoplossPct = stoplossPct;
 		this.takeProfitPct = takeProfitPct;
+	}
+
+
+
+	@Override
+	public void closeAllPositionsOnOpenPrice(LocalDate tradeDate, PriceDataV2 priceData, String reasonOfExit) {
+
+		List<LocalDate> allDates = priceData.getAll_dates();
+
+		// find the index of the tradeDate
+
+		// if it's the last bar, skip
+		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+			return;
+		}
+
+		List<String> liveHoldingsKeyList = this.liveHoldingsLogger.keySet().stream().collect(Collectors.toList());
+
+		for (String id : liveHoldingsKeyList) {
+
+			String tick = id.split("_")[0];
+			TradeExitRequestDto trade = new TradeExitRequestDto();
+			trade.setTradeId(id);
+			trade.setTradeDate(tradeDate);
+
+			float openPrice = this.priceData.getDaily_opens().getValue(tradeDate, tick);
+			trade.setExitPrice(openPrice);
+			trade.setPriceUsed("open");
+
+			trade.setExitReason(reasonOfExit);
+
+			this.exitTrade(trade);
+
+		}
+
+	}
+
+
+
+	@Override
+	public void checkMaxTime(LocalDate tradeDate, int maxTime, PriceDataV2 priceData) {
+		List<LocalDate> allDates = priceData.getAll_dates();
+		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+			return;
+		}
+		
+		if (!this.liveHoldingsLogger.isEmpty()) {
+			List<String> liveHoldingsKeyList = this.liveHoldingsLogger.keySet().stream().collect(Collectors.toList());
+
+			for (String tradeId : liveHoldingsKeyList) {
+				
+				TradeLog tradeRow = this.tradeLogger.get(tradeId);
+				
+				if(tradeRow.getDayCount() >= maxTime) {
+					String tick = tradeId.split("_")[0];
+					TradeExitRequestDto trade = new TradeExitRequestDto();
+					trade.setTradeId(tradeId);
+					trade.setTradeDate(tradeDate);
+
+					float openPrice = this.priceData.getDaily_opens().getValue(tradeDate, tick);
+					trade.setExitPrice(openPrice);
+					trade.setPriceUsed("open");
+					
+					String reasonForExit = String.format("MaxTime %s", maxTime);
+					trade.setExitReason(reasonForExit);
+
+					this.exitTrade(trade);
+				}
+				
+			}
+		}
+		
+		
+		
+		
 	}
 
 }

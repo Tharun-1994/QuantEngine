@@ -2,12 +2,10 @@ package com.backtest.engine.service.impl;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,10 +14,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.backtest.engine.config.StaticConfig;
 import com.backtest.engine.dto.request.RuleDto;
+import com.backtest.engine.dto.request.RuleGroupNodeDto;
 import com.backtest.engine.entity.BuySellDataV2;
 import com.backtest.engine.entity.PriceDataV2;
 import com.backtest.engine.entity.StrategyDataV2;
+import com.backtest.engine.ruleBuilder.LeafCacheResult;
+import com.backtest.engine.ruleBuilder.RuleTreeCache;
+import com.backtest.engine.ruleBuilder.RuleTreeEvaluator;
 import com.backtest.engine.service.PortfolioServiceV2;
 import com.backtest.engine.service.StrategyBuilderServiceV2;
 import com.backtest.engine.util.ArrowDataFrame;
@@ -38,6 +41,67 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 		return BuySellDataV2.builder().sells(sells).buys(buys).strategyData(strategyData).build();
 	}
+	
+	
+	public static Map<RuleDto, Map<LocalDate, List<String>>> toOldRuleMap(
+	        Map<String, RuleDto> rulesById,
+	        Map<String, Map<LocalDate, Set<String>>> leafCache
+	) {
+	    Map<RuleDto, Map<LocalDate, List<String>>> out = new HashMap<>();
+
+	    for (Map.Entry<String, Map<LocalDate, Set<String>>> e : leafCache.entrySet()) {
+	        String leafId = e.getKey();
+	        RuleDto rule = rulesById.get(leafId);
+	        if (rule == null) continue;
+
+	        Map<LocalDate, List<String>> byDate = new HashMap<>();
+	        for (Map.Entry<LocalDate, Set<String>> row : e.getValue().entrySet()) {
+	            byDate.put(row.getKey(), new ArrayList<>(row.getValue()));
+	        }
+	        out.put(rule, byDate);
+	    }
+	    return out;
+	}
+
+	
+	@Override
+	public BuySellDataV2 generateSignalsV1(StrategyDataV2 strategyData, PriceDataV2 priceData) {
+
+	    if (strategyData.getEntryRulesTree() != null && strategyData.getEntryLeafCache() == null) {
+	        LeafCacheResult entryRes = RuleTreeCache.buildLeafCache(
+	                strategyData.getEntryRulesTree(),
+	                strategyData.getEntryIndicators(),
+	                priceData,
+	                this
+	        );
+	        strategyData.setEntryLeafRulesById(entryRes.getRulesByLeafId());
+	        strategyData.setEntryLeafCache(entryRes.getEligibleByLeafId());
+	    }
+
+	    if (strategyData.getExitRulesTree() != null && strategyData.getExitLeafCache() == null) {
+	        LeafCacheResult exitRes = RuleTreeCache.buildLeafCache(
+	                strategyData.getExitRulesTree(),
+	                strategyData.getExitIndicators(),
+	                priceData,
+	                this
+	        );
+	        strategyData.setExitLeafRulesById(exitRes.getRulesByLeafId());
+	        strategyData.setExitLeafCache(exitRes.getEligibleByLeafId());
+	    }
+
+	    // OPTIONAL: keep old buys/sells if you still need them for debugging
+	    Map<RuleDto, Map<LocalDate, List<String>>> buys =null;
+	    Map<RuleDto, Map<LocalDate, List<String>>> sells = null;
+	    buys  = toOldRuleMap(strategyData.getEntryLeafRulesById(), strategyData.getEntryLeafCache());
+	    sells = toOldRuleMap(strategyData.getExitLeafRulesById(),  strategyData.getExitLeafCache());
+
+	    return BuySellDataV2.builder()
+	            .sells(sells)
+	            .buys(buys)
+	            .strategyData(strategyData)
+	            .build();
+	}
+
 
 	private Map<RuleDto, Map<LocalDate, List<String>>> generateSellSignals(StrategyDataV2 strategyData,
 			PriceDataV2 priceData) {
@@ -52,7 +116,8 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		Map<RuleDto, Map<LocalDate, List<String>>> exitRuleMap = new HashMap<>();
 		for (RuleDto rule : strategyData.getExitRuleList()) {
 			Map<LocalDate, List<String>> list = evaluateRule(strategyData.getExitIndicators().get(rule.getIndicator() + "_" + rule.getLookback()),
-					rule, priceData);
+					rule, priceData,strategyData.getExitIndicators().containsKey(rule.getValueIndicator() + "_" + rule.getValueLookback()) ?
+						strategyData.getExitIndicators().get(rule.getValueIndicator() + "_" + rule.getValueLookback()) : null);
 			
 //			System.err.println(list.get(LocalDate.of(2000, 1, 5)).size());
 			exitRuleMap.put(rule,list);
@@ -82,10 +147,13 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		for (RuleDto rule : strategyData.getEntryRulesList()) {
 
 			if (rule.getIndicator() != null && rule.getLookback() > -1) {
+				
+				
 				entryRuleMap.put(rule,
 						evaluateRule(
 								strategyData.getEntryIndicators().get(rule.getIndicator() + "_" + rule.getLookback()),
-								rule, priceData));
+								rule, priceData,strategyData.getEntryIndicators().containsKey(rule.getValueIndicator() + "_" + rule.getValueLookback()) ?
+										strategyData.getEntryIndicators().get(rule.getValueIndicator() + "_" + rule.getValueLookback()) : null));
 
 			}
 
@@ -132,13 +200,20 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 //		return eligibleByDate;
 //	}
 
-	private Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule,
-			PriceDataV2 priceData) {
+	public Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule,
+			PriceDataV2 priceData,ArrowDataFrame indicatorPriceDataFrame) {
 
 		// 1) Parse the threshold once
-
+		BiPredicate<Float, Float> test;
 		// 2) Prepare operator test function
-		BiPredicate<Float, Float> test = OPERATOR_MAP.get(rule.getOperator());
+		if(rule.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
+			
+			test =rule.getOperator().equalsIgnoreCase("IS_TRUE") ? OPERATOR_MAP.get("==") : OPERATOR_MAP.get(rule.getOperator());
+		}else {
+			test = OPERATOR_MAP.get(rule.getOperator());
+		}
+		
+		
 		if (test == null) {
 			throw new IllegalArgumentException("Unknown operator: " + rule.getOperator());
 		}
@@ -175,6 +250,23 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 					float threshold = 0;
 					if (rule.getValueIndicator().equalsIgnoreCase("close")) {
 						threshold = priceData.getValue(ticker, d, rule.getValueIndicator());
+					}else {
+						
+						
+						if (indicatorPriceDataFrame.getValue(d, ticker) == null) {
+							
+							
+							if(rule.getOperator().equals(">")) {
+								threshold = Integer.MAX_VALUE;
+							}else if(rule.getOperator().equals("<")) {
+								threshold = Integer.MIN_VALUE;
+							}
+							
+						}else {
+							threshold =  indicatorPriceDataFrame.getValue(d, ticker);
+						}
+						
+//						
 					}
 
 					if (test.test(indicatorValue, threshold)) {
@@ -517,7 +609,110 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 //
 //		return entryExitMap;
 //	}
+	
+	
+	
+	
+	
+	@Override
+	public Map<String, List<String>> signalsForTheDayV1(LocalDate date, PriceDataV2 priceData,
+			BuySellDataV2 buySellData, PortfolioServiceV2 portfolioService) {
+		long startTotal = System.nanoTime();
 
+		Map<String, List<String>> entryExitMap = new HashMap<>();
+		entryExitMap.put("entry", Collections.emptyList());
+		entryExitMap.put("exit", Collections.emptyList());
+
+		StrategyDataV2 sd = buySellData.getStrategyData();
+
+		// ---------- Tree evaluation timing ----------
+		long startTree = System.nanoTime();
+
+		RuleGroupNodeDto entryTree = sd.getEntryRulesTree();
+		RuleGroupNodeDto exitTree = sd.getExitRulesTree();
+
+		// LeafCacheResult contains BOTH:
+		// 1) leafId -> RuleDto (rulesByLeafId)
+		// 2) leafId -> date -> eligibleTickers (eligibleByLeafId)
+		LeafCacheResult entryRes = sd.getEntryLeafCacheResult();
+		LeafCacheResult exitRes = sd.getExitLeafCacheResult();
+
+		// Fallback only if not prebuilt (avoid in hot-path, but safe)
+		if (entryRes == null && entryTree != null) {
+			entryRes = RuleTreeCache.buildLeafCache(entryTree, sd.getEntryIndicators(), priceData, this);
+			sd.setEntryLeafCacheResult(entryRes);
+		}
+
+		if (exitRes == null && exitTree != null) {
+			exitRes = RuleTreeCache.buildLeafCache(exitTree, sd.getExitIndicators(), priceData, this);
+			sd.setExitLeafCacheResult(exitRes);
+		}
+
+		// Evaluate tree for the date using eligibleByLeafId
+		Set<String> entrySet = (entryTree == null || entryRes == null) ? new HashSet<>()
+				: new HashSet<>(RuleTreeEvaluator.evalForDate(entryTree, date, entryRes.getEligibleByLeafId()));
+
+		Set<String> exitSet = (exitTree == null || exitRes == null) ? new HashSet<>()
+				: new HashSet<>(RuleTreeEvaluator.evalForDate(exitTree, date, exitRes.getEligibleByLeafId()));
+
+		long endTree = System.nanoTime();
+
+		// ---------- Exit filtering timing ----------
+		long startSells = System.nanoTime();
+
+		Set<String> liveHoldings = new HashSet<>(portfolioService.getLiveHoldingsLogger());
+		exitSet.retainAll(liveHoldings);
+
+		long endSells = System.nanoTime();
+
+		// ---------- Universe + next-day validity + ranking ----------
+		long startRank = System.nanoTime();
+
+		Set<String> todayUniverse = priceData.getDaily_universes().getRow(date);
+
+		entrySet.retainAll(todayUniverse);
+		validEntriesTommorow(date, entrySet, priceData);
+		entrySet.removeAll(liveHoldings);
+
+		List<String> entries_list = new ArrayList<>(entrySet);
+
+		Map<String, Float> rank = sd.getRanking().getRow(date);
+		if (rank != null && !rank.isEmpty()) {
+			if ("Ascending".equals(sd.getRankingOrder())) {
+				entries_list.sort(Comparator.comparingDouble(e -> {
+					Float v = rank.get(e);
+					return v != null ? v : Float.MAX_VALUE;
+				}));
+			} else if ("Descending".equals(sd.getRankingOrder())) {
+				entries_list.sort(Comparator.comparingDouble((String e) -> {
+					Float v = rank.get(e);
+					return v != null ? v : Float.MIN_VALUE;
+				}).reversed());
+			}
+		}
+
+		long endRank = System.nanoTime();
+
+		entryExitMap.put("entry", entries_list);
+		entryExitMap.put("exit", new ArrayList<>(exitSet));
+
+		long endTotal = System.nanoTime();
+
+		// ---------- Timing report ----------
+		double totalSec = (endTotal - startTotal) / 1_000_000_000.0;
+		double treeSec = (endTree - startTree) / 1_000_000_000.0;
+		double sellsSec = (endSells - startSells) / 1_000_000_000.0;
+		double rankSec = (endRank - startRank) / 1_000_000_000.0;
+
+		System.err.printf(
+				"   ⚙️ [%s] signalsForTheDayV1(Tree) → total: %.4fs (tree: %.4fs | exits: %.4fs | rank: %.4fs)%n", date,
+				totalSec, treeSec, sellsSec, rankSec);
+
+		return entryExitMap;
+	}
+
+
+	
 	private void validEntriesTommorow(LocalDate date, Set<String> entrySet, PriceDataV2 priceData) {
 
 		int idx = Collections.binarySearch(priceData.getTrading_dates(), date);

@@ -43,6 +43,12 @@ public interface PortfolioServiceV2 {
 	public void setBasicDeatils(PriceDataV2 priceData, float startingCapital, int maxSlots, float stoplossPct,
 			float takeProfitPct);
 	
+	public void closeAllPositionsOnOpenPrice(LocalDate tradeDate,PriceDataV2 priceData,String reasonOfExit);
+	
+	public void updateTradeDayCount(LocalDate tradeDate);
+
+	public void checkMaxTime(LocalDate date, int maxTime, PriceDataV2 priceData);
+	
 	
 
 
