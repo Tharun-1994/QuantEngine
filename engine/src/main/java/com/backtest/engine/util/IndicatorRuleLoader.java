@@ -42,6 +42,7 @@ public class IndicatorRuleLoader {
 			String valueIndicatorFileName;
 			
 			if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
+				
 			    int nWeeks = (Integer) rc.getParams().get("n_week_days");
 			    int within = (Integer) rc.getParams().get("within_days");
 			    fileName = String.format("%s_%s_%s.parquet", rc.getIndicator(), nWeeks, within);
