@@ -67,9 +67,6 @@ public class IndicatorRuleLoader {
 					}
 					
 				}
-				
-				
-				
 
 //				Value Type indicator price
 				if (rc.getValueType().equals("indicator_price")) {
