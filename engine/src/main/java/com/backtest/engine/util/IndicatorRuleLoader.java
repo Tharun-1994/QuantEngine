@@ -67,6 +67,9 @@ public class IndicatorRuleLoader {
 					}
 					
 				}
+				
+				
+				
 
 //				Value Type indicator price
 				if (rc.getValueType().equals("indicator_price")) {
@@ -74,8 +77,7 @@ public class IndicatorRuleLoader {
 					if (PRICE_MAP.containsKey(rc.getValueIndicator())) {
 						valueIndicatorFileName = RuleParser.buildParquetFileName(PRICE_MAP.get(rc.getIndicator()));
 					} else {
-						valueIndicatorFileName = RuleParser.buildParquetFileName(rc.getValueIndicator(),
-								rc.getValueLookback());
+						valueIndicatorFileName = RuleParser.buildParquetFileName(rc.getValueIndicator(),rc.getValueLookback());
 
 					}
 
