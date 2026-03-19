@@ -112,6 +112,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 		for (LocalDate date : priceData.getAll_dates()) {
 
+
 			if (date.equals(LocalDate.of(2000, 1, 3))) {
 				System.err.println();
 			}
@@ -121,6 +122,13 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					&& date.isBefore(buySellData.getStrategyData().getEndDate()))
 
 					|| date.isEqual(buySellData.getStrategyData().getEndDate())) {
+				
+				
+				// Max Time is Enabled
+				if(buySellData.getStrategyData().getMaxTime() > 0 ) {
+					this.portfolioService.checkMaxTime(date,buySellData.getStrategyData().getMaxTime(),priceData);
+				}
+				
 
 				if (priceData.getTrading_dates().contains(date)) {
 
@@ -161,6 +169,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				}
 
 				this.portfolioService.markToMarket(date);
+				this.portfolioService.updateTradeDayCount(date);
 
 				// StopLoss
 				if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())
@@ -484,6 +493,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					this.portfolioService.checkTakeProfit(date, buySellData.getStrategyData().getSystemType(),
 							buySellData.getStrategyData().getStoplossTiming());
 				}
+				
+				
+
 				
 				this.portfolioService.checkLivePositionsOnTommorow(date);
 				
