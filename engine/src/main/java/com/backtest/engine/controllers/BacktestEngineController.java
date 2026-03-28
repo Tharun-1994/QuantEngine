@@ -937,25 +937,47 @@ public class BacktestEngineController {
 	@PostMapping("api/runbacktestv3")
 	public BacktestReponseDto runBacktestV3(@RequestBody StrategyBucketRequestDto strategyRequest) {
 
-		try (BacktestContext context = this.backtestContextFactory.create(this.priceDataService,this.strategyBuilderServiceV2)) {
+		try (BacktestContext context = this.backtestContextFactory.create(this.priceDataService,
+				this.strategyBuilderServiceV2, this.marketTrendServiceV2)) {
 
-			if(strategyRequest.getMarketRegimeType().equalsIgnoreCase("normal")) {
-				PriceDataV2 priceData = context.getPriceData(strategyRequest,backtestDataPath);
-				BuySellDataV2 buySellData = context.getBuySellData(strategyRequest, priceData,backtestDataPath);
-				
+			if (strategyRequest.getMarketRegimeType().equalsIgnoreCase("normal")) {
+				PriceDataV2 priceData = context.getPriceData(strategyRequest, backtestDataPath);
+				BuySellDataV2 buySellData = context.getBuySellData(strategyRequest, priceData, backtestDataPath);
+
 				buySellData.getStrategyData().setMaxSameTicker(1);
-				
+
 				BacktestReponseDto backtestResponse = backtestServiceV2.runBacktestV2(priceData, buySellData);
-			
+
 				context.writeBacktestResponse(strategyRequest, backtestResponse, backtestOPath);
 
 				return this.portfolioService.getPortfolio();
-				
+
+			} else if (strategyRequest.getMarketRegimeType().equalsIgnoreCase("simple")) {
+
+				// 1. Load shared prices + market ticker closes
+				PriceDataV2 priceData = context.getSimplePriceData(strategyRequest, backtestDataPath);
+
+				// 2. Per-regime: load indicators, build leaf cache, generate signals via tree
+				// evaluation
+				Map<String, BuySellDataV2> regimeSignals = context.getSimpleBuySellDataMap(strategyRequest, priceData,
+						backtestDataPath);
+
+				// 3. Evaluate market trend rules → date → active regime label
+				Map<LocalDate, String> marketTrends = context.getMarketTrends(strategyRequest, priceData,
+						backtestDataPath);
+
+				// 4. Run multi-regime backtest with daily regime switching
+				BacktestReponseDto backtestResponse = backtestServiceV2.runBacktestSimpleV2(priceData, marketTrends,
+						regimeSignals);
+
+				// 5. Write output
+				context.writeBacktestResponse(strategyRequest, backtestResponse, backtestOPath);
+
+				return backtestResponse;
 			}
-			
-			
+
 		} catch (Exception e) {
-			
+
 			throw new BacktestExecutionException("Failed to run backtest", e);
 		}
 

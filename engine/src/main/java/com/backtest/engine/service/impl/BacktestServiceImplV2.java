@@ -60,7 +60,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 							/ buySellData.getStrategyData().getSlots())
 					.maxSlots(buySellData.getStrategyData().getSlots())
 //	                 Max Quantities set to 5 default.
-					.maxQuantitites(maxQuantity).direction("long").minStockPricePerSlot(minStockPricePerSlot)
+					.maxQuantitites(maxQuantity).direction(buySellData.getStrategyData().getSystemType()).minStockPricePerSlot(minStockPricePerSlot)
 					.previousDate(previousDate).build();
 
 			this.portfolioService.executeLimitOrdersLong(entrySignals);
@@ -88,7 +88,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 							/ buySellData.getStrategyData().getSlots()))
 					.maxSlots(buySellData.getStrategyData().getSlots())
 //	                 Max Quantities set to 5 default.
-					.maxQuantitites(maxQuantity).direction("long").minStockPricePerSlot(minStockPricePerSlot)
+					.maxQuantitites(maxQuantity).direction(buySellData.getStrategyData().getSystemType()).minStockPricePerSlot(minStockPricePerSlot)
 					.previousDate(previousDate).build();
 
 			this.portfolioService.executeEntrySignals(entrySignals);
@@ -150,8 +150,10 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
 						if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))) {
 							if (buySellData.getStrategyData().getSystemType()
-									.equals(StaticConfig.systemType.get("long"))) {
-								processNormalOrders(date, previousDate, entryExitMap, buySellData);
+							        .equals(StaticConfig.systemType.get("long"))
+							    || buySellData.getStrategyData().getSystemType()
+							        .equals(StaticConfig.systemType.get("short"))) {
+							    processNormalOrders(date, previousDate, entryExitMap, buySellData);
 							}
 
 						} else if (buySellData.getStrategyData().getOrderType()
@@ -160,7 +162,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 										.equals(StaticConfig.orderType.get("limit"))) {
 
 							if (buySellData.getStrategyData().getSystemType()
-									.equals(StaticConfig.systemType.get("long"))) {
+									.equals(StaticConfig.systemType.get("long"))  || buySellData.getStrategyData().getSystemType()
+							        .equals(StaticConfig.systemType.get("short"))) {
 								processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
 							}
 
@@ -189,6 +192,16 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 				entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
 						this.portfolioService);
+				
+				// If exit_timing is "close", execute exits immediately at today's close
+				if (buySellData.getStrategyData().getExitTiming().equals("close")) {
+				    if (entryExitMap != null && entryExitMap.get("exit") != null
+				            && !entryExitMap.get("exit").isEmpty()) {
+				        ExitSignalsRequestDto exitSignals = ExitSignalsRequestDto.builder().tradeDate(date)
+				                .exits(entryExitMap.get("exit")).reasonForExit("Exits").exitTime("close").build();
+				        this.portfolioService.executeExitSignals(exitSignals);
+				    }
+				}
 
 				if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit_atr"))) {
 
@@ -293,7 +306,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
 						if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))) {
 							if (buySellData.getStrategyData().getSystemType()
-									.equals(StaticConfig.systemType.get("long"))) {
+									.equals(StaticConfig.systemType.get("long"))
+								|| buySellData.getStrategyData().getSystemType()
+									.equals(StaticConfig.systemType.get("short"))) {
 								processNormalOrders(date, previousDate, entryExitMap, buySellData);
 							}
 
@@ -303,7 +318,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 										.equals(StaticConfig.orderType.get("limit"))) {
 
 							if (buySellData.getStrategyData().getSystemType()
-									.equals(StaticConfig.systemType.get("long"))) {
+									.equals(StaticConfig.systemType.get("long"))
+								|| buySellData.getStrategyData().getSystemType()
+									.equals(StaticConfig.systemType.get("short"))) {
 								processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
 							}
 
@@ -420,7 +437,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 					|| date.isEqual(priceData.getEndDate())) {
 
-				if (priceData.getTrading_dates().contains(date)) {
+				if (priceData.getTrading_dates().contains(date) && buySellData != null) {
 					
 					// Exit Orders
 					if (buySellData.getStrategyData().getExitTiming().equals("open")) {
@@ -453,7 +470,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
 						if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))) {
 							if (buySellData.getStrategyData().getSystemType()
-									.equals(StaticConfig.systemType.get("long"))) {
+									.equals(StaticConfig.systemType.get("long"))
+								|| buySellData.getStrategyData().getSystemType()
+									.equals(StaticConfig.systemType.get("short"))) {
 								processNormalOrders(date, previousDate, entryExitMap, buySellData);
 							}
 
@@ -463,7 +482,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 										.equals(StaticConfig.orderType.get("limit"))) {
 
 							if (buySellData.getStrategyData().getSystemType()
-									.equals(StaticConfig.systemType.get("long"))) {
+									.equals(StaticConfig.systemType.get("long"))
+								|| buySellData.getStrategyData().getSystemType()
+									.equals(StaticConfig.systemType.get("short"))) {
 								
 								if(!buySellData.getStrategyData().getBannedMonths().contains(date.getMonthValue())) {
 									processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
@@ -480,19 +501,23 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				
 				this.portfolioService.markToMarket(date);
 				
-				// StopLoss
-				if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())
-						&& buySellData.getStrategyData().getStopLossPct() > 0) {
-					this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
-							buySellData.getStrategyData().getStoplossTiming());
+				if (buySellData != null) {
+					
+					// StopLoss
+					if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())
+							&& buySellData.getStrategyData().getStopLossPct() > 0) {
+						this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
+								buySellData.getStrategyData().getStoplossTiming());
+					}
+
+					// Takeprofit
+					if (StaticConfig.takeProfitType.get("nrml").equals(buySellData.getStrategyData().getTakeprofitType())
+							&& buySellData.getStrategyData().getTakeProfitPct() > 0) {
+						this.portfolioService.checkTakeProfit(date, buySellData.getStrategyData().getSystemType(),
+								buySellData.getStrategyData().getStoplossTiming());
+					}
 				}
 
-				// Takeprofit
-				if (StaticConfig.takeProfitType.get("nrml").equals(buySellData.getStrategyData().getTakeprofitType())
-						&& buySellData.getStrategyData().getTakeProfitPct() > 0) {
-					this.portfolioService.checkTakeProfit(date, buySellData.getStrategyData().getSystemType(),
-							buySellData.getStrategyData().getStoplossTiming());
-				}
 				
 				
 
@@ -500,15 +525,26 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				this.portfolioService.checkLivePositionsOnTommorow(date);
 				
 				previousDayMarketTrend = marketTrendOfDay;
-				marketTrendOfDay = marketTrends.get(date);
-				buySellData = rulesOfDayRegimes.get(marketTrendOfDay);
+				String newTrend = marketTrends.get(date);
+				if (newTrend != null) {
+				    marketTrendOfDay = newTrend;
+				    BuySellDataV2 newBuySellData = rulesOfDayRegimes.get(marketTrendOfDay);
+				    if (newBuySellData != null) {
+				        buySellData = newBuySellData;
+				    }
+				}
 				
-				this.portfolioService.setBasicDeatils(priceData, buySellData.getStrategyData().getStartingCapital(),
-						buySellData.getStrategyData().getSlots(), buySellData.getStrategyData().getStopLossPct(),
-						buySellData.getStrategyData().getTakeProfitPct());
+				if (buySellData != null) {
+					this.portfolioService.setBasicDeatils(priceData, buySellData.getStrategyData().getStartingCapital(),
+							buySellData.getStrategyData().getSlots(), buySellData.getStrategyData().getStopLossPct(),
+							buySellData.getStrategyData().getTakeProfitPct());
 
-//				long start = System.nanoTime();
-				entryExitMap = strategyBuilderService.signalsForTheDay(date, priceData, buySellData,this.portfolioService);
+//					long start = System.nanoTime();
+					entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,this.portfolioService);
+					
+				}
+				
+
 //				long end = System.nanoTime();
 				
 //				double elapsedSeconds = (end - start) / 1_000_000_000.0;

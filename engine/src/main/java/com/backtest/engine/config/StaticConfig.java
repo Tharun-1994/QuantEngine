@@ -20,6 +20,8 @@ public class StaticConfig {
 	
 	public static final String N_WEEK_HIGH_RECENT = "n_week_high_recent";
 	
+	public static final String SHARPE = "sharpe";
+	
 	public static String getN_WEEK_HIGH_RECENT(RuleDto rc) {
 	    if (rc == null || !N_WEEK_HIGH_RECENT.equals(rc.getIndicator())) {
 	        return "";
@@ -45,7 +47,28 @@ public class StaticConfig {
 	
 	
 	
-	
+	public static String getSharpeKey(RuleDto rc) {
+	    if (rc == null || !SHARPE.equals(rc.getIndicator())) {
+	        return "";
+	    }
+	    try {
+	        Object momObj = rc.getParams().get("momentum_lookback");
+	        Object volObj = rc.getParams().get("vol_lookback");
+	        Object skipObj = rc.getParams().get("skip_days");
+ 
+	        if (momObj == null || volObj == null) return "";
+ 
+	        String skip = (skipObj != null) ? skipObj.toString() : "0";
+	        return String.format("%s_%s_%s_%s",
+	            rc.getIndicator(),
+	            momObj.toString(),
+	            volObj.toString(),
+	            skip
+	        );
+	    } catch (Exception e) {
+	        return "";
+	    }
+	}
 	
 	
 }

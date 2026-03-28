@@ -47,6 +47,10 @@ public class IndicatorRuleLoader {
 			    int within = (Integer) rc.getParams().get("within_days");
 			    fileName = String.format("%s_%s_%s.parquet", rc.getIndicator(), nWeeks, within);
 			}
+			else if (rc.getIndicator().equals(StaticConfig.SHARPE)) {
+			    String sharpeKey = StaticConfig.getSharpeKey(rc);
+			    fileName = sharpeKey + ".parquet";
+			}
 			else if (PRICE_MAP.containsKey(rc.getIndicator())) {
 				fileName = RuleParser.buildParquetFileName(PRICE_MAP.get(rc.getIndicator()));
 			} else {
@@ -55,17 +59,18 @@ public class IndicatorRuleLoader {
 
 			Path parquetPath = Paths.get(dataDir, fileName);
 			try {
-				if (!tableMap.containsKey(rc.getIndicator() + "_" + rc.getLookback())) {
+				String lookupKey;
+				if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
+				    lookupKey = StaticConfig.getN_WEEK_HIGH_RECENT(rc);
+				} else if (rc.getIndicator().equals(StaticConfig.SHARPE)) {
+				    lookupKey = StaticConfig.getSharpeKey(rc);
+				} else {
+				    lookupKey = rc.getIndicator() + "_" + rc.getLookback();
+				}
+
+				if (!tableMap.containsKey(lookupKey)) {
 					ArrowDataFrame indicatorMap = ArrowDataFrame.load(parquetPath.toUri().toString());
-					if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
-					    int nWeeks = (Integer) rc.getParams().get("n_week_days");
-					    int within = (Integer) rc.getParams().get("within_days");
-					    String indicatorSave = String.format("%s_%s_%s", rc.getIndicator(), nWeeks, within);
-						tableMap.put(indicatorSave, indicatorMap);
-					}else {
-						tableMap.put(rc.getIndicator() + "_" + rc.getLookback(), indicatorMap);
-					}
-					
+					tableMap.put(lookupKey, indicatorMap);
 				}
 
 //				Value Type indicator price
@@ -187,6 +192,58 @@ public class IndicatorRuleLoader {
 		}
 
 		// Clean up null entries if load failed
+		tableMap.values().removeIf(Objects::isNull);
+
+		return tableMap;
+	}
+
+	/**
+	 * V3: Load market trend indicator parquets using per-rule ticker (rule.getRegimeTicker())
+	 * instead of per-regime ticker (regime.getRegimeTicker()).
+	 */
+	public static Map<String, ArrowDataFrame> loadTablesMarketTrendV3(List<MarketRegimeDto> regimes, String dataDir,
+			Map<String, Set<Integer>> indicatorLookbackMap) {
+
+		// Price indicators that come from OHLC data, not separate parquet files
+		Set<String> PRICE_INDICATORS = Set.of("close", "open", "high", "low");
+
+		Map<String, ArrowDataFrame> tableMap = new HashMap<>();
+
+		for (MarketRegimeDto regime : regimes) {
+			for (RuleDto rule : regime.getMarketTrendRules()) {
+
+				String ticker = (rule.getRegimeTicker() != null ? rule.getRegimeTicker() : "").toLowerCase();
+
+				// Load primary indicator (LHS) — skip price indicators
+				if (!PRICE_INDICATORS.contains(rule.getIndicator().toLowerCase())) {
+					String tableKey = String.format("%s_%s_%d", ticker, rule.getIndicator(), rule.getLookback());
+					String fileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getIndicator(), rule.getLookback());
+					Path parquetPath = Paths.get(dataDir, fileName);
+
+					tableMap.computeIfAbsent(tableKey, k -> {
+						try { return ArrowDataFrame.load(parquetPath.toUri().toString()); }
+						catch (Exception e) { e.printStackTrace(); return null; }
+					});
+				}
+
+				// Load value indicator (RHS) — for indicator_price comparisons
+				if ("indicator_price".equalsIgnoreCase(rule.getValueType())
+						&& rule.getValueIndicator() != null
+						&& !rule.getValueIndicator().isBlank()
+						&& !PRICE_INDICATORS.contains(rule.getValueIndicator().toLowerCase())) {
+
+					String valKey = String.format("%s_%s_%d", ticker, rule.getValueIndicator(), rule.getValueLookback());
+					String valFileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getValueIndicator(), rule.getValueLookback());
+					Path valPath = Paths.get(dataDir, valFileName);
+
+					tableMap.computeIfAbsent(valKey, k -> {
+						try { return ArrowDataFrame.load(valPath.toUri().toString()); }
+						catch (Exception e) { e.printStackTrace(); return null; }
+					});
+				}
+			}
+		}
+
 		tableMap.values().removeIf(Objects::isNull);
 
 		return tableMap;

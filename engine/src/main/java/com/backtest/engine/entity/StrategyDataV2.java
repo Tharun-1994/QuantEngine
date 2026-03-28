@@ -70,5 +70,7 @@ public class StrategyDataV2 {
     private LeafCacheResult entryLeafCacheResult;
     private LeafCacheResult exitLeafCacheResult;
 
-
+	private Map<String, String> sectorMap;  // ticker → sector/industry name
+	private int sectorLevel;
+	private int sectorLimit;
 }

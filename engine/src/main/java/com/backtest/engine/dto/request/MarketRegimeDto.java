@@ -114,5 +114,12 @@ public class MarketRegimeDto {
 
     @JsonProperty("exit_rules_tree")
     private Map<String, Object> exitRulesTree;
+    
+    @JsonProperty("sector_level")
+    private int sectorLevel;
+ 
+    @JsonProperty("sector_limit")
+    private int sectorLimit;
+    
 }
 

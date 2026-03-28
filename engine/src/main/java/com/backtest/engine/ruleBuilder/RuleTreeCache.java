@@ -22,41 +22,45 @@ public final class RuleTreeCache {
 	}
 
 	// leafId -> (date -> eligibleTickers)
-	public static LeafCacheResult buildLeafCache( RuleNodeDto root,Map<String, ArrowDataFrame> indicatorFrames,PriceDataV2 priceData,StrategyBuilderServiceImplV2 evaluator) {
-	    Map<String, RuleDto> leaves = new HashMap<>();
-	    collectLeaves(root, leaves); // leafId -> RuleDto
+	public static LeafCacheResult buildLeafCache(RuleNodeDto root, Map<String, ArrowDataFrame> indicatorFrames,
+			PriceDataV2 priceData, StrategyBuilderServiceImplV2 evaluator) {
+		Map<String, RuleDto> leaves = new HashMap<>();
+		collectLeaves(root, leaves); // leafId -> RuleDto
 
-	    Map<String, Map<LocalDate, Set<String>>> cache = new HashMap<>();
+		Map<String, Map<LocalDate, Set<String>>> cache = new HashMap<>();
 
-	    for (Map.Entry<String, RuleDto> e : leaves.entrySet()) {
-	        String leafId = e.getKey();
-	        RuleDto rule = e.getValue();
+		for (Map.Entry<String, RuleDto> e : leaves.entrySet()) {
+			String leafId = e.getKey();
+			RuleDto rule = e.getValue();
 
 			ArrowDataFrame mainDf;
-			if(rule.getIndicator().equalsIgnoreCase(StaticConfig.N_WEEK_HIGH_RECENT)) {
+			if (rule.getIndicator().equalsIgnoreCase(StaticConfig.N_WEEK_HIGH_RECENT)) {
 				mainDf = indicatorFrames.get(StaticConfig.getN_WEEK_HIGH_RECENT(rule));
-			}else {
+			} else if (rule.getIndicator().equalsIgnoreCase(StaticConfig.SHARPE)) {
+				mainDf = indicatorFrames.get(StaticConfig.getSharpeKey(rule));
+			}
+
+			else {
 				mainDf = indicatorFrames.get(rule.getIndicator() + "_" + rule.getLookback());
 			}
 
-	        ArrowDataFrame valueDf = null;
-	        if ("indicator_price".equalsIgnoreCase(rule.getValueType())) {
-	            valueDf = indicatorFrames.get(rule.getValueIndicator() + "_" + rule.getValueLookback());
-	        }
+			ArrowDataFrame valueDf = null;
+			if ("indicator_price".equalsIgnoreCase(rule.getValueType())) {
+				valueDf = indicatorFrames.get(rule.getValueIndicator() + "_" + rule.getValueLookback());
+			}
 
-	        Map<LocalDate, List<String>> eligible = evaluator.evaluateRule(mainDf, rule, priceData, valueDf);
+			Map<LocalDate, List<String>> eligible = evaluator.evaluateRule(mainDf, rule, priceData, valueDf);
 
-	        Map<LocalDate, Set<String>> asSet = new HashMap<>();
-	        for (var row : eligible.entrySet()) {
-	            asSet.put(row.getKey(), new HashSet<>(row.getValue()));
-	        }
+			Map<LocalDate, Set<String>> asSet = new HashMap<>();
+			for (var row : eligible.entrySet()) {
+				asSet.put(row.getKey(), new HashSet<>(row.getValue()));
+			}
 
-	        cache.put(leafId, asSet);
-	    }
+			cache.put(leafId, asSet);
+		}
 
-	    return new LeafCacheResult(leaves, cache);
+		return new LeafCacheResult(leaves, cache);
 	}
-
 
 	private static void collectLeaves(RuleNodeDto node, Map<String, RuleDto> out) {
 		if (node == null)

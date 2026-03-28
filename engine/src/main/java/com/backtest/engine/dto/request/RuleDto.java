@@ -28,5 +28,10 @@ public class RuleDto {
     private String label;  // optional
     
     private Map<String, Object> params; // params?: Record<string, any>
+    @JsonProperty("regime_ticker")
+    private String regimeTicker;  // per-rule ticker for market trend (e.g. "SPY", "VIX")
+    
+    @JsonProperty("ranking_order")
+    private String rankingOrder;
 }
 

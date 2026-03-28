@@ -25,22 +25,21 @@ public class MarketTrendServiceV2Impl implements MarketTrendServiceV2 {
 			Map<String, ArrowDataFrame> marketTrendMap, PriceDataV2 priceData) {
 		Map<LocalDate, String> entryRuleMap = new HashMap<>();
 		for (MarketRegimeDto regime : marketRegimes) {
-			Map<LocalDate, String> passedMap = generateMarketSignals(regime.getRegimeTicker(), regime.getMarketTrendRules(), marketTrendMap, priceData);
+			Map<LocalDate, String> passedMap = generateMarketSignals(regime.getMarketTrendRules(), marketTrendMap, priceData);
 			entryRuleMap.putAll(passedMap);
 		}
 
 		return entryRuleMap;
 	}
 
-	private Map<LocalDate, String> generateMarketSignals(String ticker, List<RuleDto> marketRules,
+	private Map<LocalDate, String> generateMarketSignals(List<RuleDto> marketRules,
 			Map<String, ArrowDataFrame> marketTrendMap, PriceDataV2 priceData) {
 		
-		// Sort market rules based on connector priority
 		marketRules.sort(Comparator.comparingInt(rule -> {
 		    String conn = rule.getConnector();
-		    if ("&&".equals(conn)) return 0;   // highest priority
-		    if ("||".equals(conn)) return 1;   // lower priority
-		    return 2;                          // no connector or others
+		    if ("&&".equals(conn)) return 0;
+		    if ("||".equals(conn)) return 1;
+		    return 2;
 		}));
 
 		Map<LocalDate, String> entryRuleMap = new HashMap<>();
@@ -51,32 +50,49 @@ public class MarketTrendServiceV2Impl implements MarketTrendServiceV2 {
 
 			if (rule.getIndicator() != null && rule.getLookback() > -1) {
 
+				// Each rule carries its own ticker (e.g. "SPY", "VIX")
+				String ruleTicker = (rule.getRegimeTicker() != null ? rule.getRegimeTicker() : "").toLowerCase();
+
+				// For price indicators (close, open, etc.), use price data directly
+				// For computed indicators (sma, atr, etc.), use marketTrendMap
+				ArrowDataFrame indicatorDf;
+				String indicator = rule.getIndicator().toLowerCase();
+				if ("close".equals(indicator) || "open".equals(indicator) || "high".equals(indicator) || "low".equals(indicator)) {
+					indicatorDf = priceData.getMarketTickerPrices().get("closes_" + ruleTicker);
+				} else {
+					indicatorDf = marketTrendMap.get(ruleTicker + "_" + rule.getIndicator() + "_" + rule.getLookback());
+				}
+
+				// For indicator_price comparison (e.g. close >= sma_200), RHS is the value indicator
+				// For numeric comparison (e.g. sma_200 > 0), RHS is the threshold (handled in evaluateRule)
+				ArrowDataFrame rhsDf;
+				if ("indicator_price".equalsIgnoreCase(rule.getValueType())
+						&& rule.getValueIndicator() != null && !rule.getValueIndicator().isBlank()) {
+					String valIndicator = rule.getValueIndicator().toLowerCase();
+					if ("close".equals(valIndicator) || "open".equals(valIndicator) || "high".equals(valIndicator) || "low".equals(valIndicator)) {
+						rhsDf = priceData.getMarketTickerPrices().get("closes_" + ruleTicker);
+					} else {
+						rhsDf = marketTrendMap.get(ruleTicker + "_" + rule.getValueIndicator() + "_" + rule.getValueLookback());
+					}
+				} else {
+					rhsDf = priceData.getMarketTickerPrices().get("closes_" + ruleTicker);
+				}
+
 				if (i == 0) {
-					Set<LocalDate> dates = evaluateRule(
-							marketTrendMap
-									.get(ticker.toLowerCase() + "_" + rule.getIndicator() + "_" + rule.getLookback()),
-							rule, priceData.getMarketTickerPrices().get("closes_" + ticker.toLowerCase()));
+					Set<LocalDate> dates = evaluateRule(indicatorDf, rule, rhsDf);
 					passedDates.addAll(dates);
 				}
 				else {
-					// look at the *previous* rule’s connector
 					RuleDto prev = marketRules.get(i - 1);
-					String conn = prev.getConnector(); // e.g. "&&" or "||"
+					String conn = prev.getConnector();
 					
-					Set<LocalDate> todays = evaluateRule(
-							marketTrendMap
-									.get(ticker.toLowerCase() + "_" + rule.getIndicator() + "_" + rule.getLookback()),
-							rule, priceData.getMarketTickerPrices().get("closes_" + ticker.toLowerCase()));
-
+					Set<LocalDate> todays = evaluateRule(indicatorDf, rule, rhsDf);
 
 					if ("&&".equals(conn)) {
-						// AND = intersection
 						passedDates.retainAll(todays);
 					} else if ("||".equals(conn)) {
-						// OR = union
 						passedDates.addAll(todays);
 					} else {
-						// fallback: treat as OR
 						passedDates.addAll(todays);
 					}
 				}
@@ -87,16 +103,13 @@ public class MarketTrendServiceV2Impl implements MarketTrendServiceV2 {
 
 		}
 		
-		
 
 		String marketRuleOfDay = marketRuleBuilder.toString();
 		
-		// Optional: If you want to remove the trailing underscore:
 		if (marketRuleOfDay.length() > 0) {
 		    marketRuleOfDay = marketRuleOfDay.substring(0, marketRuleOfDay.length() - 1);
 		}
 		
-	    // ✅ assign rule string to all passed dates
 	    for (LocalDate d : passedDates) {
 	        entryRuleMap.put(d, marketRuleOfDay);
 	    }

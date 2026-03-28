@@ -203,6 +203,32 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 	public Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule,
 			PriceDataV2 priceData,ArrowDataFrame indicatorPriceDataFrame) {
 
+		// ── Top N filter: rank tickers by indicator value, keep top N ──
+		if ("top_n".equalsIgnoreCase(rule.getValueType())) {
+			int n = (int) rule.getValue();
+			boolean descending = !"Ascending".equalsIgnoreCase(rule.getRankingOrder());
+
+			Map<LocalDate, List<String>> eligibleByDate = new HashMap<>();
+			List<LocalDate> sortedDates = arrowDataFrame.getDates().stream().sorted().toList();
+
+			for (LocalDate d : sortedDates) {
+				Map<String, Float> tickerValues = arrowDataFrame.getRow(d);
+
+				List<String> topTickers = tickerValues.entrySet().stream()
+						.filter(e -> e.getValue() != null && !e.getValue().isNaN() && !e.getValue().isInfinite())
+						.sorted(descending
+								? Map.Entry.<String, Float>comparingByValue().reversed()
+								: Map.Entry.comparingByValue())
+						.limit(n)
+						.map(Map.Entry::getKey)
+						.collect(Collectors.toList());
+
+				eligibleByDate.put(d, topTickers);
+			}
+			return eligibleByDate;
+		}
+
+		// ── Standard threshold / indicator_price comparison ──
 		// 1) Parse the threshold once
 		BiPredicate<Float, Float> test;
 		// 2) Prepare operator test function
@@ -489,6 +515,26 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		}
 		long endRank = System.nanoTime();
 
+		// ── Sector filter: cap entries per sector (counting current holdings) ──
+		StrategyDataV2 sdForSector = buySellData.getStrategyData();
+		if (sdForSector.getSectorLimit() > 0 && sdForSector.getSectorMap() != null) {
+			Map<String, Integer> sectorCount = new HashMap<>();
+			for (String holding : portfolioService.getLiveHoldingsLogger()) {
+				String sector = sdForSector.getSectorMap().getOrDefault(holding, "undefined");
+				sectorCount.merge(sector, 1, Integer::sum);
+			}
+			List<String> sectorFiltered = new ArrayList<>();
+			for (String ticker : entries_list) {
+				String sector = sdForSector.getSectorMap().getOrDefault(ticker, "undefined");
+				int count = sectorCount.getOrDefault(sector, 0);
+				if (count < sdForSector.getSectorLimit()) {
+					sectorFiltered.add(ticker);
+					sectorCount.merge(sector, 1, Integer::sum);
+				}
+			}
+			entries_list = sectorFiltered;
+		}
+
 		entryExitMap.put("entry", entries_list);
 		entryExitMap.put("exit", new ArrayList<>(exitSet));
 
@@ -692,6 +738,25 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		}
 
 		long endRank = System.nanoTime();
+
+		// ── Sector filter: cap entries per sector (counting current holdings) ──
+		if (sd.getSectorLimit() > 0 && sd.getSectorMap() != null) {
+			Map<String, Integer> sectorCount = new HashMap<>();
+			for (String holding : liveHoldings) {
+				String sector = sd.getSectorMap().getOrDefault(holding, "undefined");
+				sectorCount.merge(sector, 1, Integer::sum);
+			}
+			List<String> sectorFiltered = new ArrayList<>();
+			for (String ticker : entries_list) {
+				String sector = sd.getSectorMap().getOrDefault(ticker, "undefined");
+				int count = sectorCount.getOrDefault(sector, 0);
+				if (count < sd.getSectorLimit()) {
+					sectorFiltered.add(ticker);
+					sectorCount.merge(sector, 1, Integer::sum);
+				}
+			}
+			entries_list = sectorFiltered;
+		}
 
 		entryExitMap.put("entry", entries_list);
 		entryExitMap.put("exit", new ArrayList<>(exitSet));
