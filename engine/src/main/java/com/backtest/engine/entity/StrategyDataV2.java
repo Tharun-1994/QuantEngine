@@ -7,6 +7,8 @@ import java.util.Set;
 
 import com.backtest.engine.dto.request.RuleDto;
 import com.backtest.engine.dto.request.RuleGroupNodeDto;
+import com.backtest.engine.dto.request.TdomFilterDto;
+import com.backtest.engine.dto.request.VolFilterDto;
 import com.backtest.engine.ruleBuilder.LeafCacheResult;
 import com.backtest.engine.util.ArrowDataFrame;
 
@@ -73,4 +75,41 @@ public class StrategyDataV2 {
 	private Map<String, String> sectorMap;  // ticker → sector/industry name
 	private int sectorLevel;
 	private int sectorLimit;
+	
+	private float gapFilterPct;
+	
+	private int maxDuplicates;
+	private int maxDuplicateSets;
+
+	/**
+	 * Dynamic TDOM calendar filters — passed through from MarketRegimeDto.
+	 * Evaluated per-day in the backtest loop before any limit orders are placed.
+	 */
+	private List<TdomFilterDto> tdomFilters;
+
+	// ── Vol/Turnover filter ──────────────────────────────────────────
+	/** Config from request. Null or !enabled → filter skipped. */
+	private VolFilterDto volFilter;
+
+	/** avg_volume parquet: rolling(200).mean(turnovers/unadj_closes). Date×Ticker. */
+	private ArrowDataFrame avgVolume;
+
+	/** avg_turnover parquet: rolling(200).mean(closes*volumes). Date×Ticker. */
+	private ArrowDataFrame avgTurnover;
+
+	/** SPY close prices for SMA(200) bull/bear detection. Date×1col. */
+	private ArrowDataFrame spyCloses;
+
+	/**
+	 * Recalculated once per year (first Jan trading day).
+	 * Starts at 0 (pass all) until first recalculation fires.
+	 * Set via setVolThreshold() in BacktestServiceImplV2.
+	 */
+	@Builder.Default private volatile float volThreshold = 0f;
+
+	/**
+	 * Recalculated once per year (first Jan trading day).
+	 * Starts at 0 (pass all) until first recalculation fires.
+	 */
+	@Builder.Default private volatile float turnoverThreshold = 0f;
 }

@@ -95,6 +95,14 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 
 					double openPrice = this.priceData.getDaily_opens().getValue(tradeDate, tick);
 
+					// Gap filter: skip if stock gaps beyond threshold
+					if (entrySignalsRequest.getGapFilterPct() > 0) {
+						float gapPct = (float) ((openPrice - yesterdayClosePrice) / yesterdayClosePrice * 100);
+						if (Math.abs(gapPct) > entrySignalsRequest.getGapFilterPct()) {
+							continue;
+						}
+					}
+
 					trade.setEntryprice((float) openPrice);
 				}
 
@@ -112,6 +120,12 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 
 		}
 
+	}
+
+	@Override
+	public Map<String, Long> getLiveHoldingsTickerCounts() {
+		return liveHoldingsLogger.keySet().stream().map(key -> key.split("_")[0])
+				.collect(Collectors.groupingBy(t -> t, Collectors.counting()));
 	}
 
 	@Override
@@ -214,7 +228,12 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 
 			this.liveHoldingsLogger.remove(tradeId);
 
-			this.unusedCapital += tradeLog.getExitValue();
+			// AFTER
+			if ("SHORT".equals(tradeLog.getDirection())) {
+				this.unusedCapital += (2 * tradeLog.getEntryValue() - tradeLog.getExitValue());
+			} else {
+				this.unusedCapital += tradeLog.getExitValue();
+			}
 		}
 
 	}
@@ -242,8 +261,8 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 				}
 				todayEquity += positionValue;
 
-				eachTradeList.add(LiveHoldingsTracker.builder().symbol(symbol)
-						.endOfDayValue(positionValue).tradeDate(tradeDate).build());
+				eachTradeList.add(LiveHoldingsTracker.builder().symbol(symbol).endOfDayValue(positionValue)
+						.tradeDate(tradeDate).build());
 
 			}
 			if (todayEquity > this.maxEquity) {
@@ -364,7 +383,7 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 
 			float stopLossPrice = tickerEntryPrice * (1 + (this.stoplossPct / 100));
 
-			if (timing.equals("eod")) {
+			if (timing.toLowerCase().equals("eod")) {
 				float closePrice = this.priceData.getDaily_closes().getValue(date, symbol);
 
 				if (closePrice >= stopLossPrice) {
@@ -377,7 +396,7 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 					this.exitTrade(tradeExitRequest);
 				}
 
-			} else if (timing.equals("intraday")) {
+			} else if (timing.toLowerCase().equals("intraday")) {
 				float lowPrice = this.priceData.getDaily_lows().getValue(date, symbol);
 				float highPrice = this.priceData.getDaily_highs().getValue(date, symbol);
 				float openPrice = this.priceData.getDaily_opens().getValue(date, symbol);
@@ -625,6 +644,14 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 				openPrice = Math.round(openPrice * 100f) / 100f;
 				lowPrice = Math.round(lowPrice * 100f) / 100f;
 
+				// Gap filter: skip if stock gaps beyond threshold
+				if (limitEntrySignalsRequest.getGapFilterPct() > 0) {
+					float gapPct = ((openPrice - yesterdayClosePrice) / yesterdayClosePrice) * 100;
+					if (Math.abs(gapPct) > limitEntrySignalsRequest.getGapFilterPct()) {
+						continue;
+					}
+				}
+
 				// Limit Order hit on OPEN
 				if (openPrice <= limitOrder.getLimitPrice()) {
 					TradeEnterRequestDto trade = new TradeEnterRequestDto();
@@ -760,9 +787,9 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 					trade.setTradeId(tradeId);
 					trade.setTradeDate(tradeDate);
 
-					float openPrice = this.priceData.getDaily_opens().getValue(tradeDate, tick);
-					trade.setExitPrice(openPrice);
-					trade.setPriceUsed("open");
+					float closePrice = this.priceData.getDaily_closes().getValue(tradeDate, tick);
+					trade.setExitPrice(closePrice);
+					trade.setPriceUsed("close");
 
 					String reasonForExit = String.format("MaxTime %s", maxTime);
 					trade.setExitReason(reasonForExit);
@@ -773,6 +800,122 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 			}
 		}
 
+	}
+
+	@Override
+	public void executeLimitOrdersShort(LimitEntrySignalDto limitEntrySignalsRequest) {
+
+		if (limitEntrySignalsRequest.getLimitOrders().isEmpty() || limitEntrySignalsRequest.getLimitOrders() == null) {
+			return;
+		}
+		LocalDate tradeDate = limitEntrySignalsRequest.getTradeDate();
+		LocalDate previousDate = limitEntrySignalsRequest.getPreviousDate();
+		List<LocalDate> allDates = priceData.getAll_dates();
+
+		// if it's the last bar, skip
+		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+			return;
+		}
+
+		for (LimitOrder limitOrder : limitEntrySignalsRequest.getLimitOrders()) {
+
+			float yesterdayClosePrice = this.priceData.getDaily_closes().getValue(previousDate, limitOrder.getTicker());
+			try {
+				if (this.liveHoldingsLogger.size() >= this.maxSlots) {
+					break;
+				}
+
+				float openPrice = this.priceData.getDaily_opens().getValue(tradeDate, limitOrder.getTicker());
+				float highPrice = this.priceData.getDaily_highs().getValue(tradeDate, limitOrder.getTicker());
+
+				openPrice = Math.round(openPrice * 100f) / 100f;
+				highPrice = Math.round(highPrice * 100f) / 100f;
+
+				// Gap filter: skip if stock gaps beyond threshold
+				if (limitEntrySignalsRequest.getGapFilterPct() > 0) {
+					float gapPct = ((openPrice - yesterdayClosePrice) / yesterdayClosePrice) * 100;
+					if (Math.abs(gapPct) > limitEntrySignalsRequest.getGapFilterPct()) {
+						continue;
+					}
+				}
+
+				// SHORT: limit price is ABOVE yesterday close — stock must rally UP to fill
+				// Gap-up case : open >= limitPrice → stock opened above limit, fill at open
+				if (openPrice >= limitOrder.getLimitPrice()) {
+					TradeEnterRequestDto trade = new TradeEnterRequestDto();
+					trade.setTradeDate(tradeDate);
+					trade.setTicker(limitOrder.getTicker());
+					trade.setReason(limitEntrySignalsRequest.getReasonForEntry());
+					trade.setDirection(limitEntrySignalsRequest.getDirection());
+
+					if (limitEntrySignalsRequest.getEntryTime().equals("open")) {
+						trade.setEntryTiming(limitEntrySignalsRequest.getEntryTime());
+						trade.setPriceUsed(limitEntrySignalsRequest.getEntryTime());
+
+						trade.setEntryprice((float) openPrice);
+					}
+
+					int quantity = (int) Math.floor(limitEntrySignalsRequest.getSlotCapital() / yesterdayClosePrice);
+
+					if (quantity > limitEntrySignalsRequest.getMaxQuantitites()
+							&& yesterdayClosePrice > limitEntrySignalsRequest.getMinStockPricePerSlot()) {
+						trade.setQuantity(quantity);
+
+						this.enterTrade(trade);
+					}
+
+					// Intraday case: high >= limitPrice → stock rallied up to limit during day,
+					// fill at limit
+				} else if (highPrice >= limitOrder.getLimitPrice()) {
+
+					TradeEnterRequestDto trade = new TradeEnterRequestDto();
+					trade.setTradeDate(tradeDate);
+					trade.setTicker(limitOrder.getTicker());
+					trade.setReason(limitEntrySignalsRequest.getReasonForEntry());
+					trade.setDirection(limitEntrySignalsRequest.getDirection());
+
+					if (limitEntrySignalsRequest.getEntryTime().equals("open")) {
+						trade.setEntryTiming("intraday");
+						trade.setPriceUsed("limit price");
+
+						trade.setEntryprice((float) limitOrder.getLimitPrice());
+					}
+
+					int quantity = (int) Math.floor(limitEntrySignalsRequest.getSlotCapital() / yesterdayClosePrice);
+
+					if (quantity > limitEntrySignalsRequest.getMaxQuantitites()
+							&& yesterdayClosePrice > limitEntrySignalsRequest.getMinStockPricePerSlot()) {
+						trade.setQuantity(quantity);
+
+						this.enterTrade(trade);
+					}
+
+				}
+
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+
+		}
+
+	}
+	
+	@Override
+	public void closeAllPositionsAtEodClose(LocalDate date) {
+	    if (this.liveHoldingsLogger.isEmpty()) return;
+
+	    List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+	    for (String tradeId : liveTradeIds) {
+	        String symbol = tradeId.split("_")[0];
+	        float closePrice = this.priceData.getDaily_closes().getValue(date, symbol);
+	        TradeExitRequestDto trade = new TradeExitRequestDto();
+	        trade.setTradeId(tradeId);
+	        trade.setTradeDate(date);
+	        trade.setExitPrice(closePrice);
+	        trade.setPriceUsed("close");
+	        trade.setExitReason("EOD Close");
+	        this.exitTrade(trade);
+	    }
 	}
 
 }

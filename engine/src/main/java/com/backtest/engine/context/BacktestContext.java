@@ -78,11 +78,13 @@ public class BacktestContext implements AutoCloseable {
 		Map<Integer, Map<String, String>> priceLoaderPathMap = new HashMap<>();
 		int i = 0;
 		for (MarketRegimeDto marketRegime : strategyRequest.getRegimes()) {
+			boolean volEnabled = marketRegime.getVolFilter() != null && marketRegime.getVolFilter().isEnabled();
 			PriceLoader priceLoader = PriceLoader.builder().universe(marketRegime.getUniverse())
 					.atrLimitLookback(marketRegime.getAtrLimitLookback())
 					.atrLookbackStp(marketRegime.getAtrLookbackStp()).atrLookbackTp(marketRegime.getAtrLookbackTp())
 					.rebalance(strategyRequest.getRebalance()).rankingIndicator(marketRegime.getRanking())
-					.rankingLookback(marketRegime.getRankingLookback()).build();
+					.rankingLookback(marketRegime.getRankingLookback())
+					.volFilterEnabled(volEnabled).build();
 
 			priceLoaderPathMap.put(i, priceLoader.getFilesForRebalance(strategyRequest.getRegimes()));
 			i++;
@@ -133,8 +135,25 @@ public class BacktestContext implements AutoCloseable {
 		
 		ArrowDataFrame daily_atr = Stream.of("atr_limit", "atr_stp", "atr_tp").map(parquetFileValueMap::get)
 				.filter(Objects::nonNull).findFirst().orElse(null);
-		
-		
+
+		// Ensure closes_spy is available for vol filter SPY SMA computation
+		MarketRegimeDto firstRegime = strategyRequest.getRegimes().get(0);
+		if (firstRegime.getVolFilter() != null && firstRegime.getVolFilter().isEnabled()) {
+			String spyTicker = firstRegime.getVolFilter().getSpyTicker() != null
+					? firstRegime.getVolFilter().getSpyTicker().toLowerCase() : "spy";
+			String spyKey = "closes_" + spyTicker;
+			if (!parquetFileValueMap.containsKey(spyKey)) {
+				try {
+					String prefix = strategyRequest.getRebalance().equalsIgnoreCase("daily") ? "DAILY_" : strategyRequest.getRebalance().toLowerCase() + "_";
+					ArrowDataFrame spyDf = ArrowDataFrame.load(path(strategyRequest.getName(), prefix + spyKey + ".parquet",
+							firstRegime.getUniverse(), backtestDataPath));
+					parquetFileValueMap.put(spyKey, spyDf);
+				} catch (Exception e) {
+					System.err.println("[WARNING] Could not load spy closes for vol filter: " + e.getMessage());
+				}
+			}
+		}
+
 		PriceDataV2 priceData = this.priceDataService.loadPricesMarketDatav2(parquetFileValueMap.get("closes"),
 				parquetFileValueMap.get("opens"), parquetFileValueMap.get("highs"), parquetFileValueMap.get("lows"),
 				parquetMapSet.get("universes"), parquetDatesMapList.get("trading_dates"),
@@ -197,6 +216,9 @@ public class BacktestContext implements AutoCloseable {
 				.sectorLevel(strategyRequest.getRegimes().get(0).getSectorLevel())
 				.sectorLimit(strategyRequest.getRegimes().get(0).getSectorLimit())
 				.sectorMap(sectorMap)
+				.gapFilterPct(strategyRequest.getRegimes().get(0).getGapFilterPct())
+				.maxDuplicates(strategyRequest.getRegimes().get(0).getMaxDuplicates())
+				.maxDuplicateSets(strategyRequest.getRegimes().get(0).getMaxDuplicateSets())
 				.startDate(strategyRequest.getStartDate()).endDate(strategyRequest.getEndDate())
 				.minPrice(strategyRequest.getMinPrice()).minQuantity(strategyRequest.getMinQuantity())
 				.stoplossType(strategyRequest.getRegimes().get(0).getStoplossType())
@@ -207,6 +229,11 @@ public class BacktestContext implements AutoCloseable {
 				.limitPct(strategyRequest.getRegimes().get(0).getLimitPct())
 				.maxTime(strategyRequest.getRegimes().get(0).getMaxTime())
 				.bannedMonths(strategyRequest.getRegimes().get(0).getBannedMonths())
+				.tdomFilters(strategyRequest.getRegimes().get(0).getTdomFilters())
+				.volFilter(strategyRequest.getRegimes().get(0).getVolFilter())
+				.avgVolume(this.parquetFileValueMap.get("avg_volume"))
+				.avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
+				.spyCloses(this.parquetFileValueMap.get("closes_spy"))
 				.entryRulesTree(entryTree)
 				.exitRulesTree(exitTree)
 				.build();
@@ -354,6 +381,9 @@ public class BacktestContext implements AutoCloseable {
 					.sectorMap(simpleSectorMap)
 					.sectorLevel(simpleSectorLevel)
 					.sectorLimit(simpleSectorLimit)
+					.gapFilterPct(regime.getGapFilterPct())
+					.maxDuplicates(regime.getMaxDuplicates())
+					.maxDuplicateSets(regime.getMaxDuplicateSets())
 					.startDate(strategyRequest.getStartDate())
 					.endDate(strategyRequest.getEndDate())
 					.minPrice(strategyRequest.getMinPrice())
@@ -366,6 +396,11 @@ public class BacktestContext implements AutoCloseable {
 					.limitPct(regime.getLimitPct())
 					.maxTime(regime.getMaxTime())
 					.bannedMonths(regime.getBannedMonths())
+					.tdomFilters(regime.getTdomFilters())
+					.volFilter(regime.getVolFilter())
+					.avgVolume(this.parquetFileValueMap.get("avg_volume"))
+					.avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
+					.spyCloses(this.parquetFileValueMap.get("closes_spy"))
 					.entryRulesTree(entryTree)   // ← tree for RuleTreeEvaluator
 					.exitRulesTree(exitTree)      // ← tree for RuleTreeEvaluator
 					.build();

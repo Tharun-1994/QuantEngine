@@ -27,13 +27,14 @@ import com.backtest.engine.dto.response.BacktestReponseDto;
 import com.backtest.engine.entity.EquityLog;
 import com.backtest.engine.entity.LimitOrder;
 import com.backtest.engine.entity.LiveHoldingsTracker;
+import com.backtest.engine.entity.PriceData;
 import com.backtest.engine.entity.PriceDataV2;
 import com.backtest.engine.entity.TradeLog;
-import com.backtest.engine.service.PortfolioServiceV2;
+import com.backtest.engine.service.PortfolioService;
 
 @Service
 @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class PortfolioServiceImpl implements PortfolioServiceV2 {
+public class PortfolioServiceImpl implements PortfolioService  {
 
 	private PriceDataV2 priceData;
 
@@ -773,6 +774,19 @@ public class PortfolioServiceImpl implements PortfolioServiceV2 {
 			}
 		}
 
+	}
+
+	@Override
+	public Map<String, Long> getLiveHoldingsTickerCounts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setPriceDate(PriceData priceData, float startingCapital, int maxSlots, int stoplossPct,
+			int takeProfitPct) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

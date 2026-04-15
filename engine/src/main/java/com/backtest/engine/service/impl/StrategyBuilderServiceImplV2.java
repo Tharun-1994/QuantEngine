@@ -493,7 +493,22 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 		entrySet.retainAll(todayUniverse);
 		validEntriesTommorow(date, entrySet, priceData);
-		entrySet.removeAll(portfolioService.getLiveHoldingsLogger());
+
+		// ── Duplicate-aware holding removal ──
+		int maxDups = buySellData.getStrategyData().getMaxDuplicates();
+		int maxDupSets = buySellData.getStrategyData().getMaxDuplicateSets();
+		if (maxDups > 1) {
+			Map<String, Long> holdingCounts = portfolioService.getLiveHoldingsTickerCounts();
+			long currentDupSets = holdingCounts.values().stream().filter(c -> c >= 2).count();
+			// Remove tickers already at max duplicates
+			entrySet.removeIf(t -> holdingCounts.getOrDefault(t, 0L) >= maxDups);
+			// If at max duplicate sets, remove all held tickers (no more duplicates allowed)
+			if (maxDupSets > 0 && currentDupSets >= maxDupSets) {
+				entrySet.removeIf(t -> holdingCounts.containsKey(t));
+			}
+		} else {
+			entrySet.removeAll(portfolioService.getLiveHoldingsLogger());
+		}
 
 		List<String> entries_list = new ArrayList<>(entrySet);
 		Map<String, Float> rank = buySellData.getStrategyData().getRanking().getRow(date);
@@ -718,9 +733,59 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 		entrySet.retainAll(todayUniverse);
 		validEntriesTommorow(date, entrySet, priceData);
-		entrySet.removeAll(liveHoldings);
+
+		// ── Duplicate-aware holding removal ──
+		int maxDups = sd.getMaxDuplicates();
+		int maxDupSets = sd.getMaxDuplicateSets();
+		if (maxDups > 1) {
+			Map<String, Long> holdingCounts = portfolioService.getLiveHoldingsTickerCounts();
+			long currentDupSets = holdingCounts.values().stream().filter(c -> c >= 2).count();
+			// Remove tickers already at max duplicates
+			entrySet.removeIf(t -> holdingCounts.getOrDefault(t, 0L) >= maxDups);
+			// If at max duplicate sets, remove all held tickers (no more duplicates allowed)
+			if (maxDupSets > 0 && currentDupSets >= maxDupSets) {
+				entrySet.removeIf(t -> holdingCounts.containsKey(t));
+			}
+		} else {
+			entrySet.removeAll(liveHoldings);
+		}
 
 		List<String> entries_list = new ArrayList<>(entrySet);
+
+		// ── Vol/Turnover filter — applied BEFORE ranking ──────────────────────
+		// Matches Python: todays_entries filtered by avg_volume/avg_turnover >= threshold
+		// Threshold is set yearly by BacktestServiceImplV2.computeVolThresholds().
+		// When filter is disabled or thresholds are 0, all entries pass.
+		if (sd.getVolFilter() != null && sd.getVolFilter().isEnabled()
+				&& sd.getAvgVolume() != null && sd.getAvgTurnover() != null) {
+			// Use previousDate (yesterday) — matches Python iloc[index_today-1]
+			LocalDate prevDate = priceData.getAll_dates().stream()
+					.filter(d -> d.isBefore(date))
+					.reduce((a, b) -> b).orElse(null);
+			if (prevDate != null) {
+				float volThresh = sd.getVolThreshold();
+				float toThresh = sd.getTurnoverThreshold();
+				if (volThresh > 0 || toThresh > 0) {
+					entries_list.removeIf(ticker -> {
+						if (volThresh > 0) {
+							try {
+								Float av = sd.getAvgVolume().hasValue(prevDate, ticker)
+										? sd.getAvgVolume().getValue(prevDate, ticker) : null;
+								if (av == null || av < volThresh) return true;
+							} catch (Exception ignored) { return true; }
+						}
+						if (toThresh > 0) {
+							try {
+								Float at = sd.getAvgTurnover().hasValue(prevDate, ticker)
+										? sd.getAvgTurnover().getValue(prevDate, ticker) : null;
+								if (at == null || at < toThresh) return true;
+							} catch (Exception ignored) { return true; }
+						}
+						return false;
+					});
+				}
+			}
+		}
 
 		Map<String, Float> rank = sd.getRanking().getRow(date);
 		if (rank != null && !rank.isEmpty()) {

@@ -25,5 +25,5 @@ public class LimitEntrySignalDto {
 	private int maxQuantitites;
 	private String direction;
 	private float minStockPricePerSlot;
-
+	private float gapFilterPct;
 }

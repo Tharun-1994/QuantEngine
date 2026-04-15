@@ -1,5 +1,5 @@
 package com.backtest.engine.entity;
-
+import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +12,7 @@ import lombok.Data;
 
 @Builder
 @Data
+@AllArgsConstructor
 public class PriceDataV2 {
 	private final ArrowDataFrame daily_closes;
 	private final ArrowDataFrame daily_opens;

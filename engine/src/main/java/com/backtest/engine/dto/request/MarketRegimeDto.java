@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.backtest.engine.dto.request.VolFilterDto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -121,5 +122,23 @@ public class MarketRegimeDto {
     @JsonProperty("sector_limit")
     private int sectorLimit;
     
-}
+    @JsonProperty("gap_filter_pct")
+    private float gapFilterPct;
+    
+    @JsonProperty("max_duplicates")
+    private int maxDuplicates;
 
+    @JsonProperty("max_duplicate_sets")
+    private int maxDuplicateSets;
+
+
+    @JsonProperty("tdom_filters")
+    private List<TdomFilterDto> tdomFilters;
+
+    /**
+     * Optional vol/turnover filter config.
+     * When null or !enabled the engine skips vol/turnover threshold logic.
+     */
+    @JsonProperty("vol_filter")
+    private VolFilterDto volFilter;
+}

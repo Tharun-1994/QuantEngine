@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.backtest.engine.config.StaticConfig;
 import com.backtest.engine.dto.request.MarketRegimeDto;
+import com.backtest.engine.dto.request.VolFilterDto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +27,9 @@ public class PriceLoader {
 
 	
 	private Set<String> marketTickers;
+
+	/** When true, avg_volume, avg_turnover, and closes_spy are added to the file map. */
+	private boolean volFilterEnabled;
 	
 	
 	
@@ -46,7 +50,7 @@ public class PriceLoader {
 
 	    String univ = switch (universe.toLowerCase()) {
 	        case "sp500" -> "sp500_";
-	        case "r3000" -> "r3000_";
+	        case "russell3000" -> "russell3000_";
 	        case "liquid500" -> "liquid500_";
 	        default -> throw new IllegalArgumentException("Unknown Universe: " + universe);
 	    };
@@ -75,10 +79,14 @@ public class PriceLoader {
 	        files.put("atr_tp", String.format("%s_%d.parquet", StaticConfig.AVGTRUERANGE, atrLookbackTp));
 	    }
 
-	    this.marketTickers = tickers; 
-	    
+	    this.marketTickers = tickers;
 
-	    
+	    // Vol/Turnover filter files — loaded when filter is enabled
+	    if (volFilterEnabled) {
+	        files.put("avg_volume",   "avg_volume.parquet");
+	        files.put("avg_turnover", "avg_turnover.parquet");
+	    }
+
 	    for (String ticker : tickers) {
 	    	if(!ticker.isBlank() && ! ticker.isEmpty()) {
 		        String key = "closes_" + ticker;

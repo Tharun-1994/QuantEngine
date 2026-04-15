@@ -2,6 +2,7 @@ package com.backtest.engine.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.backtest.engine.dto.request.EntrySignalsRequestDto;
@@ -12,6 +13,7 @@ import com.backtest.engine.dto.request.TradeExitRequestDto;
 import com.backtest.engine.dto.response.BacktestReponseDto;
 import com.backtest.engine.entity.LiveHoldingsTracker;
 import com.backtest.engine.entity.PriceData;
+import com.backtest.engine.entity.PriceDataV2;
 
 public interface PortfolioService {
 
@@ -39,6 +41,20 @@ public interface PortfolioService {
 	void setPriceDate(PriceData priceData, float startingCapital, int maxSlots, int stoplossPct, int takeProfitPct);
 
 	public void executeLimitOrdersLong(LimitEntrySignalDto entrySignals);
+
+	void checkMaxTime(LocalDate tradeDate, int maxTime, PriceDataV2 priceData);
+
+	void updateTradeDayCount(LocalDate tradeDate);
+
+	void setBasicDeatils(PriceDataV2 priceData, float startingCapital, int maxSlots, float stoplossPct,
+			float takeProfitPct);
+
+	void closeAllPositionsOnOpenPrice(LocalDate tradeDate, PriceDataV2 priceData, String reasonOfExit);
+
+	Map<String, Long> getLiveHoldingsTickerCounts();
+
+	void setPriceDate(PriceDataV2 priceData, float startingCapital, int maxSlots, float stoplossPct,
+			float takeProfitPct);
 	
 	
 
