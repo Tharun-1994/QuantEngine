@@ -939,16 +939,39 @@ public class BacktestEngineController {
 
 		try (BacktestContext context = this.backtestContextFactory.create(this.priceDataService,
 				this.strategyBuilderServiceV2, this.marketTrendServiceV2)) {
+			java.time.Instant T0 = java.time.Instant.now();
+			System.err.println("⏱ ===== T0 Request received: " + strategyRequest.getName() + " =====");
 
 			if (strategyRequest.getMarketRegimeType().equalsIgnoreCase("normal")) {
 				PriceDataV2 priceData = context.getPriceData(strategyRequest, backtestDataPath);
+				
+				java.time.Instant T1 = java.time.Instant.now();
+				System.err.printf("⏱ T1 getPriceData done | phase=%.3fs | cumul=%.3fs%n",
+				    java.time.Duration.between(T0, T1).toMillis() / 1000.0,
+				    java.time.Duration.between(T0, T1).toMillis() / 1000.0);
+				
 				BuySellDataV2 buySellData = context.getBuySellData(strategyRequest, priceData, backtestDataPath);
+				java.time.Instant T2 = java.time.Instant.now();
+				System.err.printf("⏱ T2 getBuySellData done | phase=%.3fs | cumul=%.3fs%n",
+				    java.time.Duration.between(T1, T2).toMillis() / 1000.0,
+				    java.time.Duration.between(T0, T2).toMillis() / 1000.0);
 
 				buySellData.getStrategyData().setMaxSameTicker(1);
 
 				BacktestReponseDto backtestResponse = backtestServiceV2.runBacktestV2(priceData, buySellData);
+//				BacktestReponseDto backtestResponse = null;
+				java.time.Instant T3 = java.time.Instant.now();
+				System.err.printf("⏱ T3 runBacktestV2 (date loop) done | phase=%.3fs | cumul=%.3fs%n",
+				    java.time.Duration.between(T2, T3).toMillis() / 1000.0,
+				    java.time.Duration.between(T0, T3).toMillis() / 1000.0);
 
 				context.writeBacktestResponse(strategyRequest, backtestResponse, backtestOPath);
+				
+				java.time.Instant T4 = java.time.Instant.now();
+				System.err.printf("⏱ T4 writeBacktestResponse done | phase=%.3fs | cumul=%.3fs%n",
+				    java.time.Duration.between(T3, T4).toMillis() / 1000.0,
+				    java.time.Duration.between(T0, T4).toMillis() / 1000.0);
+				System.err.println("⏱ ===== TOTAL = " + (java.time.Duration.between(T0, T4).toMillis() / 1000.0) + "s =====");
 
 				return this.portfolioService.getPortfolio();
 

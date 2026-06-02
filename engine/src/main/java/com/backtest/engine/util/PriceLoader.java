@@ -33,7 +33,39 @@ public class PriceLoader {
 	
 	
 	
-	
+	/** Collect frame filenames referenced by a freeze/resume tree (VIX close + VIX SMA, etc.). */
+    @SuppressWarnings("unchecked")
+    private void collectVolCutFiles(Object node, String prefix, Map<String, String> files) {
+        if (!(node instanceof Map)) return;
+        Map<String, Object> m = (Map<String, Object>) node;
+        Object type = m.get("type");
+        if ("rule".equals(type)) {
+            Map<String, Object> r = (Map<String, Object>) m.get("rule");
+            if (r == null) return;
+            String ticker = r.get("regime_ticker") == null ? "" : r.get("regime_ticker").toString().toLowerCase();
+            if (ticker.isBlank()) return;
+            // LHS frame: {ticker}_{indicator}_{lookback}
+            String ind = r.get("indicator") == null ? "" : r.get("indicator").toString().toLowerCase();
+            int lb = r.get("lookback") == null ? 0 : ((Number) r.get("lookback")).intValue();
+            if (!ind.isBlank()) {
+                String key = ticker + "_" + ind + "_" + lb;
+                files.put(key, key + ".parquet");
+            }
+            // RHS frame (only when comparing to an indicator): {ticker}_{value_indicator}_{value_lookback}
+            Object vt = r.get("value_type");
+            String valInd = r.get("value_indicator") == null ? "" : r.get("value_indicator").toString().toLowerCase();
+            if ("indicator_price".equalsIgnoreCase(String.valueOf(vt)) && !valInd.isBlank()) {
+                int vlb = r.get("value_lookback") == null ? 0 : ((Number) r.get("value_lookback")).intValue();
+                String key = ticker + "_" + valInd + "_" + vlb;
+                files.put(key, key + ".parquet");
+            }
+            return;
+        }
+        Object children = m.get("children");
+        if (children instanceof List<?> list) {
+            for (Object c : list) collectVolCutFiles(c, prefix, files);
+        }
+    }
 
 	public Map<String, String> getFilesForRebalance(List<MarketRegimeDto> marketRegimes) {
 	    Set<String> tickers = new HashSet<>();

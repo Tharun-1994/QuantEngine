@@ -63,14 +63,20 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>3.2.4</version>
+		</dependency>
 	
 		<dependency>
 		        <groupId>org.apache.arrow</groupId>
 		        <artifactId>arrow-vector</artifactId>
 		        <version>${arrow.version}</version>
 		    </dependency>
-		
-		    <!-- Memory / allocator support -->
+
+		<!-- Memory / allocator support -->
 		    <dependency>
 		        <groupId>org.apache.arrow</groupId>
 		        <artifactId>arrow-memory-core</artifactId>
@@ -82,15 +88,15 @@
 		        <artifactId>arrow-memory-netty</artifactId>
 		        <version>${arrow.version}</version>
 		    </dependency>
-		
-		    <!-- Parquet integration -->
+
+		<!-- Parquet integration -->
 			<dependency>
 			    <groupId>org.apache.parquet</groupId>
 			    <artifactId>parquet-arrow</artifactId>
 			    <version>1.16.0</version>
 			</dependency>
-		
-		    <!-- Dataset API (includes FileSystem + Path, etc.) -->
+
+		<!-- Dataset API (includes FileSystem + Path, etc.) -->
 		    <dependency>
 		        <groupId>org.apache.arrow</groupId>
 		        <artifactId>arrow-dataset</artifactId>

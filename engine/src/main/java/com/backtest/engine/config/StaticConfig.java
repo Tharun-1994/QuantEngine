@@ -10,8 +10,8 @@ public class StaticConfig {
 	
 	public static final Map<String,String> timing = Map.of("eod","EOD","intraday","INTRADAY");
 	
-	public static final Map<String,String> stoplossType = Map.of("nrml","NORMAL","atr_based","ATRBASED");
-	public static final Map<String,String> takeProfitType = Map.of("nrml","NORMAL","atr_based","ATRBASED");
+	public static final Map<String,String> stoplossType = Map.of("nrml","NORMAL","atr_based","ATR_BASED");
+	public static final Map<String,String> takeProfitType = Map.of("nrml","NORMAL","atr_based","ATR_BASED");
 	
 	
 	public static final Map<String,String> orderType = Map.of("normal","NORMAL","limit_atr","LIMIT_ATR","limit","LIMIT");

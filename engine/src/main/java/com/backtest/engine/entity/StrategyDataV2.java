@@ -57,9 +57,12 @@ public class StrategyDataV2 {
 	private List<Integer> bannedMonths;
 	
     // ---------------- NEW: rule trees + caches ----------------
-    private RuleGroupNodeDto entryRulesTree;
+	private RuleGroupNodeDto entryRulesTree;
     private RuleGroupNodeDto exitRulesTree;
-    
+    private RuleGroupNodeDto freezeRulesTree;
+    private RuleGroupNodeDto resumeRulesTree;
+    private java.util.Set<java.time.LocalDate> freezeDays;
+    private java.util.Set<java.time.LocalDate> resumeDays;
  // leafId -> rule
     private Map<String, RuleDto> entryLeafRulesById;
     private Map<String, RuleDto> exitLeafRulesById;
@@ -99,6 +102,12 @@ public class StrategyDataV2 {
 
 	/** SPY close prices for SMA(200) bull/bear detection. Date×1col. */
 	private ArrowDataFrame spyCloses;
+	
+	/**
+	 * Per-regime: when this regime ends (market trend shifts away), force-close
+	 * its open positions at next open. Default false (Python-compatible).
+	 */
+	private boolean closePositionsOnRegimeExit;
 
 	/**
 	 * Recalculated once per year (first Jan trading day).

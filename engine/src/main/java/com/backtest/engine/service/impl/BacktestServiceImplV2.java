@@ -279,6 +279,15 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 		LocalDate previousDate = null;
 
+		// Volatility-cut (freeze/resume) suspension state — persists across days.
+		// Decisions are made on YESTERDAY's close (previousDate) and executed at
+		// TODAY's open, so there is no forward-looking bias.
+		boolean suspended = false;
+		Set<LocalDate> freezeDays = buySellData.getStrategyData().getFreezeDays();
+		Set<LocalDate> resumeDays = buySellData.getStrategyData().getResumeDays();
+		if (freezeDays == null) freezeDays = java.util.Collections.emptySet();
+		if (resumeDays == null) resumeDays = java.util.Collections.emptySet();
+
 		Map<LocalDate, Integer> tdomMap = computeTdomMap(priceData.getAll_dates());
 
 		for (LocalDate date : priceData.getAll_dates()) {
@@ -303,6 +312,18 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 				if (priceData.getTrading_dates().contains(date)) {
 
+					// Volatility-cut (freeze/resume) — decided on YESTERDAY's close
+					// (previousDate), executed at TODAY's open. No forward bias.
+					//   Freeze: close all positions at open + suspend new entries.
+					//   Resume: lift suspension (positions re-enter via normal signals).
+					if (previousDate != null && resumeDays.contains(previousDate)) {
+						suspended = false;
+					}
+					if (previousDate != null && freezeDays.contains(previousDate)) {
+						this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, "Volatility Cut");
+						suspended = true;
+					}
+
 					// Exit Orders
 					if (buySellData.getStrategyData().getExitTiming().equals("open")) {
 
@@ -316,9 +337,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						}
 					}
 
-					// Entry Orders
+					// Entry Orders (blocked while volatility-cut suspension is active)
 
-					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
+					if (!suspended && buySellData.getStrategyData().getEntryTiming().equals("open")) {
 						if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))) {
 							if (buySellData.getStrategyData().getSystemType()
 							        .equals(StaticConfig.systemType.get("long"))
@@ -361,6 +382,10 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						&& buySellData.getStrategyData().getStopLossPct() > 0) {
 					this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
 							buySellData.getStrategyData().getStoplossTiming());
+				} else if (StaticConfig.stoplossType.get("atr_based").equals(buySellData.getStrategyData().getStoplossType())
+						&& buySellData.getStrategyData().getStopLossPct() > 0) {
+					this.portfolioService.checkStoplossHitAtr(date, buySellData.getStrategyData().getSystemType(),
+							buySellData.getStrategyData().getStoplossTiming());
 				}
 
 				// Takeprofit
@@ -368,6 +393,10 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						&& buySellData.getStrategyData().getTakeProfitPct() > 0) {
 					this.portfolioService.checkTakeProfit(date, buySellData.getStrategyData().getSystemType(),
 							buySellData.getStrategyData().getStoplossTiming());
+				}else if (StaticConfig.takeProfitType.get("atr_based").equals(buySellData.getStrategyData().getTakeprofitType())
+						&& buySellData.getStrategyData().getTakeProfitPct() > 0) {
+					this.portfolioService.checkTakeProfitAtr(date, buySellData.getStrategyData().getSystemType(),
+							buySellData.getStrategyData().getTakeprofitTiming());
 				}
 
 				// EOD Close
@@ -472,6 +501,14 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 		LocalDate previousDate = null;
 
+		// Volatility-cut (freeze/resume) suspension state — persists across days.
+		// Decided on YESTERDAY's close (previousDate), executed at TODAY's open.
+		boolean suspended = false;
+		Set<LocalDate> freezeDays = buySellData.getStrategyData().getFreezeDays();
+		Set<LocalDate> resumeDays = buySellData.getStrategyData().getResumeDays();
+		if (freezeDays == null) freezeDays = java.util.Collections.emptySet();
+		if (resumeDays == null) resumeDays = java.util.Collections.emptySet();
+
 		Map<LocalDate, Integer> tdomMap = computeTdomMap(priceData.getAll_dates());
 
 		for (LocalDate date : priceData.getAll_dates()) {
@@ -488,6 +525,18 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 				if (priceData.getTrading_dates().contains(date)) {
 
+					// Volatility-cut (freeze/resume) — decided on YESTERDAY's close
+					// (previousDate), executed at TODAY's open. No forward bias.
+					//   Freeze: close all positions at open + suspend new entries.
+					//   Resume: lift suspension (positions re-enter via normal signals).
+					if (previousDate != null && resumeDays.contains(previousDate)) {
+						suspended = false;
+					}
+					if (previousDate != null && freezeDays.contains(previousDate)) {
+						this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, "Volatility Cut");
+						suspended = true;
+					}
+
 					// Exit Orders
 					if (buySellData.getStrategyData().getExitTiming().equals("open")) {
 
@@ -501,9 +550,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						}
 					}
 
-					// Entry Orders
+					// Entry Orders (blocked while volatility-cut suspension is active)
 
-					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
+					if (!suspended && buySellData.getStrategyData().getEntryTiming().equals("open")) {
 						if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))) {
 							if (buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("long"))
@@ -528,7 +577,15 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 								
 								if (!monthBanned && !isTdomBlocked(date, tdom, buySellData.getStrategyData().getTdomFilters())) {
-									processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+//									processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+									
+									if (buySellData.getStrategyData().getSystemType().equals(StaticConfig.systemType.get("short"))) {
+										System.err.println("=== LIMIT SHORT BRANCH HIT === " + date);
+										processLimitOrdersShort(date, previousDate, limitOrderMap, buySellData);
+									} else {
+										processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+									}
+									
 								}
 							}
 
@@ -649,7 +706,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				System.err.println();
 				continue;
 			}
-			if (date.equals(LocalDate.of(2000, 2, 18))) {
+			if (date.equals(LocalDate.of(2021, 8, 18))) {
 				System.err.println();
 			}
 			if (((date.isEqual(priceData.getTrading_dates().get(0))
@@ -682,8 +739,19 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					if(previousDayMarketTrend != null && marketTrendOfDay != null 
 							&& !previousDayMarketTrend.equalsIgnoreCase(marketTrendOfDay)) {
 						
-						String reason = String.format("%s %s %s %s", "Market Shift", previousDayMarketTrend,"to", marketTrendOfDay);
-						this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, reason);
+						// Only force-close positions if the OUTGOING regime requested it.
+						// At this point in the loop, buySellData still references the
+						// outgoing regime's StrategyData (the swap to the new regime
+						// happens further down). So checking its flag is correct: this
+						// is the regime whose positions would be closed.
+						//
+						// Default behaviour (flag = false) matches Python QAS, which lets
+						// open trades exit via their own signals (RSI<30, stop loss, etc.)
+						// even after the market trend flips.
+						if (buySellData.getStrategyData().isClosePositionsOnRegimeExit()) {
+							String reason = String.format("%s %s %s %s", "Market Shift", previousDayMarketTrend,"to", marketTrendOfDay);
+							this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, reason);
+						}
 						
 					}
 					
@@ -695,6 +763,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 									.equals(StaticConfig.systemType.get("long"))
 								|| buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("short"))) {
+//								System.err.println("=== Process Normal SHORT BRANCH HIT === " + date);
 								processNormalOrders(date, previousDate, entryExitMap, buySellData);
 							}
 
@@ -714,7 +783,13 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 								
 								if (!monthBanned &&!isTdomBlocked(date, tdom, buySellData.getStrategyData().getTdomFilters())) {
-									processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+//									processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+									if (buySellData.getStrategyData().getSystemType().equals(StaticConfig.systemType.get("short"))) {
+//										System.err.println("=== LIMIT SHORT BRANCH HIT === " + date);
+										processLimitOrdersShort(date, previousDate, limitOrderMap, buySellData);
+									} else {
+										processLimitOrdersLong(date, previousDate, limitOrderMap, buySellData);
+									}
 								}
 								
 							}

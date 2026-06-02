@@ -4,7 +4,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.arrow.dataset.file.FileFormat;
 import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
@@ -21,12 +28,27 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowReader;
 import org.apache.arrow.vector.types.pojo.ArrowType.ArrowTypeID;
 
-public class ArrowStringDataFrame implements AutoCloseable {
+import com.backtest.engine.config.Cacheable;
+
+public class ArrowStringDataFrame implements Cacheable {
 
     private final BufferAllocator allocator;
     private final VectorSchemaRoot root;
     private final Map<String, VarCharVector> stringVectors = new LinkedHashMap<>();
     private final Map<LocalDate, Integer> dateIndexMap = new HashMap<>();
+
+    // If true, this frame is cache-owned; close() is a no-op until the cache evicts.
+    private volatile boolean cached = false;
+
+    @Override
+    public void setCached(boolean cached) {
+        this.cached = cached;
+    }
+
+    @Override
+    public boolean isCached() {
+        return cached;
+    }
 
     private ArrowStringDataFrame(BufferAllocator allocator, VectorSchemaRoot root) {
         this.allocator = allocator;
@@ -102,6 +124,9 @@ public class ArrowStringDataFrame implements AutoCloseable {
 
     @Override
     public void close() {
+        if (cached) {
+            return;
+        }
         try {
             root.close();
         } finally {

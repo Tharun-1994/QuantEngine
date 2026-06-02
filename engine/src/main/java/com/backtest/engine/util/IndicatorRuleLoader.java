@@ -10,12 +10,34 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.backtest.engine.config.ArrowDataFrameCache;
 import com.backtest.engine.config.StaticConfig;
 import com.backtest.engine.dto.request.MarketRegimeDto;
 import com.backtest.engine.dto.request.RuleDto;
 import com.backtest.engine.ruleBuilder.RuleParser;
 
 public class IndicatorRuleLoader {
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Service Locator bootstrap: ArrowDataFrameCache calls setCache(...) at
+	// startup via @PostConstruct. When set, static load methods route through
+	// the cache; otherwise they fall back to direct disk reads. This lets us
+	// add caching to legacy static-call sites without refactoring callers.
+	// ─────────────────────────────────────────────────────────────────────────
+	private static volatile ArrowDataFrameCache cache;
+
+	public static void setCache(ArrowDataFrameCache c) {
+		cache = c;
+	}
+
+	/** Single chokepoint for all indicator parquet loads inside this class. */
+	private static ArrowDataFrame loadIndicator(String uri) throws Exception {
+		ArrowDataFrameCache c = cache;
+		if (c != null) {
+			return c.load(uri);
+		}
+		return ArrowDataFrame.load(uri);
+	}
 
 	// 1. Declare it as a static constant
 	private static final Map<String, String> PRICE_MAP = Map.of("unadjusted_close", "DAILY_unadjusted_closes", "close",
@@ -69,7 +91,7 @@ public class IndicatorRuleLoader {
 				}
 
 				if (!tableMap.containsKey(lookupKey)) {
-					ArrowDataFrame indicatorMap = ArrowDataFrame.load(parquetPath.toUri().toString());
+					ArrowDataFrame indicatorMap = loadIndicator(parquetPath.toUri().toString());
 					tableMap.put(lookupKey, indicatorMap);
 				}
 
@@ -86,7 +108,7 @@ public class IndicatorRuleLoader {
 					Path valueIndicatorParquetPath = Paths.get(dataDir, valueIndicatorFileName);
 
 					if (!tableMap.containsKey(rc.getValueIndicator() + "_" + rc.getValueLookback())) {
-						ArrowDataFrame indicatorMap = ArrowDataFrame.load(valueIndicatorParquetPath.toUri().toString());
+						ArrowDataFrame indicatorMap = loadIndicator(valueIndicatorParquetPath.toUri().toString());
 						tableMap.put(rc.getValueIndicator() + "_" + rc.getValueLookback(), indicatorMap);
 					}
 
@@ -136,7 +158,7 @@ public class IndicatorRuleLoader {
 			Path parquetPath = Paths.get(dataDir, fileName);
 			try {
 				if (!tableMap.containsKey(rc.getIndicator() + "_" + rc.getLookback())) {
-					ArrowDataFrame indicatorMap = ArrowDataFrame.load(parquetPath.toUri().toString());
+					ArrowDataFrame indicatorMap = loadIndicator(parquetPath.toUri().toString());
 					tableMap.put(rc.getIndicator() + "_" + rc.getLookback(), indicatorMap);
 				}
 
@@ -179,7 +201,7 @@ public class IndicatorRuleLoader {
 				// Load ArrowDataFrame only if not already loaded
 				tableMap.computeIfAbsent(tableKey, k -> {
 					try {
-						return ArrowDataFrame.load(parquetPath.toUri().toString());
+						return loadIndicator(parquetPath.toUri().toString());
 					} catch (Exception e) {
 						e.printStackTrace();
 						return null;
@@ -221,7 +243,7 @@ public class IndicatorRuleLoader {
 					Path parquetPath = Paths.get(dataDir, fileName);
 
 					tableMap.computeIfAbsent(tableKey, k -> {
-						try { return ArrowDataFrame.load(parquetPath.toUri().toString()); }
+						try { return loadIndicator(parquetPath.toUri().toString()); }
 						catch (Exception e) { e.printStackTrace(); return null; }
 					});
 				}
@@ -237,7 +259,7 @@ public class IndicatorRuleLoader {
 					Path valPath = Paths.get(dataDir, valFileName);
 
 					tableMap.computeIfAbsent(valKey, k -> {
-						try { return ArrowDataFrame.load(valPath.toUri().toString()); }
+						try { return loadIndicator(valPath.toUri().toString()); }
 						catch (Exception e) { e.printStackTrace(); return null; }
 					});
 				}
@@ -265,7 +287,7 @@ public class IndicatorRuleLoader {
 			Path parquetPath = Paths.get(dataDir, fileName);
 			try {
 				if (!tableMap.containsKey(rc.getIndicator() + "_" + rc.getLookback())) {
-					ArrowDataFrame indicatorMap = ArrowDataFrame.load(parquetPath.toUri().toString());
+					ArrowDataFrame indicatorMap = loadIndicator(parquetPath.toUri().toString());
 					tableMap.put(rc.getIndicator() + "_" + rc.getLookback(), indicatorMap);
 				}
 

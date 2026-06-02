@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import java.util.Set;
-
 import org.apache.arrow.dataset.file.FileFormat;
 import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
 import org.apache.arrow.dataset.jni.NativeMemoryPool;
@@ -24,12 +22,75 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowReader;
 import org.apache.arrow.vector.types.pojo.ArrowType.ArrowTypeID;
 
-public class ArrowDataFrame implements AutoCloseable {
+import com.backtest.engine.config.Cacheable;
+
+public class ArrowDataFrame implements Cacheable {
 
 	private final BufferAllocator allocator;
 	private final VectorSchemaRoot root;
 	private final Map<String, Float4Vector> tickerVectors = new HashMap<>();
 	private final Map<LocalDate, Integer> dateIndexMap = new HashMap<>();
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// PRIMITIVE-ACCESS FAST PATH
+	// Lazy-built parallel arrays for boxing-free, allocation-free iteration in
+	// hot loops (leaf cache build, date loop). Built once on first call; reused
+	// for the lifetime of the frame. Pairs perfectly with the cache: cached
+	// frames also cache their primitive index.
+	// ─────────────────────────────────────────────────────────────────────────
+	private volatile String[] tickerArray;        // tickerArray[col] = ticker name
+	private volatile Float4Vector[] vectorArray;  // vectorArray[col] = primitive float column
+
+	private void buildPrimitiveIndex() {
+		// Double-checked locking — the only writer is here, readers see a fully built array
+		if (tickerArray != null) return;
+		synchronized (this) {
+			if (tickerArray != null) return;
+			int n = tickerVectors.size();
+			String[] tArr = new String[n];
+			Float4Vector[] vArr = new Float4Vector[n];
+			int i = 0;
+			for (Map.Entry<String, Float4Vector> e : tickerVectors.entrySet()) {
+				tArr[i] = e.getKey();
+				vArr[i] = e.getValue();
+				i++;
+			}
+			vectorArray = vArr;
+			tickerArray = tArr; // assign last — visible-after barrier for the array contents
+		}
+	}
+
+	/** Ticker names indexed by column. Built once, reused. Do NOT mutate. */
+	public String[] getTickerArray() {
+		buildPrimitiveIndex();
+		return tickerArray;
+	}
+
+	/** Primitive Float4Vectors indexed by column, aligned with getTickerArray(). Do NOT mutate. */
+	public Float4Vector[] getVectorArray() {
+		buildPrimitiveIndex();
+		return vectorArray;
+	}
+
+	/** Row index for a date, or null if date not in this frame. */
+	public Integer getDateIndex(LocalDate date) {
+		return dateIndexMap.get(date);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// CACHE OWNERSHIP FLAG
+	// If true, this frame is owned by ArrowDataFrameCache; close() is a no-op.
+	// Only the cache's RemovalListener flips this back to false and then calls close().
+	// ─────────────────────────────────────────────────────────────────────────
+	private volatile boolean cached = false;
+
+	public void setCached(boolean cached) {
+		this.cached = cached;
+	}
+
+	public boolean isCached() {
+		return cached;
+	}
 
 	private ArrowDataFrame(BufferAllocator allocator, VectorSchemaRoot root) {
 		this.allocator = allocator;
@@ -164,6 +225,10 @@ public class ArrowDataFrame implements AutoCloseable {
 
 	@Override
 	public void close() {
+		// If this frame is cache-owned, skip release — cache eviction will close us later.
+		if (cached) {
+			return;
+		}
 		try {
 			root.close();
 		} finally {

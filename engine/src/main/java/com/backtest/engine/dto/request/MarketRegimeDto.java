@@ -115,6 +115,12 @@ public class MarketRegimeDto {
 
     @JsonProperty("exit_rules_tree")
     private Map<String, Object> exitRulesTree;
+
+    @JsonProperty("freeze_rules_tree")
+    private Map<String, Object> freezeRulesTree;
+
+    @JsonProperty("resume_rules_tree")
+    private Map<String, Object> resumeRulesTree;
     
     @JsonProperty("sector_level")
     private int sectorLevel;
@@ -141,4 +147,11 @@ public class MarketRegimeDto {
      */
     @JsonProperty("vol_filter")
     private VolFilterDto volFilter;
+    /**
+     * If true, all open positions belonging to THIS regime are force-closed at
+     * next open when the market trend shifts away from this regime.
+     * Default false (matches Python: positions exit normally via signals/stop).
+     */
+    @JsonProperty("close_positions_on_regime_exit")
+    private boolean closePositionsOnRegimeExit;
 }
