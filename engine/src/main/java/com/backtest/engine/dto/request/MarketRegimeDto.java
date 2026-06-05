@@ -122,6 +122,35 @@ public class MarketRegimeDto {
     @JsonProperty("resume_rules_tree")
     private Map<String, Object> resumeRulesTree;
     
+    @JsonProperty("freeze_timing")
+    private String freezeTiming;
+
+    /** "open" (default) — resume check uses previousDate. "close" — uses today. */
+    @JsonProperty("resume_timing")
+    private String resumeTiming;
+    
+    /**
+     * Volatility safety net type for this regime.
+     *   "none"           — no safety net (default)
+     *   "simple"         — stateless freeze/resume rule trees (current behaviour)
+     *   "spy_volatility" — stateful 4-escape state machine (Stage 3 — not yet wired)
+     */
+    @JsonProperty("safety_net_type")
+    private String safetyNetType;
+    
+    /**
+     * List-based safety-net contract (Stage 3a). Each item is a stateful
+     * policy with its own {@code params} blob. The engine iterates the list
+     * each day; any item saying "freeze" stops trading. Null/empty means
+     * "no safety nets configured".
+     *
+     * <p>Plumbed but inert in Stage 3a — engine reads only {@link #safetyNetType}
+     * for behaviour. Stage 3b adds the policy registry and switches dispatch
+     * to this list.</p>
+     */
+    @JsonProperty("safety_nets")
+    private java.util.List<SafetyNetItemDto> safetyNets;
+    
     @JsonProperty("sector_level")
     private int sectorLevel;
  

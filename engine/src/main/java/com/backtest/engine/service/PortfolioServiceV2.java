@@ -53,6 +53,8 @@ public interface PortfolioServiceV2 {
 	public void checkMaxTime(LocalDate date, int maxTime, PriceDataV2 priceData);
 	
 	public void closeAllPositionsAtEodClose(LocalDate date);
+	
+	public void closeAllPositionsAtClose(LocalDate date, String reasonOfExit);
 
 	public void checkStoplossHitAtr(LocalDate date, String systemType, String stoplossTiming);
 

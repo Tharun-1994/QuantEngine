@@ -7,9 +7,11 @@ import java.util.Set;
 
 import com.backtest.engine.dto.request.RuleDto;
 import com.backtest.engine.dto.request.RuleGroupNodeDto;
+import com.backtest.engine.dto.request.SafetyNetItemDto;
 import com.backtest.engine.dto.request.TdomFilterDto;
 import com.backtest.engine.dto.request.VolFilterDto;
 import com.backtest.engine.ruleBuilder.LeafCacheResult;
+import com.backtest.engine.service.safetynet.SafetyNetPolicy;
 import com.backtest.engine.util.ArrowDataFrame;
 
 import lombok.Builder;
@@ -63,6 +65,23 @@ public class StrategyDataV2 {
     private RuleGroupNodeDto resumeRulesTree;
     private java.util.Set<java.time.LocalDate> freezeDays;
     private java.util.Set<java.time.LocalDate> resumeDays;
+    private String freezeTiming;
+    private String resumeTiming;
+    /** Volatility safety net type — "none" | "simple" | "spy_volatility".
+     *  Plumbed through but not yet consumed by the day-loop (Stage 3). */
+    private String safetyNetType;
+    /** List of stateful safety-net policies (Stage 3a contract).
+     *  The raw DTOs from the request. Engine still references this for
+     *  back-compat / introspection; runtime dispatch uses {@link #safetyPolicies}. */
+    private java.util.List<SafetyNetItemDto> safetyNets;
+
+    /** Initialised SafetyNetPolicy instances for this regime (Stage 3b).
+     *  Built by BacktestContext via SafetyNetRegistry from {@link #safetyNets}.
+     *  Empty list means no active policies — strategy trades freely.
+     *  The day-loop iterates this list each day to gather freeze/resume decisions. */
+    private java.util.List<SafetyNetPolicy> safetyPolicies;
+    
+    
  // leafId -> rule
     private Map<String, RuleDto> entryLeafRulesById;
     private Map<String, RuleDto> exitLeafRulesById;

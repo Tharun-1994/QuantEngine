@@ -1205,5 +1205,28 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 			this.exitTrade(trade);
 		}
 	}
+	
+	
+	/**
+	 * Close every open position at the given date's close price with a custom
+	 * reason. Used by close-timing volatility-cut: detect on today's close,
+	 * act at today's close (matches Python `trade_every_day_close` flow).
+	 */
+	public void closeAllPositionsAtClose(LocalDate date, String reasonOfExit) {
+		if (this.liveHoldingsLogger.isEmpty())
+			return;
+		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+		for (String tradeId : liveTradeIds) {
+			String symbol = tradeId.split("_")[0];
+			float closePrice = this.priceData.getDaily_closes().getValue(date, symbol);
+			TradeExitRequestDto trade = new TradeExitRequestDto();
+			trade.setTradeId(tradeId);
+			trade.setTradeDate(date);
+			trade.setExitPrice(closePrice);
+			trade.setPriceUsed("close");
+			trade.setExitReason(reasonOfExit);
+			this.exitTrade(trade);
+		}
+	}
 
 }

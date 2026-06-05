@@ -82,6 +82,8 @@ public class PriceLoader {
 
 	    String univ = switch (universe.toLowerCase()) {
 	        case "sp500" -> "sp500_";
+	        case "sp100" -> "sp100_";
+	        case "nasdaq100" -> "nasdaq100_";
 	        case "russell3000" -> "russell3000_";
 	        case "liquid500" -> "liquid500_";
 	        default -> throw new IllegalArgumentException("Unknown Universe: " + universe);

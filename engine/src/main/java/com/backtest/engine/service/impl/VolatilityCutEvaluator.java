@@ -214,15 +214,26 @@ public final class VolatilityCutEvaluator {
 
     // ── Utilities ────────────────────────────────────────────────────────────
 
-    /** Build the canonical frame-map key: {ticker}_{indicator}_{lookback}. */
+    /**
+     * Build the canonical frame-map key: {ticker}_{indicator}_{lookback}.
+     *
+     * Exception: when the indicator name already encodes the ticker
+     * (e.g. indicator="vix_close" with ticker="vix"), the ticker prefix is
+     * skipped so the lookup key matches what the middleware wrote
+     * (vix_close_0, not vix_vix_close_0). Must stay symmetric with
+     * BacktestContext.buildVolCutKey.
+     */
     private static String buildKey(String ticker, String indicator, Integer lookback) {
         String ind = indicator == null ? "" : indicator.toLowerCase();
         int lb = (lookback == null) ? 0 : lookback;
         if (ticker == null || ticker.isBlank()) {
             return ind + "_" + lb;
         }
-        return ticker + "_" + ind + "_" + lb;
+        String tk = ticker.toLowerCase();
+        if (ind.startsWith(tk + "_")) return ind + "_" + lb;   // indicator already ticker-prefixed
+        return tk + "_" + ind + "_" + lb;
     }
+    
 
     /** Read the single-column scalar for a date (first column of the frame). */
     private static Float scalarFor(ArrowDataFrame df, LocalDate d) {
