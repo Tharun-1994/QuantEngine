@@ -42,19 +42,17 @@ public class IndicatorRuleLoader {
 	// 1. Declare it as a static constant
 	private static final Map<String, String> PRICE_MAP = Map.of("unadjusted_close", "DAILY_unadjusted_closes", "close",
 			"DAILY_closes");
-	
+
 	private static final Set<String> PATTERN_INDICATORS = buildPatternIndicators();
 
 	private static Set<String> buildPatternIndicators() {
-	    Set<String> m = new HashSet<>();
+		Set<String> m = new HashSet<>();
 
-	    // --- Pattern / price-action style ---
-	    m.add("n_week_high_recent");
+		// --- Pattern / price-action style ---
+		m.add("n_week_high_recent");
 
-	    return Collections.unmodifiableSet(m);
+		return Collections.unmodifiableSet(m);
 	}
-	
-	
 
 	public static Map<String, ArrowDataFrame> loadTables(List<RuleDto> conditions, String dataDir) {
 		Map<String, ArrowDataFrame> tableMap = new HashMap<>();
@@ -62,18 +60,16 @@ public class IndicatorRuleLoader {
 		for (RuleDto rc : conditions) {
 			String fileName;
 			String valueIndicatorFileName;
-			
+
 			if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
-				
-			    int nWeeks = (Integer) rc.getParams().get("n_week_days");
-			    int within = (Integer) rc.getParams().get("within_days");
-			    fileName = String.format("%s_%s_%s.parquet", rc.getIndicator(), nWeeks, within);
-			}
-			else if (rc.getIndicator().equals(StaticConfig.SHARPE)) {
-			    String sharpeKey = StaticConfig.getSharpeKey(rc);
-			    fileName = sharpeKey + ".parquet";
-			}
-			else if (PRICE_MAP.containsKey(rc.getIndicator())) {
+
+				int nWeeks = (Integer) rc.getParams().get("n_week_days");
+				int within = (Integer) rc.getParams().get("within_days");
+				fileName = String.format("%s_%s_%s.parquet", rc.getIndicator(), nWeeks, within);
+			} else if (rc.getIndicator().equals(StaticConfig.SHARPE)) {
+				String sharpeKey = StaticConfig.getSharpeKey(rc);
+				fileName = sharpeKey + ".parquet";
+			} else if (PRICE_MAP.containsKey(rc.getIndicator())) {
 				fileName = RuleParser.buildParquetFileName(PRICE_MAP.get(rc.getIndicator()));
 			} else {
 				fileName = RuleParser.buildParquetFileName(rc.getIndicator(), rc.getLookback());
@@ -83,11 +79,11 @@ public class IndicatorRuleLoader {
 			try {
 				String lookupKey;
 				if (rc.getIndicator().equals(StaticConfig.N_WEEK_HIGH_RECENT)) {
-				    lookupKey = StaticConfig.getN_WEEK_HIGH_RECENT(rc);
+					lookupKey = StaticConfig.getN_WEEK_HIGH_RECENT(rc);
 				} else if (rc.getIndicator().equals(StaticConfig.SHARPE)) {
-				    lookupKey = StaticConfig.getSharpeKey(rc);
+					lookupKey = StaticConfig.getSharpeKey(rc);
 				} else {
-				    lookupKey = rc.getIndicator() + "_" + rc.getLookback();
+					lookupKey = rc.getIndicator() + "_" + rc.getLookback();
 				}
 
 				if (!tableMap.containsKey(lookupKey)) {
@@ -101,7 +97,8 @@ public class IndicatorRuleLoader {
 					if (PRICE_MAP.containsKey(rc.getValueIndicator())) {
 						valueIndicatorFileName = RuleParser.buildParquetFileName(PRICE_MAP.get(rc.getIndicator()));
 					} else {
-						valueIndicatorFileName = RuleParser.buildParquetFileName(rc.getValueIndicator(),rc.getValueLookback());
+						valueIndicatorFileName = RuleParser.buildParquetFileName(rc.getValueIndicator(),
+								rc.getValueLookback());
 
 					}
 
@@ -220,8 +217,9 @@ public class IndicatorRuleLoader {
 	}
 
 	/**
-	 * V3: Load market trend indicator parquets using per-rule ticker (rule.getRegimeTicker())
-	 * instead of per-regime ticker (regime.getRegimeTicker()).
+	 * V3: Load market trend indicator parquets using per-rule ticker
+	 * (rule.getRegimeTicker()) instead of per-regime ticker
+	 * (regime.getRegimeTicker()).
 	 */
 	public static Map<String, ArrowDataFrame> loadTablesMarketTrendV3(List<MarketRegimeDto> regimes, String dataDir,
 			Map<String, Set<Integer>> indicatorLookbackMap) {
@@ -239,28 +237,38 @@ public class IndicatorRuleLoader {
 				// Load primary indicator (LHS) — skip price indicators
 				if (!PRICE_INDICATORS.contains(rule.getIndicator().toLowerCase())) {
 					String tableKey = String.format("%s_%s_%d", ticker, rule.getIndicator(), rule.getLookback());
-					String fileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getIndicator(), rule.getLookback());
+					String fileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getIndicator(),
+							rule.getLookback());
 					Path parquetPath = Paths.get(dataDir, fileName);
 
 					tableMap.computeIfAbsent(tableKey, k -> {
-						try { return loadIndicator(parquetPath.toUri().toString()); }
-						catch (Exception e) { e.printStackTrace(); return null; }
+						try {
+							return loadIndicator(parquetPath.toUri().toString());
+						} catch (Exception e) {
+							e.printStackTrace();
+							return null;
+						}
 					});
 				}
 
 				// Load value indicator (RHS) — for indicator_price comparisons
-				if ("indicator_price".equalsIgnoreCase(rule.getValueType())
-						&& rule.getValueIndicator() != null
+				if ("indicator_price".equalsIgnoreCase(rule.getValueType()) && rule.getValueIndicator() != null
 						&& !rule.getValueIndicator().isBlank()
 						&& !PRICE_INDICATORS.contains(rule.getValueIndicator().toLowerCase())) {
 
-					String valKey = String.format("%s_%s_%d", ticker, rule.getValueIndicator(), rule.getValueLookback());
-					String valFileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getValueIndicator(), rule.getValueLookback());
+					String valKey = String.format("%s_%s_%d", ticker, rule.getValueIndicator(),
+							rule.getValueLookback());
+					String valFileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getValueIndicator(),
+							rule.getValueLookback());
 					Path valPath = Paths.get(dataDir, valFileName);
 
 					tableMap.computeIfAbsent(valKey, k -> {
-						try { return loadIndicator(valPath.toUri().toString()); }
-						catch (Exception e) { e.printStackTrace(); return null; }
+						try {
+							return loadIndicator(valPath.toUri().toString());
+						} catch (Exception e) {
+							e.printStackTrace();
+							return null;
+						}
 					});
 				}
 			}
@@ -301,6 +309,115 @@ public class IndicatorRuleLoader {
 
 		return tableMap;
 
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// LRA Patch 35 — auto-collect + auto-load indicators referenced by the
+	// LRA-specific JSON config (entry_rules_tree_long / _short + sizing_policy
+	// conditional indicator). The existing scan loops in BacktestEngineController
+	// only inspect the legacy flat entry_rules / exit_rules / market_trend_rules
+	// lists; this fills the gap for LONGSHORT system_type.
+	// ─────────────────────────────────────────────────────────────────────────
+
+	/**
+	 * Walks an LRA regime's JSON config and returns every (indicator, lookback)
+	 * pair it references. Sources scanned: - entry_rules_tree_long (recursive
+	 * group/leaf tree) - entry_rules_tree_short (recursive group/leaf tree) -
+	 * sizing_policy.params.conditional_on (+ optional conditional_on_lookback)
+	 *
+	 * Returns an empty map when the regime has no LRA fields populated — so
+	 * existing ROC strategies pay zero cost when this is called against them.
+	 */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Set<Integer>> collectLraIndicators(MarketRegimeDto regime) {
+		Map<String, Set<Integer>> result = new HashMap<>();
+		if (regime == null) {
+			return result;
+		}
+
+		walkTreeForIndicators(regime.getEntryRulesTreeLong(), result);
+		walkTreeForIndicators(regime.getEntryRulesTreeShort(), result);
+
+		Map<String, Object> policy = regime.getSizingPolicy();
+		if (policy != null) {
+			Map<String, Object> params = (Map<String, Object>) policy.get("params");
+			if (params != null) {
+				Object conditionalOn = params.get("conditional_on");
+				if (conditionalOn instanceof String && !((String) conditionalOn).isEmpty()) {
+					Object lbObj = params.get("conditional_on_lookback");
+					int lb = (lbObj instanceof Number) ? ((Number) lbObj).intValue() : 0;
+					result.computeIfAbsent((String) conditionalOn, k -> new HashSet<>()).add(lb);
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Recursive tree-walker. Group nodes ({"type":"group", "children":[...]})
+	 * recurse on children. Leaf nodes contribute (indicator, lookback). Lookback
+	 * defaults to 0 when absent. top_n_universe leaves are not special-cased — they
+	 * reference an indicator like any other comparison node.
+	 */
+	@SuppressWarnings("unchecked")
+	private static void walkTreeForIndicators(Map<String, Object> node, Map<String, Set<Integer>> sink) {
+		if (node == null) {
+			return;
+		}
+		String type = (String) node.get("type");
+		if ("group".equals(type)) {
+			List<Map<String, Object>> children = (List<Map<String, Object>>) node.get("children");
+			if (children != null) {
+				for (Map<String, Object> child : children) {
+					walkTreeForIndicators(child, sink);
+				}
+			}
+			return;
+		}
+		// Leaf
+		String indicator = (String) node.get("indicator");
+		if (indicator == null || indicator.isEmpty()) {
+			return;
+		}
+		Object lbObj = node.get("lookback");
+		int lookback = (lbObj instanceof Number) ? ((Number) lbObj).intValue() : 0;
+		sink.computeIfAbsent(indicator, k -> new HashSet<>()).add(lookback);
+	}
+
+	/**
+	 * Loads every parquet referenced in indicatorLookbacks into an ArrowDataFrame
+	 * map keyed "indicator_lookback". Existing entries in tableMap aren't checked
+	 * here — caller is expected to merge with putAll into the regime's entryMap.
+	 * Failures are logged and the offending entry is skipped (consistent with
+	 * loadTables' resilience pattern).
+	 */
+	public static Map<String, ArrowDataFrame> loadFromMap(Map<String, Set<Integer>> indicatorLookbacks,
+			String dataDir) {
+		Map<String, ArrowDataFrame> tableMap = new HashMap<>();
+		if (indicatorLookbacks == null || indicatorLookbacks.isEmpty()) {
+			return tableMap;
+		}
+		for (Map.Entry<String, Set<Integer>> e : indicatorLookbacks.entrySet()) {
+			String indicator = e.getKey();
+			for (Integer lookback : e.getValue()) {
+				int lb = (lookback != null) ? lookback : 0;
+				String key = indicator + "_" + lb;
+				if (tableMap.containsKey(key)) {
+					continue;
+				}
+				String fileName = RuleParser.buildParquetFileName(indicator, lb);
+				Path parquetPath = Paths.get(dataDir, fileName);
+				try {
+					ArrowDataFrame df = loadIndicator(parquetPath.toUri().toString());
+					tableMap.put(key, df);
+				} catch (Exception ex) {
+					System.err.println(
+							"LRA Patch 35: failed to load indicator parquet: " + parquetPath + " - " + ex.getMessage());
+					ex.printStackTrace();
+				}
+			}
+		}
+		return tableMap;
 	}
 
 }

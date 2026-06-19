@@ -34,6 +34,8 @@ import com.backtest.engine.dto.request.RuleDto;
 import com.backtest.engine.dto.request.StrategyBucketRequestDto;
 import com.backtest.engine.dto.request.StrategyRequestDto;
 import com.backtest.engine.dto.response.BacktestReponseDto;
+import com.backtest.engine.dto.response.SingleBarSignalsResponseDto; // Patch 31
+import com.backtest.engine.service.SingleBarEvaluator; // Patch 31
 import com.backtest.engine.entity.BuySellData;
 import com.backtest.engine.entity.BuySellDataV2;
 import com.backtest.engine.entity.PriceData;
@@ -51,7 +53,9 @@ import com.backtest.engine.service.StrategyBuilderService;
 import com.backtest.engine.service.StrategyBuilderServiceV2;
 import com.backtest.engine.util.ArrowDataFrame;
 import com.backtest.engine.util.ArrowStringDataFrame;
+import com.backtest.engine.dto.request.ExecutionStepRequestDto;
 import com.backtest.engine.util.BacktestExecutionException;
+import org.springframework.http.ResponseEntity;
 import com.backtest.engine.util.IndicatorRuleLoader;
 import com.backtest.engine.util.ParquetToMap;
 import com.backtest.engine.util.PriceLoader;
@@ -80,7 +84,7 @@ public class BacktestEngineController {
 	private final BacktestServiceV2 backtestServiceV2;
 
 	private final BacktestContextFactory backtestContextFactory;
-
+	private final SingleBarEvaluator singleBarEvaluator;
 	private final PriceDataLoaderService priceDataService;
 	private final StrategyBuilderService strategyBuilderService;
 	private final StrategyBuilderServiceV2 strategyBuilderServiceV2;
@@ -92,7 +96,8 @@ public class BacktestEngineController {
 	public BacktestEngineController(BacktestService backtestService, PriceDataLoaderService priceDataService,
 			StrategyBuilderService strategyBuilderService, PortfolioService portfolioService,
 			StrategyBuilderServiceV2 strategyBuilderServiceV2, BacktestServiceV2 backtestServiceV2,
-			MarketTrendServiceV2 marketTrendServiceV2, BacktestContextFactory backtestContextFactory) {
+			MarketTrendServiceV2 marketTrendServiceV2, BacktestContextFactory backtestContextFactory,
+			SingleBarEvaluator singleBarEvaluator) {
 		this.backtestService = backtestService;
 		this.priceDataService = priceDataService;
 		this.strategyBuilderService = strategyBuilderService;
@@ -101,6 +106,7 @@ public class BacktestEngineController {
 		this.backtestServiceV2 = backtestServiceV2;
 		this.marketTrendServiceV2 = marketTrendServiceV2;
 		this.backtestContextFactory = backtestContextFactory;
+		this.singleBarEvaluator = singleBarEvaluator;
 	}
 
 	public Map<String, Map<LocalDate, Map<String, Float>>> loadTables(List<RuleCondition> conditions, String universe,
@@ -401,6 +407,11 @@ public class BacktestEngineController {
 				.startingCapital(strategyRequest.getCapital()).slots(strategyRequest.getSlots())
 				.stopLossPct(strategyRequest.getStoplossPct()).takeProfitPct(strategyRequest.getTakeprofitPct())
 				.stoplossTiming(strategyRequest.getStoplossTiming())
+				// Patch 72m.1: anchor passes through builder; null when not PORTFOLIO.
+//				.portfolioStoplossAnchor(
+//					strategyRequest.getRegimes() != null && !strategyRequest.getRegimes().isEmpty()
+//						? strategyRequest.getRegimes().get(0).getPortfolioStoplossAnchor()
+//						: null)
 				.takeprofitTiming(strategyRequest.getTakeprofitTiming()).entryTiming(strategyRequest.getEntryTiming())
 				.exitTiming(strategyRequest.getExitTiming()).ranking(parquetFileValueMap.get("ranking"))
 				.rankingOrder(strategyRequest.getRankingOrder()).startDate(strategyRequest.getStartDate())
@@ -583,6 +594,8 @@ public class BacktestEngineController {
 					.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
 					.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
 					.stoplossTiming(strategyRequest.getRegimes().get(0).getStoplossTiming())
+					// Patch 72m.2: anchor passes through builder.
+					.portfolioStoplossAnchor(strategyRequest.getRegimes().get(0).getPortfolioStoplossAnchor())
 					.takeprofitTiming(strategyRequest.getRegimes().get(0).getTakeprofitTiming())
 					.entryTiming(strategyRequest.getRegimes().get(0).getEntryTiming())
 					.exitTiming(strategyRequest.getRegimes().get(0).getExitTiming())
@@ -597,7 +610,17 @@ public class BacktestEngineController {
 					.atrLimitLookback(strategyRequest.getRegimes().get(0).getAtrLimitLookback())
 					.limitPct(strategyRequest.getRegimes().get(0).getLimitPct())
 					.maxTime(strategyRequest.getRegimes().get(0).getMaxTime())
-					.bannedMonths(strategyRequest.getRegimes().get(0).getBannedMonths()).build();
+					.bannedMonths(strategyRequest.getRegimes().get(0).getBannedMonths())
+					// LRA Patch 22a: propagate the 5 LONGSHORT regime fields.
+					// Null for LONG / SHORT — additive, no behavioural impact.
+					.tickerClassification(strategyRequest.getRegimes().get(0).getTickerClassification())
+					.pairingEntryRules(strategyRequest.getRegimes().get(0).getPairingEntryRules())
+					.pairingExitRules(strategyRequest.getRegimes().get(0).getPairingExitRules())
+					.sizingPolicy(strategyRequest.getRegimes().get(0).getSizingPolicy())
+					.pairExitPolicy(strategyRequest.getRegimes().get(0).getPairExitPolicy())
+					// LRA Patch 25b: per-leg entry rule trees. Null for LONG / SHORT.
+					.entryRulesTreeLong(strategyRequest.getRegimes().get(0).getEntryRulesTreeLong())
+					.entryRulesTreeShort(strategyRequest.getRegimes().get(0).getEntryRulesTreeShort()).build();
 
 			BuySellDataV2 buySellData = this.strategyBuilderServiceV2.generateSignals(strategyData, priceData);
 			buySellData.setStrategyData(strategyData);
@@ -812,11 +835,23 @@ public class BacktestEngineController {
 					Map<String, ArrowDataFrame> exitMap = IndicatorRuleLoader.loadTables(exitRuleConditions,
 							inputPath(strategyRequest.getName(), universe), indicatorLookbackMap);
 
+					// LRA Patch 35: auto-load indicators referenced by entry_rules_tree_long,
+					// entry_rules_tree_short, and sizing_policy.params.conditional_on. Empty
+					// for ROC regimes (no LRA fields populated) → zero overhead.
+					Map<String, Set<Integer>> lraIndicators = IndicatorRuleLoader.collectLraIndicators(regime);
+					if (!lraIndicators.isEmpty()) {
+						Map<String, ArrowDataFrame> lraIndicatorMap = IndicatorRuleLoader.loadFromMap(lraIndicators,
+								inputPath(strategyRequest.getName(), universe));
+						entryMap.putAll(lraIndicatorMap);
+					}
+
 					StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryRuleConditions)
 							.exitRuleList(exitRuleConditions).entryIndicators(entryMap).exitIndicators(exitMap)
 							.startingCapital(regime.getCapital()).slots(regime.getSlots())
 							.stopLossPct(regime.getStoplossPct()).takeProfitPct(regime.getTakeprofitPct())
 							.stoplossTiming(regime.getStoplossTiming()).takeprofitTiming(regime.getTakeprofitTiming())
+							// Patch 72m.3: anchor passes through builder.
+							.portfolioStoplossAnchor(regime.getPortfolioStoplossAnchor())
 							.entryTiming(regime.getEntryTiming()).exitTiming(regime.getExitTiming())
 							.ranking(overlays.get(regime).getRanking()).rankingOrder(regime.getRankingOrder())
 							.startDate(strategyRequest.getStartDate()).endDate(strategyRequest.getEndDate())
@@ -824,7 +859,15 @@ public class BacktestEngineController {
 							.stoplossType(regime.getStoplossType()).takeprofitType(regime.getTakeprofitType())
 							.systemType(strategyRequest.getSystemType()).orderType(regime.getOrderType())
 							.atrLimitLookback(regime.getAtrLimitLookback()).limitPct(regime.getLimitPct())
-							.maxTime(regime.getMaxTime()).bannedMonths(regime.getBannedMonths()).build();
+							.maxTime(regime.getMaxTime()).bannedMonths(regime.getBannedMonths())
+							// LRA Patch 22a: propagate the 5 LONGSHORT regime fields. Null-safe.
+							.tickerClassification(regime.getTickerClassification())
+							.pairingEntryRules(regime.getPairingEntryRules())
+							.pairingExitRules(regime.getPairingExitRules()).sizingPolicy(regime.getSizingPolicy())
+							.pairExitPolicy(regime.getPairExitPolicy())
+							// LRA Patch 25b: per-leg entry rule trees. Null for LONG / SHORT.
+							.entryRulesTreeLong(regime.getEntryRulesTreeLong())
+							.entryRulesTreeShort(regime.getEntryRulesTreeShort()).build();
 
 					// Collecting All the Labels of the Market Trend and make it as key.
 
@@ -944,17 +987,17 @@ public class BacktestEngineController {
 
 			if (strategyRequest.getMarketRegimeType().equalsIgnoreCase("normal")) {
 				PriceDataV2 priceData = context.getPriceData(strategyRequest, backtestDataPath);
-				
+
 				java.time.Instant T1 = java.time.Instant.now();
 				System.err.printf("⏱ T1 getPriceData done | phase=%.3fs | cumul=%.3fs%n",
-				    java.time.Duration.between(T0, T1).toMillis() / 1000.0,
-				    java.time.Duration.between(T0, T1).toMillis() / 1000.0);
-				
+						java.time.Duration.between(T0, T1).toMillis() / 1000.0,
+						java.time.Duration.between(T0, T1).toMillis() / 1000.0);
+
 				BuySellDataV2 buySellData = context.getBuySellData(strategyRequest, priceData, backtestDataPath);
 				java.time.Instant T2 = java.time.Instant.now();
 				System.err.printf("⏱ T2 getBuySellData done | phase=%.3fs | cumul=%.3fs%n",
-				    java.time.Duration.between(T1, T2).toMillis() / 1000.0,
-				    java.time.Duration.between(T0, T2).toMillis() / 1000.0);
+						java.time.Duration.between(T1, T2).toMillis() / 1000.0,
+						java.time.Duration.between(T0, T2).toMillis() / 1000.0);
 
 				buySellData.getStrategyData().setMaxSameTicker(1);
 
@@ -962,16 +1005,17 @@ public class BacktestEngineController {
 //				BacktestReponseDto backtestResponse = null;
 				java.time.Instant T3 = java.time.Instant.now();
 				System.err.printf("⏱ T3 runBacktestV2 (date loop) done | phase=%.3fs | cumul=%.3fs%n",
-				    java.time.Duration.between(T2, T3).toMillis() / 1000.0,
-				    java.time.Duration.between(T0, T3).toMillis() / 1000.0);
+						java.time.Duration.between(T2, T3).toMillis() / 1000.0,
+						java.time.Duration.between(T0, T3).toMillis() / 1000.0);
 
 				context.writeBacktestResponse(strategyRequest, backtestResponse, backtestOPath);
-				
+
 				java.time.Instant T4 = java.time.Instant.now();
 				System.err.printf("⏱ T4 writeBacktestResponse done | phase=%.3fs | cumul=%.3fs%n",
-				    java.time.Duration.between(T3, T4).toMillis() / 1000.0,
-				    java.time.Duration.between(T0, T4).toMillis() / 1000.0);
-				System.err.println("⏱ ===== TOTAL = " + (java.time.Duration.between(T0, T4).toMillis() / 1000.0) + "s =====");
+						java.time.Duration.between(T3, T4).toMillis() / 1000.0,
+						java.time.Duration.between(T0, T4).toMillis() / 1000.0);
+				System.err.println(
+						"⏱ ===== TOTAL = " + (java.time.Duration.between(T0, T4).toMillis() / 1000.0) + "s =====");
 
 				return this.portfolioService.getPortfolio();
 
@@ -1005,5 +1049,117 @@ public class BacktestEngineController {
 		}
 
 		return null;
+	}
+
+	// ─── Patch 11: execution-mode endpoint ───────────────────────────────────
+	// Generates PROPOSED orders for D+1 using:
+	// - tradelist's LIVE rows (passed in liveHoldings) → seedLiveHoldings
+	// - parquet data through req.strategy.end_date (= D)
+	// - skip-last-bar guard captures D+1 orders into response.proposedOrders
+	//
+	// LONGSHORT not supported here — Phase 2 LRA will get its own endpoint.
+	// Only market_regime_type='simple' supported in Phase 1 (the ROC family
+	// path). market_regime_type='normal' rejected for now — single-regime
+	// legacy strategies aren't on the execution roadmap.
+	@PostMapping("api/execution/step/single")
+	public ResponseEntity<?> executionStepSingle(@RequestBody ExecutionStepRequestDto req) {
+		if (req == null || req.getStrategy() == null) {
+			return ResponseEntity.badRequest().body("strategy is required");
+		}
+		StrategyBucketRequestDto strategy = req.getStrategy();
+		if (strategy.getSystemType() != null && strategy.getSystemType().equalsIgnoreCase("LONGSHORT")) {
+			return ResponseEntity.badRequest()
+					.body("LONGSHORT system_type not supported on /api/execution/step/single. "
+							+ "Pair execution will get its own endpoint in Phase 2 LRA.");
+		}
+		// Patch 17: removed the market_regime_type='simple' restriction.
+		// runBacktestSimpleV2 handles both 'simple' (multi-regime) and 'Normal'
+		// (single-regime) — the original Phase B restriction was overcautious.
+		// LONGSHORT is still rejected above; that's the only restriction
+		// execution mode needs in Phase 1.
+
+		try (BacktestContext context = this.backtestContextFactory.create(this.priceDataService,
+				this.strategyBuilderServiceV2, this.marketTrendServiceV2)) {
+			context.setExecutionDataRoot(req.getDataRoot());
+			// Mirror runbacktestv3's simple branch — same loaders, same path scheme.
+			PriceDataV2 priceData = context.getSimplePriceData(strategy, backtestDataPath);
+			Map<String, BuySellDataV2> regimeSignals = context.getSimpleBuySellDataMap(strategy, priceData,
+					backtestDataPath);
+
+			// Patch 19: marketTrends synthesis for single-regime "Normal" strategies.
+			// runbacktestv3 branches Normal → runBacktestV2 (no trend map) vs simple →
+			// runBacktestSimpleV2 (per-date label). The execution endpoint takes only
+			// the simple path; if we call getMarketTrends() for a Normal strategy
+			// whose market_trend_rules_tree is empty, the result is an empty map and
+			// every date in the day-loop fails the regime-lookup → zero signals.
+			//
+			// Fix: when marketRegimeType="Normal", fabricate a one-label map. The
+			// simple branch already has all the proposed-orders capture logic
+			// instrumented (Patches 11+16) — this lets a Normal strategy flow
+			// through that instrumented path without needing to mirror ~140 lines
+			// of capture logic into runBacktestV2. Multi-regime "simple" strategies
+			// continue to use getMarketTrends() as before.
+			Map<LocalDate, String> marketTrends;
+			if ("normal".equalsIgnoreCase(strategy.getMarketRegimeType())) {
+				if (regimeSignals.isEmpty()) {
+					throw new IllegalStateException(
+							"Normal strategy " + strategy.getName() + " produced no regime signals");
+				}
+				String soleLabel = regimeSignals.keySet().iterator().next();
+				marketTrends = new java.util.HashMap<>();
+				for (LocalDate d : priceData.getAll_dates()) {
+					marketTrends.put(d, soleLabel);
+				}
+				System.err.println("[execution] Normal strategy → synthesized " + marketTrends.size()
+						+ " marketTrend entries → label=" + soleLabel);
+			} else {
+				marketTrends = context.getMarketTrends(strategy, priceData, backtestDataPath);
+			}
+
+			// 4-arg overload with seedHoldings — engine attaches proposedOrders
+			// internally before returning. No call to writeBacktestResponse here
+			// since execution mode doesn't persist TradeList.json on disk.
+			BacktestReponseDto response = backtestServiceV2.runBacktestSimpleV2(priceData, marketTrends, regimeSignals,
+					req.getLiveHoldings());
+
+			return ResponseEntity.ok(response);
+
+		} catch (Exception e) {
+			throw new BacktestExecutionException("Failed to run execution step", e);
+		}
+	}
+
+	// ─── Patch 31: single-bar execution endpoint (Phase B) ──────────────────
+	//
+	// Stateless single-bar signal evaluation. Replaces the day-loop endpoint
+	// /api/execution/step/single for nightly execution once middleware cuts
+	// over. The day-loop endpoint above stays alive in parallel during the
+	// cutover window — RT decommissions it after parity testing.
+	//
+	// Differences from /api/execution/step/single:
+	// - No 2023→today re-simulation. Evaluates ONLY the last bar.
+	// - No tradeLogger / equityLogger / fillOutcomes in the response.
+	// - Response shape: { proposedEntries, substitutePool, proposedExits,
+	// stopUpdates, activeRegimeOnLastBar, dataDate, runDate }.
+	// - ~100-200ms per strategy vs ~30s in the day-loop.
+	//
+	// LONGSHORT rejected — Phase 2 LRA pairs will get their own endpoint.
+	@PostMapping("api/execution/signals/last-bar")
+	public ResponseEntity<?> signalsLastBar(@RequestBody ExecutionStepRequestDto req) {
+		if (req == null || req.getStrategy() == null) {
+			return ResponseEntity.badRequest().body("strategy is required");
+		}
+		StrategyBucketRequestDto strategy = req.getStrategy();
+		if (strategy.getSystemType() != null && strategy.getSystemType().equalsIgnoreCase("LONGSHORT")) {
+			return ResponseEntity.badRequest()
+					.body("LONGSHORT system_type not supported on /api/execution/signals/last-bar. "
+							+ "Pair execution will get its own endpoint in Phase 2 LRA.");
+		}
+		try {
+			SingleBarSignalsResponseDto response = singleBarEvaluator.evaluate(req);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			throw new BacktestExecutionException("Failed to evaluate single-bar signals", e);
+		}
 	}
 }

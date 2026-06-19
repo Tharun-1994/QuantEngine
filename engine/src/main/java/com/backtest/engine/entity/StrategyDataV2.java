@@ -29,6 +29,8 @@ public class StrategyDataV2 {
 	private float takeProfitPct;
 	private int maxSameTicker;
 	private float startingCapital;
+    private Float productionCapital;   // Patch 50: per-regime live execution sizing. Null for backtest.
+    
 	private int slots;
 	private LocalDate startDate;
 	private LocalDate endDate;
@@ -46,6 +48,10 @@ public class StrategyDataV2 {
 	private float minPrice;
 	private String stoplossType;
 	private String takeprofitType;
+	// Patch 72l: PORTFOLIO drawdown anchor — "PEAK" (default) or "DAILY".
+	// Read by PortfolioServiceImplV2.checkPortfolioStoplossHit via a setter
+	// on PortfolioServiceV2; null/empty defaults to PEAK at runtime.
+	private String portfolioStoplossAnchor;
 	private String systemType;
 
 	private String orderType;
@@ -140,4 +146,32 @@ public class StrategyDataV2 {
 	 * Starts at 0 (pass all) until first recalculation fires.
 	 */
 	@Builder.Default private volatile float turnoverThreshold = 0f;
+
+	// LRA Patch 22a: in-engine carriers for the 5 LONGSHORT regime fields.
+	// Populated from MarketRegimeDto by the controller. Read only on the
+	// LONGSHORT dispatch arm (Patch 22b); null for every LONG / SHORT strategy.
+
+	/** Per-ticker static metadata, deserialised JSON. See MarketRegimeDto for shape. */
+	private Map<String, Object> tickerClassification;
+
+	/** disallowed_combos + backtracking — passed to PairingService. */
+	private Map<String, Object> pairingEntryRules;
+
+	/** Reserved for future pair-level exit rule trees. Empty for LRA. */
+	private Map<String, Object> pairingExitRules;
+
+	/** VIX bands + per-leg cap assignment — passed to SizingPolicyResolver. */
+	private Map<String, Object> sizingPolicy;
+
+	/** max_hold_sessions + force_close + profit_exit — passed to exit processors. */
+	private Map<String, Object> pairExitPolicy;
+	
+	// LRA Patch 25b: per-leg entry rule trees. Null for LONG / SHORT strategies.
+
+	/** Rule tree producing long-side entry candidates on the LONGSHORT path. */
+	private Map<String, Object> entryRulesTreeLong;
+
+	/** Rule tree producing short-side entry candidates on the LONGSHORT path. */
+	private Map<String, Object> entryRulesTreeShort;
+
 }

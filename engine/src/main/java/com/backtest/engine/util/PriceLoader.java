@@ -32,7 +32,33 @@ public class PriceLoader {
 	private boolean volFilterEnabled;
 	
 	
-	
+	/**
+     * Walk a rule tree and collect any `regime_ticker` values from leaf rules.
+     *
+     * Used by {@link #getFilesForRebalance} to determine which {@code closes_{ticker}.parquet}
+     * files to load. Tickers live on rule-tree leaves in the current UI design;
+     * the regime-level {@code regime_ticker} field is legacy and ignored.
+     */
+    @SuppressWarnings("unchecked")
+    private void collectTickersFromTree(Object node, Set<String> tickers) {
+        if (!(node instanceof Map)) return;
+        Map<String, Object> m = (Map<String, Object>) node;
+        Object type = m.get("type");
+        if ("rule".equals(type)) {
+            Map<String, Object> r = (Map<String, Object>) m.get("rule");
+            if (r == null) return;
+            Object t = r.get("regime_ticker");
+            if (t != null && !t.toString().isBlank()) {
+                tickers.add(t.toString().toLowerCase());
+            }
+            return;
+        }
+        Object children = m.get("children");
+        if (children instanceof List<?> list) {
+            for (Object c : list) collectTickersFromTree(c, tickers);
+        }
+    }
+
 	/** Collect frame filenames referenced by a freeze/resume tree (VIX close + VIX SMA, etc.). */
     @SuppressWarnings("unchecked")
     private void collectVolCutFiles(Object node, String prefix, Map<String, String> files) {
@@ -70,7 +96,10 @@ public class PriceLoader {
 	public Map<String, String> getFilesForRebalance(List<MarketRegimeDto> marketRegimes) {
 	    Set<String> tickers = new HashSet<>();
 	    for (MarketRegimeDto regime : marketRegimes) {
-	        tickers.add(regime.getRegimeTicker().toLowerCase());
+	        
+	        collectTickersFromTree(regime.getMarketTrendRulesTree(), tickers);
+	        collectTickersFromTree(regime.getFreezeRulesTree(),      tickers);
+	        collectTickersFromTree(regime.getResumeRulesTree(),      tickers);
 	    }
 
 	    String prefix = switch (rebalance.toLowerCase()) {
@@ -86,6 +115,7 @@ public class PriceLoader {
 	        case "nasdaq100" -> "nasdaq100_";
 	        case "russell3000" -> "russell3000_";
 	        case "liquid500" -> "liquid500_";
+	        case "lra14" -> "lra14_";   // LRA Patch 43
 	        default -> throw new IllegalArgumentException("Unknown Universe: " + universe);
 	    };
 

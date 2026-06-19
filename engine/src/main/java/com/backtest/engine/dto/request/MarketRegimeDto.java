@@ -66,6 +66,11 @@ public class MarketRegimeDto {
     @JsonProperty("takeprofit_timing")
     private String takeprofitTiming;
 
+    // Patch 72k: PORTFOLIO drawdown anchor. PEAK or DAILY. Null when
+    // stoploss_type != PORTFOLIO. Validated at the Python save layer.
+    @JsonProperty("portfolio_stoploss_anchor")
+    private String portfolioStoplossAnchor;
+    
     @JsonProperty("atr_lookback_stp")
     private int atrLookbackStp;
 
@@ -93,6 +98,9 @@ public class MarketRegimeDto {
     private float capital;
     private int slots;
     private String rebalance;
+    
+    @JsonProperty("production_capital")
+    private Float productionCapital;   // Patch 50: nullable — null means not set
 
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
@@ -183,4 +191,42 @@ public class MarketRegimeDto {
      */
     @JsonProperty("close_positions_on_regime_exit")
     private boolean closePositionsOnRegimeExit;
+
+    // LRA Patch 22a: 5 new fields for LONGSHORT (pair-trading) regimes.
+    // For LONG / SHORT strategies the middleware doesn't send these, so
+    // Jackson leaves them null. The engine only reads them on the LONGSHORT
+    // dispatch arm (Patch 22b); existing code paths never touch them.
+
+    /** Per-ticker static metadata: {symbol -> {risk:..., range_tier:..., ...}} */
+    @JsonProperty("ticker_classification")
+    private Map<String, Object> tickerClassification;
+
+    /** disallowed_combos + backtracking config — consumed by PairingService */
+    @JsonProperty("pairing_entry_rules")
+    private Map<String, Object> pairingEntryRules;
+
+    /** Reserved for future pair-level exit rule trees. Empty for LRA. */
+    @JsonProperty("pairing_exit_rules")
+    private Map<String, Object> pairingExitRules;
+
+    /** VIX bands + per-leg cap assignment — consumed by SizingPolicyResolver */
+    @JsonProperty("sizing_policy")
+    private Map<String, Object> sizingPolicy;
+
+    /** max_hold_sessions + force_close + profit_exit — consumed by exit processors */
+    @JsonProperty("pair_exit_policy")
+    private Map<String, Object> pairExitPolicy;
+    // LRA Patch 25b: per-leg entry rule trees for LONGSHORT strategies.
+    // Each leg has its own tree (e.g. LRA bull regime: long side = IBS bottom-N
+    // + daily_range_pct + RSI carve-out; short side = IBS top-N + daily_range_pct
+    // + RSI > 50). For LONG / SHORT strategies, both stay null and the existing
+    // entryRulesTree is used instead.
+
+    /** Rule tree producing long-side entry candidates. Null on LONG / SHORT strategies. */
+    @JsonProperty("entry_rules_tree_long")
+    private Map<String, Object> entryRulesTreeLong;
+
+    /** Rule tree producing short-side entry candidates. Null on LONG / SHORT strategies. */
+    @JsonProperty("entry_rules_tree_short")
+    private Map<String, Object> entryRulesTreeShort;
 }

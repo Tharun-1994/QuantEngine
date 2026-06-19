@@ -51,6 +51,15 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 	) {
 	    Map<RuleDto, Map<LocalDate, List<String>>> out = new HashMap<>();
 
+	    // Null-safe: when a regime has no entry/exit rules (e.g. bull leg of
+	    // Ronnan's ROC_SP500 where bull-mode has no entry filter and exits
+	    // only via max_time), the corresponding tree is null → leaf cache
+	    // is never built → both params arrive as null. Return empty map
+	    // rather than NPE on entrySet().
+	    if (leafCache == null || rulesById == null) {
+	        return out;
+	    }
+
 	    for (Map.Entry<String, Map<LocalDate, Set<String>>> e : leafCache.entrySet()) {
 	        String leafId = e.getKey();
 	        RuleDto rule = rulesById.get(leafId);
@@ -921,8 +930,20 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			sd.setExitLeafCacheResult(exitRes);
 		}
 
-		// Evaluate tree for the date using eligibleByLeafId
-		Set<String> entrySet = (entryTree == null || entryRes == null) ? new HashSet<>()
+		// Evaluate tree for the date using eligibleByLeafId.
+		//
+		// Semantic for NULL entry tree: treat as "no filter" → entire universe is
+		// candidate (matches Python's bull-leg pattern in Ronnan's ROC_SP500 script,
+		// where `if not bear: rank entire universe by ROC`). Without this, a null
+		// entry tree would produce zero candidates and the bull leg would never
+		// trade — opposite of Python.
+		//
+		// NULL exit tree stays as empty set: no RSI/IBS-driven exits. max_time
+		// still fires from BacktestServiceImplV2.checkMaxTime, matching Python's
+		// bull-leg behaviour (only max_time exits, no signal exits).
+		Set<String> todayUniverseForEval = priceData.getDaily_universes().getRow(date);
+		Set<String> entrySet = (entryTree == null || entryRes == null)
+				? new HashSet<>(todayUniverseForEval)
 				: new HashSet<>(RuleTreeEvaluator.evalForDate(entryTree, date, entryRes.getEligibleByLeafId()));
 
 		Set<String> exitSet = (exitTree == null || exitRes == null) ? new HashSet<>()

@@ -15,4 +15,8 @@ public class TradeEnterRequestDto {
 	private String entryTiming;
 	private float entryprice;
 	private int capital;
+	// LRA Patch 20: nullable pair identifier. Existing callers never set this →
+	// stays null → TradeLog.pairId stays null → omitted from JSON output.
+	// Patch 22's LONGSHORT dispatch arm sets this to the TradePair.pairId.
+	private Integer pairId;
 }

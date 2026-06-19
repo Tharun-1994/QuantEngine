@@ -60,6 +60,14 @@ public class BacktestContext implements AutoCloseable {
 	// Track all Arrow resources opened during Simple regime processing
 	private final List<Map<String, ArrowDataFrame>> allArrowMaps = new ArrayList<>();
 
+	// Patch 14: execution-mode data root override.
+	// When set (non-null, non-blank), inputPath() resolves to
+	// {executionDataRoot}/{universe}, skipping the {strategy_name}/input/
+	// segments. exec_data is universe-shared so no per-strategy folder is
+	// needed. Set by the /api/execution/step/single endpoint from the
+	// request's data_root field; null in backtest contexts.
+	private String executionDataRoot;
+
 	public BacktestContext(PriceDataLoaderService priceDataService, StrategyBuilderServiceV2 strategyBuilderServiceV2,
 			MarketTrendServiceV2 marketTrendServiceV2, ArrowDataFrameCache cache,
 			ArrowStringDataFrameCache stringCache) {
@@ -70,7 +78,21 @@ public class BacktestContext implements AutoCloseable {
 		this.stringCache = stringCache;
 	}
 
+	// Patch 14: setter invoked from the execution endpoint to switch the
+	// path-resolution scheme to exec_data layout. No-op for backtests.
+	public void setExecutionDataRoot(String dataRoot) {
+		this.executionDataRoot = dataRoot;
+	}
+
 	public String inputPath(String strategy_name, String universe, String backtestDataPath) {
+		// Patch 14: execution mode reads from a date-stamped exec_data
+		// folder written by middleware C1. Skips strategy_name + "input"
+		// segments because exec_data is universe-shared. backtestDataPath
+		// is intentionally ignored in this branch — the caller's existing
+		// argument is preserved unchanged for API compatibility.
+		if (this.executionDataRoot != null && !this.executionDataRoot.isBlank()) {
+			return String.format("%s/%s", this.executionDataRoot, universe);
+		}
 		return String.format("%s/%s/%s/%s", backtestDataPath, strategy_name, "input", universe);
 	}
 
@@ -237,29 +259,21 @@ public class BacktestContext implements AutoCloseable {
 		// initialised with the shared market data + frame loader.
 		// Day-loop dispatch wiring lands in Stage 3b Sub-chunk B2; until
 		// then the inline freezeDays/resumeDays path above stays primary.
-		java.util.List<SafetyNetItemDto> resolvedSafetyNets =
-				resolveSafetyNets(strategyRequest);
-		SafetyNetInitContext safetyInitCtx =
-				SafetyNetInitContext.builder()
-				.strategyRequest(strategyRequest)
-				.universe(univ)
-				.priceData(priceData)
-				.allDates(volCutDates)
-				.objectMapper(mapper)
-				.frameLoader((RuleGroupNodeDto tree) ->
-						loadVolatilityCutFrames(tree, strategyRequest, univ, backtestDataPath))
+		java.util.List<SafetyNetItemDto> resolvedSafetyNets = resolveSafetyNets(strategyRequest);
+		SafetyNetInitContext safetyInitCtx = SafetyNetInitContext.builder().strategyRequest(strategyRequest)
+				.universe(univ).priceData(priceData).allDates(volCutDates).objectMapper(mapper)
+				.frameLoader((RuleGroupNodeDto tree) -> loadVolatilityCutFrames(tree, strategyRequest, univ,
+						backtestDataPath))
 				.build();
-		java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> safetyPolicies =
-				new java.util.ArrayList<>();
+		java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> safetyPolicies = new java.util.ArrayList<>();
 		for (SafetyNetItemDto item : resolvedSafetyNets) {
-			SafetyNetPolicy policy =
-					SafetyNetRegistry.create(item.getType());
-			if (policy == null) continue;
+			SafetyNetPolicy policy = SafetyNetRegistry.create(item.getType());
+			if (policy == null)
+				continue;
 			policy.initialize(item, safetyInitCtx);
 			safetyPolicies.add(policy);
 		}
-		System.out.println("[safety-nets] resolved=" + resolvedSafetyNets.size()
-				+ " active=" + safetyPolicies.size());
+		System.out.println("[safety-nets] resolved=" + resolvedSafetyNets.size() + " active=" + safetyPolicies.size());
 
 		StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryLeafRules)
 				.exitRuleList(exitLeafRules).entryIndicators(entryMap).exitIndicators(exitMap)
@@ -283,6 +297,8 @@ public class BacktestContext implements AutoCloseable {
 				.minPrice(strategyRequest.getMinPrice()).minQuantity(strategyRequest.getMinQuantity())
 				.stoplossType(strategyRequest.getRegimes().get(0).getStoplossType())
 				.takeprofitType(strategyRequest.getRegimes().get(0).getTakeprofitType())
+				// Patch 72m.4: anchor passes through builder.
+				.portfolioStoplossAnchor(strategyRequest.getRegimes().get(0).getPortfolioStoplossAnchor())
 				.systemType(strategyRequest.getSystemType())
 				.orderType(strategyRequest.getRegimes().get(0).getOrderType())
 				.atrLimitLookback(strategyRequest.getRegimes().get(0).getAtrLimitLookback())
@@ -294,23 +310,14 @@ public class BacktestContext implements AutoCloseable {
 				.avgVolume(this.parquetFileValueMap.get("avg_volume"))
 				.avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
 				.spyCloses(this.parquetFileValueMap.get("closes_spy")).entryRulesTree(entryTree).exitRulesTree(exitTree)
-				.freezeRulesTree(freezeTree).resumeRulesTree(resumeTree)
-				.freezeDays(freezeDays).resumeDays(resumeDays)
-				.freezeTiming(
-						strategyRequest.getRegimes().get(0).getFreezeTiming() == null
-							? "open"
-							: strategyRequest.getRegimes().get(0).getFreezeTiming().toLowerCase())
-					.resumeTiming(
-						strategyRequest.getRegimes().get(0).getResumeTiming() == null
-							? "open"
-							: strategyRequest.getRegimes().get(0).getResumeTiming().toLowerCase())
-					.safetyNetType(
-							strategyRequest.getRegimes().get(0).getSafetyNetType() == null
-								? "none"
-								: strategyRequest.getRegimes().get(0).getSafetyNetType().toLowerCase())
-					.safetyNets(strategyRequest.getRegimes().get(0).getSafetyNets())
-					.safetyPolicies(safetyPolicies)
-					.build();
+				.freezeRulesTree(freezeTree).resumeRulesTree(resumeTree).freezeDays(freezeDays).resumeDays(resumeDays)
+				.freezeTiming(strategyRequest.getRegimes().get(0).getFreezeTiming() == null ? "open"
+						: strategyRequest.getRegimes().get(0).getFreezeTiming().toLowerCase())
+				.resumeTiming(strategyRequest.getRegimes().get(0).getResumeTiming() == null ? "open"
+						: strategyRequest.getRegimes().get(0).getResumeTiming().toLowerCase())
+				.safetyNetType(strategyRequest.getRegimes().get(0).getSafetyNetType() == null ? "none"
+						: strategyRequest.getRegimes().get(0).getSafetyNetType().toLowerCase())
+				.safetyNets(strategyRequest.getRegimes().get(0).getSafetyNets()).safetyPolicies(safetyPolicies).build();
 
 		BuySellDataV2 buySellData = this.strategyBuilderServiceV2.generateSignalsV1(strategyData, priceData);
 		buySellData.setStrategyData(strategyData);
@@ -323,22 +330,22 @@ public class BacktestContext implements AutoCloseable {
 	 * freeze/resume trees into their own map.
 	 *
 	 * FIX (Bug 1): key format is {ticker}_{indicator}_{lookback}, matching exactly
-	 * what VolatilityCutEvaluator.evalLeaf() expects.  Previously the ticker
-	 * prefix was omitted, causing every lookup to silently return null.
+	 * what VolatilityCutEvaluator.evalLeaf() expects. Previously the ticker prefix
+	 * was omitted, causing every lookup to silently return null.
 	 *
-	 * FIX (Bug 2): when the ticker is "spy" and the indicator is "close", the
-	 * frame is sourced from the already-loaded closes_spy entry in
-	 * parquetFileValueMap (loaded by the VolFilter path) rather than attempting
-	 * to read a non-existent spy_close_0.parquet from the strategy input folder.
-	 * If closes_spy is not yet loaded (VolFilter disabled) we attempt a direct
-	 * load using the standard DAILY_closes_spy.parquet path.
+	 * FIX (Bug 2): when the ticker is "spy" and the indicator is "close", the frame
+	 * is sourced from the already-loaded closes_spy entry in parquetFileValueMap
+	 * (loaded by the VolFilter path) rather than attempting to read a non-existent
+	 * spy_close_0.parquet from the strategy input folder. If closes_spy is not yet
+	 * loaded (VolFilter disabled) we attempt a direct load using the standard
+	 * DAILY_closes_spy.parquet path.
 	 *
 	 * NOTE: spy_sma_{N} frames are intentionally NOT loaded here.
-	 * VolatilityCutEvaluator computes the SMA on-the-fly from the close frame
-	 * (Bug 3 fix), so no pre-built SMA parquet is required.
+	 * VolatilityCutEvaluator computes the SMA on-the-fly from the close frame (Bug
+	 * 3 fix), so no pre-built SMA parquet is required.
 	 *
-	 * NOTE: rules with operator "month_in" and indicator "month" are skipped —
-	 * they require no parquet frame (the evaluator inspects the date directly).
+	 * NOTE: rules with operator "month_in" and indicator "month" are skipped — they
+	 * require no parquet frame (the evaluator inspects the date directly).
 	 */
 	private java.util.Map<String, ArrowDataFrame> loadVolatilityCutFrames(RuleGroupNodeDto tree,
 			StrategyBucketRequestDto strategyRequest, String univ, String backtestDataPath) {
@@ -351,45 +358,44 @@ public class BacktestContext implements AutoCloseable {
 
 		for (RuleDto rule : RuleTreeFlattener.flatten(tree)) {
 			// month_in rules need no frame — evaluator inspects the date directly
-			if ("month_in".equalsIgnoreCase(rule.getOperator())
-					|| "month".equalsIgnoreCase(rule.getIndicator())) {
+			if ("month_in".equalsIgnoreCase(rule.getOperator()) || "month".equalsIgnoreCase(rule.getIndicator())) {
 				continue;
 			}
 
-			String ticker = (rule.getRegimeTicker() == null || rule.getRegimeTicker().isBlank())
-					? "" : rule.getRegimeTicker().toLowerCase();
+			String ticker = (rule.getRegimeTicker() == null || rule.getRegimeTicker().isBlank()) ? ""
+					: rule.getRegimeTicker().toLowerCase();
 
 			// LHS frame: {ticker}_{indicator}_{lookback}
 			String lhsKey = buildVolCutKey(ticker, rule.getIndicator(), rule.getLookback());
-			loadVolCutFrame(lhsKey, ticker, rule.getIndicator(), rule.getLookback(),
-					frames, strategyRequest, univ, backtestDataPath, rebalancePrefix);
+			loadVolCutFrame(lhsKey, ticker, rule.getIndicator(), rule.getLookback(), frames, strategyRequest, univ,
+					backtestDataPath, rebalancePrefix);
 
 			// RHS frame — only when comparing to another indicator.
 			// Skip "sma" RHS: VolatilityCutEvaluator computes it on-the-fly from the
 			// close frame (no pre-built sma parquet needed).
-			if ("indicator_price".equalsIgnoreCase(rule.getValueType())
-					&& rule.getValueIndicator() != null && !rule.getValueIndicator().isBlank()
-					&& !"sma".equalsIgnoreCase(rule.getValueIndicator())) {
+			if ("indicator_price".equalsIgnoreCase(rule.getValueType()) && rule.getValueIndicator() != null
+					&& !rule.getValueIndicator().isBlank() && !"sma".equalsIgnoreCase(rule.getValueIndicator())) {
 				String rhsKey = buildVolCutKey(ticker, rule.getValueIndicator(), rule.getValueLookback());
-				loadVolCutFrame(rhsKey, ticker, rule.getValueIndicator(), rule.getValueLookback(),
-						frames, strategyRequest, univ, backtestDataPath, rebalancePrefix);
+				loadVolCutFrame(rhsKey, ticker, rule.getValueIndicator(), rule.getValueLookback(), frames,
+						strategyRequest, univ, backtestDataPath, rebalancePrefix);
 			}
 		}
 		return frames;
 	}
-	
+
 	/**
-	 * Back-compat shim: if the request has no {@code safety_nets} list but
-	 * carries the legacy {@code safety_net_type='simple'} + regime-level
-	 * freeze/resume trees, synthesise a one-item list so the policy
-	 * framework treats them identically to a freshly-saved strategy.
+	 * Back-compat shim: if the request has no {@code safety_nets} list but carries
+	 * the legacy {@code safety_net_type='simple'} + regime-level freeze/resume
+	 * trees, synthesise a one-item list so the policy framework treats them
+	 * identically to a freshly-saved strategy.
 	 *
-	 * <p>Returns the safetyNets list to use downstream (never null — empty
-	 * list when there's nothing to wire up).</p>
+	 * <p>
+	 * Returns the safetyNets list to use downstream (never null — empty list when
+	 * there's nothing to wire up).
+	 * </p>
 	 */
 	@SuppressWarnings("unchecked")
-	private List<SafetyNetItemDto>
-			resolveSafetyNets(StrategyBucketRequestDto request) {
+	private List<SafetyNetItemDto> resolveSafetyNets(StrategyBucketRequestDto request) {
 		MarketRegimeDto regime = request.getRegimes().get(0);
 		java.util.List<SafetyNetItemDto> list = regime.getSafetyNets();
 		if (list != null && !list.isEmpty()) {
@@ -401,46 +407,47 @@ public class BacktestContext implements AutoCloseable {
 		}
 		// Synthesise a single 'simple' item from the regime-level fields
 		java.util.Map<String, Object> params = new java.util.HashMap<>();
-		params.put("freeze_rules_tree",  regime.getFreezeRulesTree());
-		params.put("resume_rules_tree",  regime.getResumeRulesTree());
-		params.put("freeze_timing",      regime.getFreezeTiming()  == null ? "open" : regime.getFreezeTiming());
-		params.put("resume_timing",      regime.getResumeTiming()  == null ? "open" : regime.getResumeTiming());
-		SafetyNetItemDto item =
-				new SafetyNetItemDto("simple", params);
+		params.put("freeze_rules_tree", regime.getFreezeRulesTree());
+		params.put("resume_rules_tree", regime.getResumeRulesTree());
+		params.put("freeze_timing", regime.getFreezeTiming() == null ? "open" : regime.getFreezeTiming());
+		params.put("resume_timing", regime.getResumeTiming() == null ? "open" : regime.getResumeTiming());
+		SafetyNetItemDto item = new SafetyNetItemDto("simple", params);
 		return java.util.List.of(item);
 	}
-	
+
 	/**
 	 * Canonical key: {ticker}_{indicator}_{lookback} (ticker may be empty).
 	 *
-	 * Exception: when the indicator name already encodes the ticker
-	 * (e.g. indicator="vix_close" with ticker="vix"), the ticker prefix is
-	 * skipped so the key matches the middleware-written filename
-	 * (vix_close_0.parquet, not vix_vix_close_0.parquet).
-	 * See GeneratePricesIndicators._compute_volatility_cut_indicators.
+	 * Exception: when the indicator name already encodes the ticker (e.g.
+	 * indicator="vix_close" with ticker="vix"), the ticker prefix is skipped so the
+	 * key matches the middleware-written filename (vix_close_0.parquet, not
+	 * vix_vix_close_0.parquet). See
+	 * GeneratePricesIndicators._compute_volatility_cut_indicators.
 	 */
 	private static String buildVolCutKey(String ticker, String indicator, Integer lookback) {
 		String ind = indicator == null ? "" : indicator.toLowerCase();
 		int lb = (lookback == null) ? 0 : lookback;
-		if (ticker == null || ticker.isBlank()) return ind + "_" + lb;
+		if (ticker == null || ticker.isBlank())
+			return ind + "_" + lb;
 		String tk = ticker.toLowerCase();
-		if (ind.startsWith(tk + "_")) return ind + "_" + lb;   // indicator already ticker-prefixed
+		if (ind.startsWith(tk + "_"))
+			return ind + "_" + lb; // indicator already ticker-prefixed
 		return tk + "_" + ind + "_" + lb;
 	}
 
 	/**
 	 * Load a single frame into the frames map.
 	 *
-	 * Priority for close frames on a known market ticker (e.g. spy):
-	 *   1. Already present in parquetFileValueMap (loaded by VolFilter path)
-	 *   2. Direct load via DAILY_closes_{ticker}.parquet from strategy input folder
-	 *   3. Fall back to generic {key}.parquet in strategy input folder
+	 * Priority for close frames on a known market ticker (e.g. spy): 1. Already
+	 * present in parquetFileValueMap (loaded by VolFilter path) 2. Direct load via
+	 * DAILY_closes_{ticker}.parquet from strategy input folder 3. Fall back to
+	 * generic {key}.parquet in strategy input folder
 	 */
 	private void loadVolCutFrame(String key, String ticker, String indicator, Integer lookback,
-			java.util.Map<String, ArrowDataFrame> frames,
-			StrategyBucketRequestDto strategyRequest, String univ,
+			java.util.Map<String, ArrowDataFrame> frames, StrategyBucketRequestDto strategyRequest, String univ,
 			String backtestDataPath, String rebalancePrefix) {
-		if (frames.containsKey(key)) return;
+		if (frames.containsKey(key))
+			return;
 
 		// FIX (Bug 2): for close indicator on a named ticker, prefer the already-loaded
 		// closes_{ticker} frame from parquetFileValueMap (populated by VolFilter path).
@@ -461,8 +468,8 @@ public class BacktestContext implements AutoCloseable {
 					return;
 				}
 			} catch (Exception e) {
-				System.err.println("[WARNING] Could not load vol-cut close frame for ticker '"
-						+ ticker + "': " + e.getMessage());
+				System.err.println(
+						"[WARNING] Could not load vol-cut close frame for ticker '" + ticker + "': " + e.getMessage());
 			}
 		}
 
@@ -587,6 +594,7 @@ public class BacktestContext implements AutoCloseable {
 			StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryLeafRules)
 					.exitRuleList(exitLeafRules).entryIndicators(entryMap).exitIndicators(exitMap)
 					.startingCapital(regime.getCapital()).slots(regime.getSlots()).stopLossPct(regime.getStoplossPct())
+					.productionCapital(regime.getProductionCapital())   // Patch 50
 					.takeProfitPct(regime.getTakeprofitPct()).stoplossTiming(regime.getStoplossTiming())
 					.takeprofitTiming(regime.getTakeprofitTiming()).entryTiming(regime.getEntryTiming())
 					.exitTiming(regime.getExitTiming()).ranking(overlay.getRanking())
@@ -597,6 +605,8 @@ public class BacktestContext implements AutoCloseable {
 					.endDate(strategyRequest.getEndDate()).minPrice(strategyRequest.getMinPrice())
 					.minQuantity(strategyRequest.getMinQuantity()).stoplossType(regime.getStoplossType())
 					.takeprofitType(regime.getTakeprofitType()).systemType(strategyRequest.getSystemType())
+					// Patch 72m.5: anchor passes through builder.
+					.portfolioStoplossAnchor(regime.getPortfolioStoplossAnchor())
 					.orderType(regime.getOrderType()).atrLimitLookback(regime.getAtrLimitLookback())
 					.limitPct(regime.getLimitPct()).maxTime(regime.getMaxTime()).bannedMonths(regime.getBannedMonths())
 					.tdomFilters(regime.getTdomFilters()).volFilter(regime.getVolFilter())
