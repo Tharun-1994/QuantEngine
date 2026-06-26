@@ -161,6 +161,16 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 
 			float perSlotCapital = capitalForExecution / (float) Math.max(slots, 1); // Patch 50
 
+			// Resolve order type once — same for all entries in this regime.
+			String orderType = sd.getOrderType() != null ? sd.getOrderType().toUpperCase() : "NORMAL";
+			boolean isLimit = "LIMIT".equals(orderType);
+			boolean isLimitAtr = "LIMIT_ATR".equals(orderType);
+
+			// ATR frame for last bar — used for LIMIT_ATR entry price and ATR_BASED stop.
+			// Loaded from atr_stp parquet via RegimeOverlay in BacktestContext.
+			// Null for NORMAL strategies (no ATR parquet loaded).
+			Map<String, Float> lastAtr = (sd.getDailyAtr() != null) ? sd.getDailyAtr().getRow(lastBar) : null;
+
 			List<ProposedEntryDto> entries = new ArrayList<>();
 			for (int i = 0; i < rankedEntries.size(); i++) {
 				String ticker = rankedEntries.get(i);
@@ -168,6 +178,42 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				Float score = (rankRow != null) ? rankRow.get(ticker) : null;
 				String sector = (sd.getSectorMap() != null) ? sd.getSectorMap().getOrDefault(ticker, null) : null;
 
+				// ── Limit price ──────────────────────────────────────────────
+				// NORMAL: limitPrice = null (MKT order, no limit price)
+				// LIMIT: limitPrice = lastClose × (1 - limitPct/100)
+				// LIMIT_ATR: limitPrice = lastClose - (atr × atrLimitLookback)
+				Float limitPrice = null;
+				if (close != null && close > 0f) {
+					if (isLimit && sd.getLimitPct() > 0f) {
+						limitPrice = close * (1f - sd.getLimitPct() / 100f);
+					} else if (isLimitAtr && sd.getAtrLimitLookback() > 0) {
+						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
+						if (atr != null && atr > 0f) {
+							limitPrice = close - (atr * (float) sd.getAtrLimitLookback());
+						}
+					}
+				}
+
+				// ── Stop price (initial bracket stop at proposal time) ────────
+				// Only computed when limitPrice is known (LIMIT / LIMIT_ATR).
+				// NORMAL: stopPrice = null — no entry price known yet at proposal time.
+				// PCT: stopPrice = limitPrice × (1 - stoplossPct/100)
+				// ATR_BASED: stopPrice = limitPrice - (stoplossPct × atr)
+				Float stopPrice = null;
+				if (limitPrice != null && limitPrice > 0f) {
+					String stoplossType = sd.getStoplossType();
+					if (sd.getStopLossPct() > 0f && !"ATR_BASED".equals(stoplossType)) {
+						// PCT (NORMAL stoploss type or null)
+						stopPrice = limitPrice * (1f - sd.getStopLossPct() / 100f);
+					} else if ("ATR_BASED".equals(stoplossType) && sd.getAtrLookbackStp() > 0) {
+						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
+						if (atr != null && atr > 0f) {
+							stopPrice = limitPrice - (sd.getStopLossPct() * atr);
+						}
+					}
+				}
+
+				// ── Quantity: always sized off lastClose (confirmed from backtest) ─
 				int qty = 0;
 				if (close != null && close > 0f) {
 					qty = (int) Math.floor(perSlotCapital / close);
@@ -177,10 +223,10 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				ProposedEntryDto entry = ProposedEntryDto.builder().symbol(ticker).direction(direction)
 						.orderType(sd.getOrderType()).entryDate(request.getRunDate()).entryTiming(sd.getEntryTiming())
 						.entryReason("entry rule fired on " + lastBar).quantity(qty).capital(capitalEst).sector(sector)
-						.rank(i + 1).score(score)
-						// limitPrice / stopPrice for LIMIT / LIMIT_ATR: deferred,
-						// see class-level Javadoc.
-						.limitPrice(null).stopPrice(null).build();
+						.rank(i + 1).score(score).limitPrice(limitPrice) // null for NORMAL, computed for
+																			// LIMIT/LIMIT_ATR
+						.stopPrice(stopPrice) // null for NORMAL, computed for LIMIT when stoploss set
+						.build();
 
 				entries.add(entry);
 			}
@@ -196,6 +242,35 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				}
 			}
 
+			// ── 7.5 Patch 79: Max-time exits (execution path) ─────────────────
+			// Backtest fires max-time via PortfolioServiceImplV2.checkMaxTime in the
+			// day-loop; SingleBarEvaluatorImpl never calls it, so live positions never
+			// max-time out. Replicate the rule on the single bar: dayCount = trading
+			// sessions from entryDate to lastBar (== the backtest's per-bar
+			// updateTradeDayCount). Exit when dayCount >= maxTime. No last-bar guard
+			// here — in execution lastBar means "today", not "end of data". Backtest
+			// exits at CLOSE → route MOC.
+			int maxTime = sd.getMaxTime();
+			if (maxTime > 0) {
+				int lastIdx = tradingDates.size() - 1;
+				for (LiveHoldingsSeedDto h : liveHoldings) {
+					if (exitSymbols.contains(h.getSymbol())) {
+						continue; // already exiting on a rule — don't double-add
+					}
+					int entryIdx = tradingDates.indexOf(h.getEntryDate());
+					if (entryIdx < 0) {
+						continue; // entry date outside the loaded window — can't age it
+					}
+					if ((lastIdx - entryIdx)+1 >= maxTime) {
+						proposedExits.add(ProposedExitDto.builder().tradeId(h.getTradeId()).symbol(h.getSymbol())
+								.exitReason(String.format("MaxTime %d", maxTime)).exitDate(request.getRunDate())
+								.exitTiming("close") // MOC — matches backtest close-exit
+								.build());
+						exitSymbols.add(h.getSymbol()); // so step 8 skips its stop update
+					}
+				}
+			}
+
 			// ── 8. Stop updates — for each LIVE holding NOT exiting ──────────
 			float stoplossPct = sd.getStopLossPct();
 			List<StopUpdateDto> stopUpdates = new ArrayList<>();
@@ -203,7 +278,7 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				if (exitSymbols.contains(h.getSymbol())) {
 					continue;
 				}
-				Float newStop = computeStopValue(h, stoplossPct);
+				Float newStop = computeStopValue(h, stoplossPct, sd.getStoplossType(), lastAtr);
 				if (newStop != null) {
 					String source = (h.getCurrentStopPrice() != null) ? "trader_override" : "pct_recompute";
 					stopUpdates.add(StopUpdateDto.builder().tradeId(h.getTradeId()).symbol(h.getSymbol())
@@ -269,22 +344,43 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 	}
 
 	/**
-	 * Compute today's stop value for a LIVE position. Mirrors
-	 * PortfolioServiceImplV2.stoplossHitLong/Short formula (lines 524-542): - D3
-	 * trader override (currentStopPrice non-null) takes precedence - Otherwise, pct
-	 * stop relative to entry price - Returns null when stoploss_pct=0 and no trader
-	 * override (no broker stop bracket needed for this position)
+	 * Compute stop price for a LIVE position nightly.
 	 *
-	 * ATR-based stops not handled here — see class-level Javadoc.
+	 * Priority: 1. D3 trader override (currentStopPrice non-null) — echoed back
+	 * unchanged 2. ATR_BASED: entryPrice - (stoplossPct × atr[lastBar][ticker]) 3.
+	 * PCT (NORMAL): entryPrice × (1 - stoplossPct/100) for LONG entryPrice × (1 +
+	 * stoplossPct/100) for SHORT 4. No stoploss (pct=0, no override) → null (no
+	 * stop bracket needed)
+	 *
+	 * Mirrors PortfolioServiceImplV2.stoplossHitLong (line 767) for PCT and
+	 * stoplossHitLongAtr (line 1004) for ATR_BASED.
 	 */
-	private Float computeStopValue(LiveHoldingsSeedDto h, float stoplossPct) {
+	private Float computeStopValue(LiveHoldingsSeedDto h, float stoplossPct, String stoplossType,
+			Map<String, Float> lastAtr) {
+		// D3 trader override always takes precedence
 		if (h.getCurrentStopPrice() != null) {
 			return h.getCurrentStopPrice();
 		}
 		if (stoplossPct <= 0f) {
 			return null;
 		}
-		if ("LONG".equalsIgnoreCase(h.getDirection())) {
+		boolean isLong = "LONG".equalsIgnoreCase(h.getDirection());
+
+		// ATR_BASED: stop = entryPrice - (stoplossPct × atr)
+		// stoplossPct is the ATR multiplier in this case (e.g. 2.0 = 2 × ATR)
+		if ("ATR_BASED".equals(stoplossType) && lastAtr != null) {
+			Float atr = lastAtr.get(h.getSymbol());
+			if (atr != null && atr > 0f) {
+				if (isLong) {
+					return h.getEntryprice() - (stoplossPct * atr);
+				} else {
+					return h.getEntryprice() + (stoplossPct * atr);
+				}
+			}
+		}
+
+		// PCT: stop = entryPrice × (1 ± pct/100)
+		if (isLong) {
 			return h.getEntryprice() * (1f - (stoplossPct / 100f));
 		} else {
 			return h.getEntryprice() * (1f + (stoplossPct / 100f));

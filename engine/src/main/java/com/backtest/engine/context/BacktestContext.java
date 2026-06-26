@@ -237,6 +237,11 @@ public class BacktestContext implements AutoCloseable {
 				String sectorPath = inputPath(strategyRequest.getName(), univ, backtestDataPath)
 						+ "/sector_mapping.parquet";
 				sectorMap = ParquetToMap.loadSectorMapping(sectorPath, sectorLevel);
+				// Patch NN diagnostic
+				if (sectorMap != null) {
+				    System.out.println("[sector-map] loaded " + sectorMap.size() + " entries from " + sectorPath);
+				    System.out.println("[sector-map] OXY=" + sectorMap.get("OXY") + " SLB=" + sectorMap.get("SLB") + " APA=" + sectorMap.get("APA"));
+				}
 			} catch (Exception e) {
 				System.err.println("[WARNING] Could not load sector mapping: " + e.getMessage());
 			}
@@ -607,15 +612,17 @@ public class BacktestContext implements AutoCloseable {
 					.takeprofitType(regime.getTakeprofitType()).systemType(strategyRequest.getSystemType())
 					// Patch 72m.5: anchor passes through builder.
 					.portfolioStoplossAnchor(regime.getPortfolioStoplossAnchor())
-					.orderType(regime.getOrderType()).atrLimitLookback(regime.getAtrLimitLookback())
-					.limitPct(regime.getLimitPct()).maxTime(regime.getMaxTime()).bannedMonths(regime.getBannedMonths())
-					.tdomFilters(regime.getTdomFilters()).volFilter(regime.getVolFilter())
-					.avgVolume(this.parquetFileValueMap.get("avg_volume"))
-					.avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
-					.spyCloses(this.parquetFileValueMap.get("closes_spy")).entryRulesTree(entryTree) // ← tree for
-																										// RuleTreeEvaluator
-					.exitRulesTree(exitTree) // ← tree for RuleTreeEvaluator
-					.build();
+                    .orderType(regime.getOrderType()).atrLimitLookback(regime.getAtrLimitLookback())
+                    .atrLookbackStp(regime.getAtrLookbackStp())      // Spec 1: needed for stop price computation
+                    .limitPct(regime.getLimitPct()).maxTime(regime.getMaxTime()).bannedMonths(regime.getBannedMonths())
+                    .tdomFilters(regime.getTdomFilters()).volFilter(regime.getVolFilter())
+                    .avgVolume(this.parquetFileValueMap.get("avg_volume"))
+                    .avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
+                    .spyCloses(this.parquetFileValueMap.get("closes_spy"))
+                    .dailyAtr(overlay.getDailyAtr())                 // Spec 1: ATR frame from regime overlay
+                    .entryRulesTree(entryTree)
+                    .exitRulesTree(exitTree)
+                    .build();
 
 			// generateSignalsV1 detects trees → builds LeafCache → uses RuleTreeEvaluator
 			BuySellDataV2 buySellData = this.strategyBuilderServiceV2.generateSignalsV1(strategyData, priceData);

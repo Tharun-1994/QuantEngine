@@ -406,9 +406,11 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				continue;
 			}
 
-			if (date.equals(LocalDate.of(2000, 1, 3))) {
+			if (date.equals(LocalDate.of(2026, 6, 24))) {
 				System.err.println();
 			}
+
+
 
 			if (((date.isEqual(priceData.getTrading_dates().get(0))
 					|| date.isAfter(priceData.getTrading_dates().get(0)))

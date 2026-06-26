@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
@@ -112,9 +113,9 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 		List<LocalDate> allDates = priceData.getAll_dates();
 
 		// if it's the last bar, skip
-		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
-			return;
-		}
+//		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+//			return;
+//		}
 
 		for (String tick : entrySignalsRequest.getEntries()) {
 			Float yesterdayCloseBox = this.priceData.getDaily_closes().getValue(previousDate, tick);
@@ -211,9 +212,9 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 		// find the index of the tradeDate
 
 		// if it's the last bar, skip
-		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
-			return;
-		}
+//		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+//			return;
+//		}
 
 		List<String> liveHoldingsKeyList = this.liveHoldingsLogger.keySet().stream().collect(Collectors.toList());
 
@@ -243,6 +244,16 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 
 		}
 
+	}
+
+	// Patch 77: return trades closed today by checkMaxTime, so the sector cap
+	// in signalsForTheDayV1 can count their sectors as still occupied.
+	// checkMaxTime removes them from liveHoldingsLogger before signalsForTheDayV1
+	// runs; this restores their sector presence for the cap computation only.
+	@Override
+	public List<TradeLog> getTodaysMaxTimeExits(LocalDate date) {
+		return tradeLogger.values().stream().filter(t -> date.equals(t.getExitDate()) && t.getExitReason() != null
+				&& t.getExitReason().startsWith("MaxTime")).collect(java.util.stream.Collectors.toList());
 	}
 
 	@Override
@@ -294,8 +305,11 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 																								// single-direction
 					.currentStopPrice(h.getCurrentStopPrice()) // D3 — null falls through to recompute
 					.build();
+			
 
-			String id = h.getTradeId();
+			boolean isDigitId = NumberUtils.isDigits(h.getTradeId());
+			String id = isDigitId ? "%s_%s".formatted(h.getSymbol(), h.getTradeId()) : h.getTradeId();
+
 			this.tradeLogger.put(id, tradeLog);
 			this.liveHoldingsLogger.put(id, new ArrayList<>());
 			this.unusedCapital -= Math.round(h.getEntryprice() * h.getQuantity());
@@ -1274,10 +1288,10 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 		List<LocalDate> allDates = priceData.getAll_dates();
 
 		// if it's the last bar, skip
-		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
-
-			return;
-		}
+//		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+//
+//			return;
+//		}
 
 		for (LimitOrder limitOrder : limitEntrySignalsRequest.getLimitOrders()) {
 
@@ -1400,9 +1414,9 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 		// find the index of the tradeDate
 
 		// if it's the last bar, skip
-		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
-			return;
-		}
+//		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+//			return;
+//		}
 
 		List<String> liveHoldingsKeyList = this.liveHoldingsLogger.keySet().stream().collect(Collectors.toList());
 
@@ -1428,9 +1442,9 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 	@Override
 	public void checkMaxTime(LocalDate tradeDate, int maxTime, PriceDataV2 priceData) {
 		List<LocalDate> allDates = priceData.getAll_dates();
-		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
-			return;
-		}
+//		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+//			return;
+//		}
 
 		if (!this.liveHoldingsLogger.isEmpty()) {
 			List<String> liveHoldingsKeyList = this.liveHoldingsLogger.keySet().stream().collect(Collectors.toList());
@@ -1471,10 +1485,10 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 		List<LocalDate> allDates = priceData.getAll_dates();
 
 		// if it's the last bar, skip
-		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
-
-			return;
-		}
+//		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
+//
+//			return;
+//		}
 
 		for (LimitOrder limitOrder : limitEntrySignalsRequest.getLimitOrders()) {
 
@@ -1599,7 +1613,6 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 			this.exitTrade(trade);
 		}
 	}
-
 
 	@Override
 	public void clearPortfolioStoplossTrip(LocalDate asOfDate) {

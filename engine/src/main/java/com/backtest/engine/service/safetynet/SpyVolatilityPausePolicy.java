@@ -80,14 +80,16 @@ public class SpyVolatilityPausePolicy implements SafetyNetPolicy {
         volByDate    = new HashMap<>(allDates.size());
         medianByDate = new HashMap<>(allDates.size());
 
-        for (LocalDate d : allDates) {
+        for (int i = 0; i + 1 < allDates.size(); i++) {
+            LocalDate src  = allDates.get(i);       // value as of this date
+            LocalDate slot = allDates.get(i + 1);   // stored under the next trading day (the .shift(1))
             try {
-                Float v = volFrame.getValue(d, volCol);
-                if (v != null && !v.isNaN()) volByDate.put(d, (double) v.floatValue());
+                Float v = volFrame.getValue(src, volCol);
+                if (v != null && !v.isNaN()) volByDate.put(slot, (double) v.floatValue());
             } catch (Exception ignore) { /* gap */ }
             try {
-                Float m = medianFrame.getValue(d, medianCol);
-                if (m != null && !m.isNaN()) medianByDate.put(d, (double) m.floatValue());
+                Float m = medianFrame.getValue(src, medianCol);
+                if (m != null && !m.isNaN()) medianByDate.put(slot, (double) m.floatValue());
             } catch (Exception ignore) { /* gap */ }
         }
 

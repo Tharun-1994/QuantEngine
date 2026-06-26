@@ -54,9 +54,11 @@ public class StrategyDataV2 {
 	private String portfolioStoplossAnchor;
 	private String systemType;
 
-	private String orderType;
-	private float limitPct;
-	private int atrLimitLookback;
+    private String orderType;
+    private float limitPct;
+    private int atrLimitLookback;
+    private int atrLookbackStp;          // ATR multiplier for stop price: stop = limitPrice - (pct × atr)
+    private ArrowDataFrame dailyAtr;     // ATR parquet for last bar lookups (loaded from atr_stp parquet)
 	
 	private int maxTime;
 	

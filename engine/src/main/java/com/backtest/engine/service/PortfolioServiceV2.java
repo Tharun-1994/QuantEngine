@@ -1,6 +1,7 @@
 package com.backtest.engine.service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,8 +12,8 @@ import com.backtest.engine.dto.request.LiveHoldingsSeedDto;
 import com.backtest.engine.dto.request.TradeEnterRequestDto;
 import com.backtest.engine.dto.request.TradeExitRequestDto;
 import com.backtest.engine.dto.response.BacktestReponseDto;
-import com.backtest.engine.entity.LimitOrder;
 import com.backtest.engine.entity.PriceDataV2;
+import com.backtest.engine.entity.TradeLog;
 
 public interface PortfolioServiceV2 {
 
@@ -112,5 +113,8 @@ public interface PortfolioServiceV2 {
 	// Patch 12: overwrite the captured-orders field. Called by
 	// runBacktestSimpleV2 in execution mode on the last bar.
 	public void recordProposedOrders(java.util.List<com.backtest.engine.entity.LimitOrder> orders);
+	
+	// Patch 77: trades closed today by checkMaxTime — for sector cap accounting
+	List<TradeLog> getTodaysMaxTimeExits(LocalDate date);
 
 }

@@ -22,6 +22,7 @@ import com.backtest.engine.dto.request.RuleGroupNodeDto;
 import com.backtest.engine.entity.BuySellDataV2;
 import com.backtest.engine.entity.PriceDataV2;
 import com.backtest.engine.entity.StrategyDataV2;
+import com.backtest.engine.entity.TradeLog;
 import com.backtest.engine.ruleBuilder.LeafCacheResult;
 import com.backtest.engine.ruleBuilder.RuleTreeCache;
 import com.backtest.engine.ruleBuilder.RuleTreeEvaluator;
@@ -897,7 +898,7 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			BuySellDataV2 buySellData, PortfolioServiceV2 portfolioService) {
 		long startTotal = System.nanoTime();
 		
-	    if (date.equals(LocalDate.of(2020, 3, 4))) {
+	    if (date.equals(LocalDate.of(2026, 6, 24))) {
 	        System.err.println();  // ← put breakpoint here
 	    }
 
@@ -1042,6 +1043,11 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			Map<String, Integer> sectorCount = new HashMap<>();
 			for (String holding : liveHoldings) {
 				String sector = sd.getSectorMap().getOrDefault(holding, "undefined");
+				sectorCount.merge(sector, 1, Integer::sum);
+			}
+			// Patch 77: include MaxTime exits that fired earlier this same day
+			for (TradeLog closed : portfolioService.getTodaysMaxTimeExits(date)) {
+				String sector = sd.getSectorMap().getOrDefault(closed.getSymbol(), "undefined");
 				sectorCount.merge(sector, 1, Integer::sum);
 			}
 			List<String> sectorFiltered = new ArrayList<>();
