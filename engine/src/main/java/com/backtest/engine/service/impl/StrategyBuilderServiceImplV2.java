@@ -1046,10 +1046,10 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 				sectorCount.merge(sector, 1, Integer::sum);
 			}
 			// Patch 77: include MaxTime exits that fired earlier this same day
-			for (TradeLog closed : portfolioService.getTodaysMaxTimeExits(date)) {
-				String sector = sd.getSectorMap().getOrDefault(closed.getSymbol(), "undefined");
-				sectorCount.merge(sector, 1, Integer::sum);
-			}
+//			for (TradeLog closed : portfolioService.getTodaysMaxTimeExits(date)) {
+//				String sector = sd.getSectorMap().getOrDefault(closed.getSymbol(), "undefined");
+//				sectorCount.merge(sector, 1, Integer::sum);
+//			}
 			List<String> sectorFiltered = new ArrayList<>();
 			for (String ticker : entries_list) {
 				String sector = sd.getSectorMap().getOrDefault(ticker, "undefined");

@@ -406,7 +406,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				continue;
 			}
 
-			if (date.equals(LocalDate.of(2026, 6, 24))) {
+			if (date.equals(LocalDate.of(2026, 6, 26))) {
 				System.err.println();
 			}
 
