@@ -57,6 +57,10 @@ public class MarketRegimeDto {
     @JsonProperty("stoploss_pct")
     private float stoplossPct;
 
+    // Patch 99: cap on ATR stop offset as % of anchor price. 0/null = disabled.
+    @JsonProperty("stoploss_max_pct")
+    private float stoplossMaxPct;
+
     @JsonProperty("takeprofit_pct")
     private float takeprofitPct;
 

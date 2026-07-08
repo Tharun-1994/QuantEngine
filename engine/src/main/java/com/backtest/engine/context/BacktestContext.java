@@ -285,6 +285,7 @@ public class BacktestContext implements AutoCloseable {
 				.startingCapital(strategyRequest.getRegimes().get(0).getCapital())
 				.slots(strategyRequest.getRegimes().get(0).getSlots())
 				.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
+				.stoplossMaxPct(strategyRequest.getRegimes().get(0).getStoplossMaxPct()) // Patch 99
 				.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
 				.stoplossTiming(strategyRequest.getRegimes().get(0).getStoplossTiming())
 				.takeprofitTiming(strategyRequest.getRegimes().get(0).getTakeprofitTiming())
@@ -599,6 +600,7 @@ public class BacktestContext implements AutoCloseable {
 			StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryLeafRules)
 					.exitRuleList(exitLeafRules).entryIndicators(entryMap).exitIndicators(exitMap)
 					.startingCapital(regime.getCapital()).slots(regime.getSlots()).stopLossPct(regime.getStoplossPct())
+					.stoplossMaxPct(regime.getStoplossMaxPct()) // Patch 99
 					.productionCapital(regime.getProductionCapital())   // Patch 50
 					.takeProfitPct(regime.getTakeprofitPct()).stoplossTiming(regime.getStoplossTiming())
 					.takeprofitTiming(regime.getTakeprofitTiming()).entryTiming(regime.getEntryTiming())

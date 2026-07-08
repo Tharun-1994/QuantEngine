@@ -95,7 +95,14 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		List<LocalDate> tradingDates = priceData.getTrading_dates();
 		boolean isFirstDay = !tradingDates.isEmpty() && date.equals(tradingDates.get(0));
 		int tdom = tdomMap.getOrDefault(date, -1);
-		boolean isJanTdom0 = (tdom == 0 && date.getMonthValue() == 1);
+		// Patch 115: trigger month/tdom are configurable; null-coalesce to
+		// legacy defaults (January, TDOM 0). isFirstDay stays unconditional,
+		// matching Python: (d == trading_dates[0]) or (month==1 and tdom==0).
+		int triggerMonth = (vf.getTriggerMonth() != null && vf.getTriggerMonth() >= 1 && vf.getTriggerMonth() <= 12)
+				? vf.getTriggerMonth()
+				: 1;
+		int triggerTdom = (vf.getTriggerTdom() != null && vf.getTriggerTdom() >= 0) ? vf.getTriggerTdom() : 0;
+		boolean isJanTdom0 = (tdom == triggerTdom && date.getMonthValue() == triggerMonth);
 		if (!isFirstDay && !isJanTdom0)
 			return;
 
@@ -116,7 +123,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		int prevIdx = allDates.indexOf(previousDate);
 		if (prevIdx < 0)
 			return;
-		int smaLookback = 200;
+		// Patch 115: SPY SMA lookback configurable; null/invalid → legacy 200.
+		int smaLookback = (vf.getSpySmaLookback() != null && vf.getSpySmaLookback() > 0) ? vf.getSpySmaLookback() : 200;
 		int startIdx = Math.max(0, prevIdx - smaLookback + 1);
 		double spySum = 0;
 		int spyCount = 0;
@@ -395,7 +403,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					if (date.isEqual(endDate)) {
 						this.portfolioService.endOfBacktest(date);
 					}
-					
+
 					// Patch 73c.1: circuit-breaker resume. Trading resumes from
 					// the NEXT bar — today's continue still skips entries and
 					// signal-builder for this flush day.
@@ -409,8 +417,6 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 			if (date.equals(LocalDate.of(2026, 6, 26))) {
 				System.err.println();
 			}
-
-
 
 			if (((date.isEqual(priceData.getTrading_dates().get(0))
 					|| date.isAfter(priceData.getTrading_dates().get(0)))
@@ -883,8 +889,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					anyRegime.getStrategyData().getSlots(), anyRegime.getStrategyData().getStopLossPct(),
 					anyRegime.getStrategyData().getTakeProfitPct());
 			// Patch 72p.3: wire anchor for PORTFOLIO stoploss.
-			this.portfolioService.setPortfolioStoplossAnchor(
-					anyRegime.getStrategyData().getPortfolioStoplossAnchor());
+			this.portfolioService.setPortfolioStoplossAnchor(anyRegime.getStrategyData().getPortfolioStoplossAnchor());
 		}
 
 		Map<String, List<String>> entryExitMap = null;
@@ -1112,12 +1117,12 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					this.portfolioService.setBasicDeatils(priceData, buySellData.getStrategyData().getStartingCapital(),
 							buySellData.getStrategyData().getSlots(), buySellData.getStrategyData().getStopLossPct(),
 							buySellData.getStrategyData().getTakeProfitPct());
-					
+
 					// Patch 72p.4: anchor follows regime swap. Multi-regime strategies
 					// can carry different anchors per regime, though the trip flag is
 					// sticky once set so a swap mid-trip doesn't restart evaluation.
-					this.portfolioService.setPortfolioStoplossAnchor(
-							buySellData.getStrategyData().getPortfolioStoplossAnchor());
+					this.portfolioService
+							.setPortfolioStoplossAnchor(buySellData.getStrategyData().getPortfolioStoplossAnchor());
 
 //					long start = System.nanoTime();
 					entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
@@ -1397,8 +1402,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 								buySellData.getStrategyData().getStopLossPct(),
 								buySellData.getStrategyData().getTakeProfitPct());
 						// Patch 72p.5: wire anchor on lazy init.
-						this.portfolioService.setPortfolioStoplossAnchor(
-								buySellData.getStrategyData().getPortfolioStoplossAnchor());
+						this.portfolioService
+								.setPortfolioStoplossAnchor(buySellData.getStrategyData().getPortfolioStoplossAnchor());
 					}
 				}
 
@@ -1509,8 +1514,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		this.portfolioService.setPriceDate(priceData, buySellData.getStrategyData().getStartingCapital(),
 				buySellData.getStrategyData().getSlots(), buySellData.getStrategyData().getStopLossPct(),
 				buySellData.getStrategyData().getTakeProfitPct());
-		this.portfolioService.setPortfolioStoplossAnchor(
-				buySellData.getStrategyData().getPortfolioStoplossAnchor());
+		this.portfolioService.setPortfolioStoplossAnchor(buySellData.getStrategyData().getPortfolioStoplossAnchor());
 
 		// Patch 24: precompute trading-date → index for O(1) sessions-held arithmetic.
 		List<LocalDate> tradingDates = priceData.getTrading_dates();
@@ -1569,8 +1573,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 			this.portfolioService.setPriceDate(priceData, anyRegime.getStrategyData().getStartingCapital(),
 					anyRegime.getStrategyData().getSlots(), anyRegime.getStrategyData().getStopLossPct(),
 					anyRegime.getStrategyData().getTakeProfitPct());
-			this.portfolioService.setPortfolioStoplossAnchor(
-					anyRegime.getStrategyData().getPortfolioStoplossAnchor());
+			this.portfolioService.setPortfolioStoplossAnchor(anyRegime.getStrategyData().getPortfolioStoplossAnchor());
 			endDate = anyRegime.getStrategyData().getEndDate();
 		}
 

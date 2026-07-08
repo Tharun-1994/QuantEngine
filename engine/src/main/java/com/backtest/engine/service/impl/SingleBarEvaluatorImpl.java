@@ -189,7 +189,9 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 					} else if (isLimitAtr && sd.getAtrLimitLookback() > 0) {
 						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
 						if (atr != null && atr > 0f) {
-							limitPrice = close - (atr * (float) sd.getAtrLimitLookback());
+							limitPrice = limitPrice = round2(close - (sd.getLimitPct() * atr)); // Patch 90:
+																								// round2(close −
+																								// limitPct×ATR)
 						}
 					}
 				}
@@ -208,7 +210,37 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 					} else if ("ATR_BASED".equals(stoplossType) && sd.getAtrLookbackStp() > 0) {
 						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
 						if (atr != null && atr > 0f) {
-							stopPrice = limitPrice - (sd.getStopLossPct() * atr);
+							float slOffset = round2(sd.getStopLossPct() * atr); // Patch 90: double-round like backtest
+							// Patch 99: cap stop offset at stoplossMaxPct% of limit (legacy 'Temp Fix
+							// Vas').
+							// TP offset stays UNCAPPED — legacy derives it from the pre-cap stoploss
+							// amount.
+							if (sd.getStoplossMaxPct() > 0f) {
+								float maxOffset = round2(limitPrice * sd.getStoplossMaxPct() / 100f);
+								if (slOffset > maxOffset) {
+									slOffset = maxOffset;
+								}
+							}
+							stopPrice = round2(limitPrice - slOffset);
+						}
+					}
+				}
+
+				// ── Take-profit price (initial bracket TP at proposal time) ──
+				// Patch 90. Mirrors PortfolioServiceImplV2.takeProfitHitLongAtr:
+				// ATR_BASED: tp = round2(limit + round2(takeProfitPct × stopLossPct × atr))
+				// PCT: tp = limit × (1 + takeProfitPct/100)
+				// lastAtr = ATR at atrLookbackStp — one ATR parquet feeds stop+TP,
+				// correct while atrLookbackTp == atrLookbackStp. LONG only.
+				Float tpPrice = null;
+				if (limitPrice != null && limitPrice > 0f) {
+					String tpType = sd.getTakeprofitType();
+					if (sd.getTakeProfitPct() > 0f && !"ATR_BASED".equals(tpType)) {
+						tpPrice = round2(limitPrice * (1f + sd.getTakeProfitPct() / 100f));
+					} else if ("ATR_BASED".equals(tpType) && sd.getAtrLookbackStp() > 0) {
+						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
+						if (atr != null && atr > 0f) {
+							tpPrice = round2(limitPrice + round2(sd.getTakeProfitPct() * sd.getStopLossPct() * atr));
 						}
 					}
 				}
@@ -226,6 +258,7 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 						.rank(i + 1).score(score).limitPrice(limitPrice) // null for NORMAL, computed for
 																			// LIMIT/LIMIT_ATR
 						.stopPrice(stopPrice) // null for NORMAL, computed for LIMIT when stoploss set
+						.tpPrice(tpPrice) // Patch 90: null for NORMAL, computed for LIMIT_ATR/LIMIT
 						.build();
 
 				entries.add(entry);
@@ -261,7 +294,7 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 					if (entryIdx < 0) {
 						continue; // entry date outside the loaded window — can't age it
 					}
-					if ((lastIdx - entryIdx)+1 >= maxTime) {
+					if ((lastIdx - entryIdx) + 1 >= maxTime) {
 						proposedExits.add(ProposedExitDto.builder().tradeId(h.getTradeId()).symbol(h.getSymbol())
 								.exitReason(String.format("MaxTime %d", maxTime)).exitDate(request.getRunDate())
 								.exitTiming("close") // MOC — matches backtest close-exit
@@ -278,11 +311,15 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				if (exitSymbols.contains(h.getSymbol())) {
 					continue;
 				}
-				Float newStop = computeStopValue(h, stoplossPct, sd.getStoplossType(), lastAtr);
-				if (newStop != null) {
+				Float newStop = computeStopValue(h, stoplossPct, sd.getStoplossType(), lastAtr, sd.getStoplossMaxPct()); // Patch
+																															// 99
+				// Patch 108: daily TP maintenance alongside the stop (legacy
+				// take_profit_orders block). Uncapped by design.
+				Float newTp = computeTpValue(h, stoplossPct, sd.getTakeProfitPct(), sd.getStoplossType(), lastAtr);
+				if (newStop != null || newTp != null) {
 					String source = (h.getCurrentStopPrice() != null) ? "trader_override" : "pct_recompute";
 					stopUpdates.add(StopUpdateDto.builder().tradeId(h.getTradeId()).symbol(h.getSymbol())
-							.newStopPrice(newStop).source(source).build());
+							.newStopPrice(newStop).newTpPrice(newTp).source(source).build());
 				}
 			}
 
@@ -356,7 +393,7 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 	 * stoplossHitLongAtr (line 1004) for ATR_BASED.
 	 */
 	private Float computeStopValue(LiveHoldingsSeedDto h, float stoplossPct, String stoplossType,
-			Map<String, Float> lastAtr) {
+			Map<String, Float> lastAtr, float stoplossMaxPct) { // Patch 99: cap param
 		// D3 trader override always takes precedence
 		if (h.getCurrentStopPrice() != null) {
 			return h.getCurrentStopPrice();
@@ -371,10 +408,19 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 		if ("ATR_BASED".equals(stoplossType) && lastAtr != null) {
 			Float atr = lastAtr.get(h.getSymbol());
 			if (atr != null && atr > 0f) {
+				float offset = stoplossPct * atr;
+				// Patch 99: cap maintenance stop offset at stoplossMaxPct% of ENTRY price
+				// (legacy daily block: if stop > 20% below entry, floor at entry x 0.8).
+				if (stoplossMaxPct > 0f) {
+					float maxOffset = h.getEntryprice() * stoplossMaxPct / 100f;
+					if (offset > maxOffset) {
+						offset = maxOffset;
+					}
+				}
 				if (isLong) {
-					return h.getEntryprice() - (stoplossPct * atr);
+					return h.getEntryprice() - offset;
 				} else {
-					return h.getEntryprice() + (stoplossPct * atr);
+					return h.getEntryprice() + offset;
 				}
 			}
 		}
@@ -387,11 +433,55 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 		}
 	}
 
+	/**
+	 * Patch 108: daily take-profit maintenance value for a LIVE holding.
+	 * Mirrors the legacy take_profit_orders block:
+	 *   ATR_BASED: tp = entry ± (takeProfitPct × stoplossPct × atr[lastBar])
+	 *              — UNCAPPED by design: legacy derives the TP amount from
+	 *              the PRE-cap stoploss amount (stoploss_max_pct never
+	 *              touches it).
+	 *   PCT      : tp = entry × (1 ± takeProfitPct/100)
+	 * Engine-computed ONLY — there is no D3 trader override for TP (legacy
+	 * had none either). takeProfitPct <= 0 → null (no TP bracket).
+	 */
+	private Float computeTpValue(LiveHoldingsSeedDto h, float stoplossPct, float takeProfitPct,
+			String stoplossType, Map<String, Float> lastAtr) {
+		if (takeProfitPct <= 0f) {
+			return null;
+		}
+		boolean isLong = "LONG".equalsIgnoreCase(h.getDirection());
+
+		if ("ATR_BASED".equals(stoplossType) && lastAtr != null) {
+			Float atr = lastAtr.get(h.getSymbol());
+			if (atr != null && atr > 0f && stoplossPct > 0f) {
+				float profitAmount = takeProfitPct * stoplossPct * atr;
+				if (isLong) {
+					return h.getEntryprice() + profitAmount;
+				} else {
+					return h.getEntryprice() - profitAmount;
+				}
+			}
+			return null;   // ATR missing → no TP tonight (loud in freshness logs)
+		}
+
+		// PCT semantics for non-ATR stoploss types
+		if (isLong) {
+			return h.getEntryprice() * (1f + takeProfitPct / 100f);
+		}
+		return h.getEntryprice() * (1f - takeProfitPct / 100f);
+	}
+
 	private String resolveDirection(String systemType) {
 		if (systemType == null)
 			return "LONG";
 		if ("SHORT".equalsIgnoreCase(systemType))
 			return "SHORT";
 		return "LONG";
+	}
+
+	// Patch 90: 2-decimal rounding, matching BacktestServiceImplV2 +
+	// PortfolioServiceImplV2.
+	private static float round2(float v) {
+		return Math.round(v * 100f) / 100f;
 	}
 }

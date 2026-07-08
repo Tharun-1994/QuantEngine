@@ -27,6 +27,7 @@ public class StrategyDataV2 {
 	private Map<String, ArrowDataFrame> exitIndicators;
 	private float stopLossPct;
 	private float takeProfitPct;
+	private float stoplossMaxPct;
 	private int maxSameTicker;
 	private float startingCapital;
     private Float productionCapital;   // Patch 50: per-regime live execution sizing. Null for backtest.

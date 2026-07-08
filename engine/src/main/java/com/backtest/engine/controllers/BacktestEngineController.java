@@ -592,6 +592,7 @@ public class BacktestEngineController {
 					.startingCapital(strategyRequest.getRegimes().get(0).getCapital())
 					.slots(strategyRequest.getRegimes().get(0).getSlots())
 					.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
+					.stoplossMaxPct(strategyRequest.getRegimes().get(0).getStoplossMaxPct()) // Patch 99
 					.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
 					.stoplossTiming(strategyRequest.getRegimes().get(0).getStoplossTiming())
 					// Patch 72m.2: anchor passes through builder.
@@ -848,7 +849,8 @@ public class BacktestEngineController {
 					StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryRuleConditions)
 							.exitRuleList(exitRuleConditions).entryIndicators(entryMap).exitIndicators(exitMap)
 							.startingCapital(regime.getCapital()).slots(regime.getSlots())
-							.stopLossPct(regime.getStoplossPct()).takeProfitPct(regime.getTakeprofitPct())
+							.stopLossPct(regime.getStoplossPct()).stoplossMaxPct(regime.getStoplossMaxPct()) // Patch 99
+							.takeProfitPct(regime.getTakeprofitPct())
 							.stoplossTiming(regime.getStoplossTiming()).takeprofitTiming(regime.getTakeprofitTiming())
 							// Patch 72m.3: anchor passes through builder.
 							.portfolioStoplossAnchor(regime.getPortfolioStoplossAnchor())
