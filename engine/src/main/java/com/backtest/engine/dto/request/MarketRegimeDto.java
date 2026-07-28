@@ -97,7 +97,12 @@ public class MarketRegimeDto {
 
     @JsonProperty("atr_limit_lookback")
     private int atrLimitLookback;
-
+    // Patch 167 v2: mode-specific limit parameters (mirrors middleware's
+    // limit_params_json). LIMIT_HV keys: hv_lookback, divider, lower,
+    // upper, reduction. Future LIMIT_* modes reuse this map -- no new fields.
+    @JsonProperty("limit_params")
+    private java.util.Map<String, Float> limitParams;
+    
     private String universe;
     private float capital;
     private int slots;

@@ -1159,6 +1159,8 @@ public class BacktestEngineController {
 		}
 		try {
 			SingleBarSignalsResponseDto response = singleBarEvaluator.evaluate(req);
+			
+			System.err.println(response.getEntryExitSize());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			throw new BacktestExecutionException("Failed to evaluate single-bar signals", e);

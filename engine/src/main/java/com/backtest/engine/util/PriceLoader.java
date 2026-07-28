@@ -30,6 +30,9 @@ public class PriceLoader {
 
 	/** When true, avg_volume, avg_turnover, and closes_spy are added to the file map. */
 	private boolean volFilterEnabled;
+
+	/** Patch 167 v2: when true (order_type=LIMIT_HV), hv_limit.parquet is added. */
+	private boolean hvLimitEnabled;
 	
 	
 	/**
@@ -149,6 +152,10 @@ public class PriceLoader {
 	    if (volFilterEnabled) {
 	        files.put("avg_volume",   "avg_volume.parquet");
 	        files.put("avg_turnover", "avg_turnover.parquet");
+	    }
+	    // Patch 167 v2: fixed-name HV frame for the LIMIT_HV entry price
+	    if (hvLimitEnabled) {
+	        files.put("hv_limit", "hv_limit.parquet");
 	    }
 
 	    for (String ticker : tickers) {

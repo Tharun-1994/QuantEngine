@@ -82,7 +82,10 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 	 * sorted ascending, threshold = value at floor(size * pct). After setting,
 	 * every entry candidate is filtered per-day in signalsForTheDayV1.
 	 */
-	private void computeVolThresholds(LocalDate date, LocalDate previousDate, BuySellDataV2 buySellData,
+	// Patch 160: private -> public so SingleBarEvaluatorImpl can replay the
+	// SAME recalibration over its warm-up window (exact-parity vol seeding
+	// for the execution path). Behaviour unchanged.
+	public void computeVolThresholds(LocalDate date, LocalDate previousDate, BuySellDataV2 buySellData,
 			PriceDataV2 priceData, Map<LocalDate, Integer> tdomMap) {
 
 		StrategyDataV2 sd = buySellData.getStrategyData();
@@ -200,7 +203,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		}
 	}
 
-	private Map<LocalDate, Integer> computeTdomMap(List<LocalDate> allDates) {
+	// Patch 160: private -> public — see computeVolThresholds note above.
+	public Map<LocalDate, Integer> computeTdomMap(List<LocalDate> allDates) {
 		// Matches Python: split=list(all_dates), filtered by year+month, .index(x)
 		// Using all_dates ensures mid-month start dates get correct offset, not reset
 		// to 0.
@@ -468,7 +472,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						} else if (buySellData.getStrategyData().getOrderType()
 								.equals(StaticConfig.orderType.get("limit_atr"))
 								|| buySellData.getStrategyData().getOrderType()
-										.equals(StaticConfig.orderType.get("limit"))) {
+										.equals(StaticConfig.orderType.get("limit")) || buySellData.getStrategyData().getOrderType()
+										.equals(StaticConfig.orderType.get("limit_hv")) ) {
 
 							if (buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("long"))
@@ -614,6 +619,44 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						}
 					}
 					limitOrderMap.put("limit_orders", limitOrdersList);
+				} else if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit_hv"))) {
+					// Patch 167 v2: LIMIT_HV -- volatility-scaled limit.
+					// pct = clamp(HV(lb)/divider, lower, upper) / 100 x reduction.
+					// SHORT: limit ABOVE close; LONG: below. HV frame = fixed-name
+					// hv_limit parquet; scalars unpacked from limit_params map.
+					Set<String> livePositionsHv = this.portfolioService.getLiveHoldingsLogger();
+					int targetSecHv = buySellData.getStrategyData().getSlots() - livePositionsHv.size();
+					limitOrderMap = new HashMap<>();
+					List<LimitOrder> limitOrdersHv = new LinkedList<>();
+					for (String entry : entryExitMap.get("entry")) {
+						if (!livePositionsHv.contains(entry) && targetSecHv > 0) {
+							Float hvVal = null;
+							try {
+								hvVal = buySellData.getStrategyData().getHvLimit().getValue(date, entry);
+							} catch (Exception ignored) {
+								System.err.println();
+							}
+							if (hvVal == null || hvVal <= 0f
+									|| buySellData.getStrategyData().getHvLimitDivider() <= 0f) {
+								continue;
+							}
+							float closePrice = priceData.getDaily_closes().getValue(date, entry);
+							float pctHv = hvVal / buySellData.getStrategyData().getHvLimitDivider();
+							pctHv = Math.max(buySellData.getStrategyData().getHvLimitLower(),
+									Math.min(buySellData.getStrategyData().getHvLimitUpper(), pctHv));
+							pctHv = pctHv / 100f * buySellData.getStrategyData().getHvLimitReduction();
+							float limit_price;
+							if (buySellData.getStrategyData().getSystemType()
+									.equals(StaticConfig.systemType.get("short"))) {
+								limit_price = closePrice * (1 + pctHv);
+							} else {
+								limit_price = closePrice * (1 - pctHv);
+							}
+							limitOrdersHv.add(LimitOrder.builder().ticker(entry).limitPrice(limit_price).build());
+							targetSecHv--;
+						}
+					}
+					limitOrderMap.put("limit_orders", limitOrdersHv);
 
 				}
 
@@ -853,6 +896,43 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						}
 					}
 					limitOrderMap.put("limit_orders", limitOrdersList);
+				} else if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit_hv"))) {
+					// Patch 167 v2: LIMIT_HV -- volatility-scaled limit.
+					// pct = clamp(HV(lb)/divider, lower, upper) / 100 x reduction.
+					// SHORT: limit ABOVE close; LONG: below. HV frame = fixed-name
+					// hv_limit parquet; scalars unpacked from limit_params map.
+					Set<String> livePositionsHv = this.portfolioService.getLiveHoldingsLogger();
+					int targetSecHv = buySellData.getStrategyData().getSlots() - livePositionsHv.size();
+					limitOrderMap = new HashMap<>();
+					List<LimitOrder> limitOrdersHv = new LinkedList<>();
+					for (String entry : entryExitMap.get("entry")) {
+						if (!livePositionsHv.contains(entry) && targetSecHv > 0) {
+							Float hvVal = null;
+							try {
+								hvVal = buySellData.getStrategyData().getHvLimit().getValue(date, entry);
+							} catch (Exception ignored) {
+							}
+							if (hvVal == null || hvVal <= 0f
+									|| buySellData.getStrategyData().getHvLimitDivider() <= 0f) {
+								continue;
+							}
+							float closePrice = priceData.getDaily_closes().getValue(date, entry);
+							float pctHv = hvVal / buySellData.getStrategyData().getHvLimitDivider();
+							pctHv = Math.max(buySellData.getStrategyData().getHvLimitLower(),
+									Math.min(buySellData.getStrategyData().getHvLimitUpper(), pctHv));
+							pctHv = pctHv / 100f * buySellData.getStrategyData().getHvLimitReduction();
+							float limit_price;
+							if (buySellData.getStrategyData().getSystemType()
+									.equals(StaticConfig.systemType.get("short"))) {
+								limit_price = closePrice * (1 + pctHv);
+							} else {
+								limit_price = closePrice * (1 - pctHv);
+							}
+							limitOrdersHv.add(LimitOrder.builder().ticker(entry).limitPrice(limit_price).build());
+							targetSecHv--;
+						}
+					}
+					limitOrderMap.put("limit_orders", limitOrdersHv);
 
 				}
 
@@ -1439,9 +1519,25 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 	 * Run all policies' open-phase evaluation. Returns the updated suspended flag
 	 * after applying every policy's decision.
 	 */
-	private boolean dispatchSafetyNetsAtOpen(
+	public boolean dispatchSafetyNetsAtOpen(
 			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> policies, java.time.LocalDate date,
 			java.time.LocalDate previousDate, boolean suspended, PriceDataV2 priceData) {
+		// Patch 185e: back-compat overload -- every backtest call site keeps
+		// this signature and full portfolio actions. Behaviour unchanged.
+		return dispatchSafetyNetsAtOpen(policies, date, previousDate, suspended, priceData, true);
+	}
+
+	/**
+	 * Patch 185e: state-only variant. FREEZE must be able to update the
+	 * suspended flag WITHOUT touching the portfolio -- the SBE execution
+	 * replay has no live portfolio (liveHoldingsLogger is null), and 'no
+	 * positions' must mean 'nothing to close, proceed to entries', never
+	 * an NPE.
+	 */
+	public boolean dispatchSafetyNetsAtOpen(
+			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> policies, java.time.LocalDate date,
+			java.time.LocalDate previousDate, boolean suspended, PriceDataV2 priceData,
+			boolean applyPortfolioActions) {
 		if (policies == null || policies.isEmpty())
 			return suspended;
 		for (com.backtest.engine.service.safetynet.SafetyNetPolicy p : policies) {
@@ -1456,7 +1552,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 			if (d.isFreeze()) {
 				String reason = (d.getReason() == null || d.getReason().isBlank()) ? "Volatility Cut"
 						: "Volatility Cut: " + d.getReason();
-				this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, reason);
+				if (applyPortfolioActions) { // Patch 185e
+					this.portfolioServiceImplV2.closeAllPositionsOnOpenPrice(date, priceData, reason);
+				}
 				suspended = true;
 			}
 		}
@@ -1467,9 +1565,16 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 	 * Run all policies' close-phase evaluation. Returns the updated suspended flag
 	 * after applying every policy's decision.
 	 */
-	private boolean dispatchSafetyNetsAtClose(
+	public boolean dispatchSafetyNetsAtClose(
 			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> policies, java.time.LocalDate date,
 			boolean suspended) {
+		// Patch 185e: back-compat overload (see AtOpen).
+		return dispatchSafetyNetsAtClose(policies, date, suspended, true);
+	}
+
+	public boolean dispatchSafetyNetsAtClose(
+			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> policies, java.time.LocalDate date,
+			boolean suspended, boolean applyPortfolioActions) {
 		if (policies == null || policies.isEmpty())
 			return suspended;
 		for (com.backtest.engine.service.safetynet.SafetyNetPolicy p : policies) {
@@ -1483,7 +1588,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 			if (d.isFreeze()) {
 				String reason = (d.getReason() == null || d.getReason().isBlank()) ? "Volatility Cut"
 						: "Volatility Cut: " + d.getReason();
-				this.portfolioServiceImplV2.closeAllPositionsAtClose(date, reason);
+				if (applyPortfolioActions) { // Patch 185e
+					this.portfolioServiceImplV2.closeAllPositionsAtClose(date, reason);
+				}
 				suspended = true;
 			}
 		}

@@ -21,7 +21,8 @@ public class StaticConfig {
 	public static final Map<String, String> portfolioStoplossAnchor = Map.of("peak", "PEAK", "daily", "DAILY");
 	public static final String PORTFOLIO_STOPLOSS_ANCHOR_DEFAULT = "PEAK";
 
-	public static final Map<String, String> orderType = Map.of("normal", "NORMAL", "limit_atr", "LIMIT_ATR", "limit",
+	public static final Map<String, String> orderType = Map.of("normal", "NORMAL", "limit_atr", "LIMIT_ATR",
+			"limit_hv", "LIMIT_HV", "limit",
 			"LIMIT");
 
 	public static final String AVGTRUERANGE = "AvgTrueRange";

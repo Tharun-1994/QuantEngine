@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.backtest.engine.dto.request.TdomFilterDto; // Patch 148
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +71,11 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 	private MarketTrendServiceV2 marketTrendServiceV2;
 	@Autowired
 	private PortfolioServiceV2 portfolioService;
+	// Patch 160: vol-filter threshold seeding reuses the day-loop's own
+	// method (BacktestServiceImplV2.computeVolThresholds, made public) —
+	// no cycle: that service never references this one.
+	@Autowired
+	private BacktestServiceImplV2 backtestServiceImplV2;
 
 	@Value("${backtest.data.path}")
 	private String backtestDataPath;
@@ -126,6 +133,184 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 			}
 			StrategyDataV2 sd = buySellData.getStrategyData();
 
+			// Patch 148: execution-path TDOM / banned-month gate, tested on the
+			// INTENDED trade date. The backtest applies these bans on the ENTRY
+			// day inside the day loop (BacktestServiceImplV2:478-483); the
+			// single-bar path must therefore test the day the orders will
+			// actually trade — request.runDate, which middleware sets to
+			// next_trading_day(dataDate) (payload_builder step 4) — NOT lastBar.
+			// A Friday run has runDate=Monday, so weekday-0 filters empty the
+			// proposed-entry list. Exits and stop updates are NOT gated (the
+			// backtest only gates the entry block).
+			boolean entriesBanned = false;
+			String banReason = null;
+			LocalDate intendedTradeDate = request.getRunDate();
+			if (intendedTradeDate == null) {
+				System.err.println("[single-bar] " + strategy.getName()
+						+ " request.runDate missing — tdom/banned-month gate SKIPPED");
+			} else {
+				List<Integer> strategyBannedMonths = sd.getBannedMonths();
+				if (strategyBannedMonths != null
+						&& strategyBannedMonths.contains(intendedTradeDate.getMonthValue())) {
+					entriesBanned = true;
+					banReason = "banned_months contains month "
+							+ intendedTradeDate.getMonthValue();
+				}
+				if (!entriesBanned && sd.getTdomFilters() != null) {
+					// Patch 173: numbered-TDOM support for the execution path.
+					// runDate = next_trading_day(lastBar) by construction
+					// (payload_builder step 4), so its trading-day-of-month is
+					// exactly: same month as lastBar -> tdom(lastBar)+1, else 1
+					// (first session of a new month). tdom(lastBar) comes from
+					// the SAME public computeTdomMap the vol seeding uses, so
+					// backtest and execution share one calendar definition.
+					Integer tdomOfRunDate = null;
+					for (TdomFilterDto f : sd.getTdomFilters()) {
+						if (f == null)
+							continue;
+						if (f.getTdom() != null) {
+							if (tdomOfRunDate == null) {
+								List<LocalDate> allDatesBan = priceData.getAll_dates();
+								LocalDate lastBarBan = allDatesBan.get(allDatesBan.size() - 1);
+								Map<LocalDate, Integer> tdomMapBan = backtestServiceImplV2
+										.computeTdomMap(allDatesBan);
+								Integer lastBarTdom = tdomMapBan.get(lastBarBan);
+								if (lastBarTdom == null) {
+									throw new IllegalStateException("[single-bar] "
+											+ strategy.getName() + ": computeTdomMap has no entry"
+											+ " for lastBar " + lastBarBan
+											+ " — cannot derive tdom of runDate.");
+								}
+								tdomOfRunDate = (intendedTradeDate.getMonthValue() == lastBarBan.getMonthValue()
+										&& intendedTradeDate.getYear() == lastBarBan.getYear())
+												? lastBarTdom + 1 : 1;
+								System.err.println("[single-bar] " + strategy.getName()
+										+ " tdom(" + intendedTradeDate + ") = " + tdomOfRunDate
+										+ " (lastBar " + lastBarBan + " tdom=" + lastBarTdom + ")");
+							}
+							// Mirrors BacktestServiceImplV2.isTdomBlocked (:237-239):
+							// month in filter.bannedMonths AND filter.tdom == tdom(date)
+							if (f.getBannedMonths() != null
+									&& f.getBannedMonths().contains(intendedTradeDate.getMonthValue())
+									&& f.getTdom().intValue() == tdomOfRunDate.intValue()) {
+								entriesBanned = true;
+								banReason = "tdom_filter tdom=" + f.getTdom()
+										+ " month=" + intendedTradeDate.getMonthValue();
+								break;
+							}
+							continue;
+						}
+						// Mirrors BacktestServiceImplV2 semantics: the filter applies
+						// only when the month is in ITS bannedMonths list AND the
+						// weekday matches. Python weekday 0=Mon..4=Fri; Java
+						// DayOfWeek 1=Mon..7=Sun, hence the -1.
+						boolean monthApplies = f.getBannedMonths() != null
+								&& f.getBannedMonths().contains(intendedTradeDate.getMonthValue());
+						boolean weekdayMatches = f.getWeekday() != null
+								&& (intendedTradeDate.getDayOfWeek().getValue() - 1) == f.getWeekday();
+						if (monthApplies && weekdayMatches) {
+							entriesBanned = true;
+							banReason = "tdom_filter weekday=" + f.getWeekday()
+									+ " month=" + intendedTradeDate.getMonthValue();
+							break;
+						}
+					}
+				}
+			}
+
+			// Patch 160: vol-filter threshold seeding — the ONE rule class the
+			// single-bar path lacked (thresholds stayed 0 → the StrategyBuilder
+			// gate at ~:1002 never engaged → candidates were vol-UNfiltered).
+			// The day-loop recalibrates at each trigger (BacktestServiceImplV2:553
+			// → computeVolThresholds: first trading day OR triggerMonth/Tdom,
+			// SPY-vs-SMA(prev) branch, percentile over the ACTIVE universe's
+			// avg volume/turnover on prev). Replay that EXACT method over every
+			// trading date up to lastBar — off-trigger dates no-op inside it —
+			// so the thresholds signalsForTheDayV1 reads below are
+			// identical-by-construction to what the same date sees in a
+			// backtest. Per-date active regime is honoured for multi-regime
+			// strategies via marketTrends.
+			// Patch 185: safety-net gate at execution. Replays the SAME
+			// open/close state machine the backtest day-loop runs
+			// (dispatchSafetyNetsAtOpen/AtClose; suspended gates ENTRIES only,
+			// mirroring BSIv2 :463) through lastBar, then evaluates the
+			// intended trade date's open using data <= lastBar (no forward
+			// bias). Policies self-load spy_close_0 / spy_rolling_vol_close_N
+			// frames; if absent they log a loud no-op and never suspend.
+			// Patch 185b: EXPLICIT opt-in only. resolveSafetyNets has a legacy
+			// fallback (safety_net_type='simple' synthesizes a policy); running
+			// that at execution would silently change books that never asked.
+			// The gate activates ONLY for strategies whose regime carries an
+			// explicit safety_nets list (e.g. Lsmr_static). Everything else --
+			// CRDT shorts, QAS, PullBack, all combined members -- skips this
+			// entire block, log line included: zero change to existing books.
+			java.util.List<com.backtest.engine.dto.request.SafetyNetItemDto> explicitNets185 = strategy
+					.getRegimes().get(0).getSafetyNets();
+			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> safetyPolicies185 = (explicitNets185 != null
+					&& !explicitNets185.isEmpty())
+							? context.buildSafetyPolicies(strategy, priceData, backtestDataPath)
+							: java.util.Collections.emptyList();
+			if (!safetyPolicies185.isEmpty()) {
+				boolean suspended185 = false;
+				LocalDate prev185 = null;
+				for (LocalDate d185 : priceData.getAll_dates()) {
+					suspended185 = backtestServiceImplV2.dispatchSafetyNetsAtOpen(safetyPolicies185, d185, prev185,
+							suspended185, priceData, false); // Patch 185e: state-only
+					suspended185 = backtestServiceImplV2.dispatchSafetyNetsAtClose(safetyPolicies185, d185, suspended185, false); // Patch 185e
+					prev185 = d185;
+				}
+				boolean intendedSuspended185 = backtestServiceImplV2.dispatchSafetyNetsAtOpen(safetyPolicies185,
+						intendedTradeDate, lastBar, suspended185, priceData, false); // Patch 185e
+				System.err.println("[single-bar] " + strategy.getName() + " safety-net: policies="
+						+ safetyPolicies185.size() + " suspendedThroughLastBar=" + suspended185
+						+ " intended(" + intendedTradeDate + ")=" + intendedSuspended185);
+				if (intendedSuspended185 && !entriesBanned) {
+					entriesBanned = true;
+					banReason = "safety_net suspended (state through " + lastBar + ")";
+				}
+			}
+			Map<LocalDate, Integer> tdomMapForVol = backtestServiceImplV2
+					.computeTdomMap(priceData.getAll_dates());
+			for (int di = 0; di < tradingDates.size(); di++) {
+				LocalDate volDate = tradingDates.get(di);
+				if (volDate.isAfter(lastBar))
+					break;
+				String volLabel = marketTrends.get(volDate);
+				if (volLabel == null)
+					continue;
+				BuySellDataV2 volBsd = regimeSignals.get(volLabel);
+				if (volBsd == null)
+					continue;
+				LocalDate volPrev = (di > 0) ? tradingDates.get(di - 1) : null;
+				backtestServiceImplV2.computeVolThresholds(volDate, volPrev,
+						volBsd, priceData, tdomMapForVol);
+			}
+			System.err.println("[single-bar] " + strategy.getName()
+					+ " vol thresholds seeded through " + lastBar + ": vol="
+					+ sd.getVolThreshold() + " turnover="
+					+ sd.getTurnoverThreshold() + " (regime '" + activeRegime
+					+ "')");
+			// Patch 164: name the silent guard. computeVolThresholds returns
+			// without setting anything when its inputs are missing — the
+			// evidence run showed vol=0.0/turnover=0.0 with no explanation.
+			// If the filter is enabled and thresholds stayed unset, say
+			// exactly which input is null and where its file lives.
+			if (sd.getVolFilter() != null && sd.getVolFilter().isEnabled()
+					&& (sd.getVolThreshold() <= 0f)
+					&& ( sd.getTurnoverThreshold() <= 0f)) {
+				System.err.println("[single-bar] " + strategy.getName()
+						+ " VOL SEEDING INEFFECTIVE — filter is enabled but"
+						+ " thresholds stayed 0 (vol filter INERT)."
+						+ " Inputs present: avgVolume=" + (sd.getAvgVolume() != null)
+						+ " avgTurnover=" + (sd.getAvgTurnover() != null)
+						+ " spyCloses=" + (sd.getSpyCloses() != null)
+						+ " — the loader expects avg_volume.parquet,"
+						+ " avg_turnover.parquet, closes_spy.parquet in the"
+						+ " exec universe folder (PriceLoader volFilterEnabled"
+						+ " path). A false above = that file failed to load"
+						+ " or was never generated.");
+			}
+
 			// ── 4. Initialise portfolioService + seed LIVE holdings ──────────
 			float capitalForExecution = (sd.getProductionCapital() != null) ? sd.getProductionCapital()
 					: sd.getStartingCapital();
@@ -144,6 +329,14 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 			Map<String, List<String>> entryExitMap = this.strategyBuilderServiceV2.signalsForTheDayV1(lastBar,
 					priceData, buySellData, this.portfolioService);
 			List<String> rankedEntries = entryExitMap.getOrDefault("entry", new ArrayList<>());
+			if (entriesBanned) {
+				// Patch 148: intended trade date is banned — propose no entries.
+				System.err.println("[single-bar] " + strategy.getName()
+						+ " intended trade date " + intendedTradeDate + " is BANNED ("
+						+ banReason + ") — proposedEntries emptied; exits/stop"
+						+ " updates unaffected.");
+				rankedEntries = new ArrayList<>();
+			}
 			List<String> exitTickers = entryExitMap.getOrDefault("exit", new ArrayList<>());
 			// ── 6. Build ranked entry list (FULL list — middleware splits) ───
 
@@ -165,11 +358,14 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 			String orderType = sd.getOrderType() != null ? sd.getOrderType().toUpperCase() : "NORMAL";
 			boolean isLimit = "LIMIT".equals(orderType);
 			boolean isLimitAtr = "LIMIT_ATR".equals(orderType);
+			boolean isLimitHv = "LIMIT_HV".equals(orderType);   // Patch 167 v2
 
 			// ATR frame for last bar — used for LIMIT_ATR entry price and ATR_BASED stop.
 			// Loaded from atr_stp parquet via RegimeOverlay in BacktestContext.
 			// Null for NORMAL strategies (no ATR parquet loaded).
 			Map<String, Float> lastAtr = (sd.getDailyAtr() != null) ? sd.getDailyAtr().getRow(lastBar) : null;
+			// Patch 167 v2: HV frame for LIMIT_HV (fixed-name hv_limit parquet)
+			Map<String, Float> lastHvLimit = (sd.getHvLimit() != null) ? sd.getHvLimit().getRow(lastBar) : null;
 
 			List<ProposedEntryDto> entries = new ArrayList<>();
 			for (int i = 0; i < rankedEntries.size(); i++) {
@@ -185,16 +381,38 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				Float limitPrice = null;
 				if (close != null && close > 0f) {
 					if (isLimit && sd.getLimitPct() > 0f) {
-						limitPrice = close * (1f - sd.getLimitPct() / 100f);
+						// Patch 180: direction-aware. SHORT sells a rally: limit ABOVE
+						// close (legacy close x (1 + pct)); below-close sell-limits are
+						// marketable, i.e. accidental market orders.
+						limitPrice = "SHORT".equalsIgnoreCase(direction)
+								? close * (1f + sd.getLimitPct() / 100f)
+								: close * (1f - sd.getLimitPct() / 100f);
 					} else if (isLimitAtr && sd.getAtrLimitLookback() > 0) {
 						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
 						if (atr != null && atr > 0f) {
-							limitPrice = limitPrice = round2(close - (sd.getLimitPct() * atr)); // Patch 90:
+							// Patch 180: direction-aware (and the accidental double-assign
+							// from Patch 90 normalized).
+							limitPrice = round2("SHORT".equalsIgnoreCase(direction)
+									? close + (sd.getLimitPct() * atr)
+									: close - (sd.getLimitPct() * atr)); // Patch 90:
 																								// round2(close −
 																								// limitPct×ATR)
 						}
+					} else if (isLimitHv) {
+						// Patch 167 v2: pct = clamp(HV/divider, lower, upper)/100 x reduction.
+						// Direction-aware from birth: SHORT limit ABOVE close.
+						Float hvV = (lastHvLimit != null) ? lastHvLimit.get(ticker) : null;
+						if (hvV != null && hvV > 0f && sd.getHvLimitDivider() > 0f) {
+							float pctHv = hvV / sd.getHvLimitDivider();
+							pctHv = Math.max(sd.getHvLimitLower(), Math.min(sd.getHvLimitUpper(), pctHv));
+							pctHv = pctHv / 100f * sd.getHvLimitReduction();
+							limitPrice = round2("SHORT".equalsIgnoreCase(direction)
+									? close * (1f + pctHv)
+									: close * (1f - pctHv));
+						}
 					}
 				}
+				
 
 				// ── Stop price (initial bracket stop at proposal time) ────────
 				// Only computed when limitPrice is known (LIMIT / LIMIT_ATR).
@@ -206,7 +424,10 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 					String stoplossType = sd.getStoplossType();
 					if (sd.getStopLossPct() > 0f && !"ATR_BASED".equals(stoplossType)) {
 						// PCT (NORMAL stoploss type or null)
-						stopPrice = limitPrice * (1f - sd.getStopLossPct() / 100f);
+						// Patch 180: a SHORT loses when price RISES -- stop ABOVE entry.
+						stopPrice = "SHORT".equalsIgnoreCase(direction)
+								? limitPrice * (1f + sd.getStopLossPct() / 100f)
+								: limitPrice * (1f - sd.getStopLossPct() / 100f);
 					} else if ("ATR_BASED".equals(stoplossType) && sd.getAtrLookbackStp() > 0) {
 						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
 						if (atr != null && atr > 0f) {
@@ -221,7 +442,10 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 									slOffset = maxOffset;
 								}
 							}
-							stopPrice = round2(limitPrice - slOffset);
+							// Patch 180: offset ADDS for SHORT (stop above entry).
+							stopPrice = round2("SHORT".equalsIgnoreCase(direction)
+									? limitPrice + slOffset
+									: limitPrice - slOffset);
 						}
 					}
 				}
@@ -236,11 +460,16 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				if (limitPrice != null && limitPrice > 0f) {
 					String tpType = sd.getTakeprofitType();
 					if (sd.getTakeProfitPct() > 0f && !"ATR_BASED".equals(tpType)) {
-						tpPrice = round2(limitPrice * (1f + sd.getTakeProfitPct() / 100f));
+						// Patch 180: a SHORT takes profit when price FALLS -- TP below.
+						tpPrice = round2("SHORT".equalsIgnoreCase(direction)
+								? limitPrice * (1f - sd.getTakeProfitPct() / 100f)
+								: limitPrice * (1f + sd.getTakeProfitPct() / 100f));
 					} else if ("ATR_BASED".equals(tpType) && sd.getAtrLookbackStp() > 0) {
 						Float atr = (lastAtr != null) ? lastAtr.get(ticker) : null;
 						if (atr != null && atr > 0f) {
-							tpPrice = round2(limitPrice + round2(sd.getTakeProfitPct() * sd.getStopLossPct() * atr));
+							tpPrice = round2("SHORT".equalsIgnoreCase(direction)
+									? limitPrice - round2(sd.getTakeProfitPct() * sd.getStopLossPct() * atr)
+									: limitPrice + round2(sd.getTakeProfitPct() * sd.getStopLossPct() * atr));
 						}
 					}
 				}

@@ -1,7 +1,9 @@
 package com.backtest.engine.dto.response;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Builder;
 import lombok.Data;
@@ -44,4 +46,17 @@ public class SingleBarSignalsResponseDto {
     // human-readable trip text ("Portfolio Stoploss Hit: 15.30% (threshold 15%) on 2026-06-12").
     private Boolean executionEnabledChange;
     private String  executionDisableReason;
+    
+    
+    
+    public Map<String,Integer> getEntryExitSize(){
+    	Map<String,Integer> m = new HashMap<>();
+    	m.put("Entry", proposedEntries.size());
+    	m.put("Exit", proposedExits.size());
+
+		return m;
+    	
+    	
+    	
+    }
 }

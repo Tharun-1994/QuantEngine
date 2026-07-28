@@ -57,6 +57,14 @@ public class StrategyDataV2 {
 
     private String orderType;
     private float limitPct;
+    // Patch 167 v2: LIMIT_HV scalars (unpacked from limit_params map in
+    // BacktestContext) + the fixed-name hv_limit frame
+    private float hvLimitDivider;
+    private float hvLimitLower;
+    private float hvLimitUpper;
+    private float hvLimitReduction;
+    private ArrowDataFrame hvLimit;
+    
     private int atrLimitLookback;
     private int atrLookbackStp;          // ATR multiplier for stop price: stop = limitPrice - (pct × atr)
     private ArrowDataFrame dailyAtr;     // ATR parquet for last bar lookups (loaded from atr_stp parquet)
