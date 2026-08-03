@@ -44,76 +44,60 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 		return BuySellDataV2.builder().sells(sells).buys(buys).strategyData(strategyData).build();
 	}
-	
-	
-	public static Map<RuleDto, Map<LocalDate, List<String>>> toOldRuleMap(
-	        Map<String, RuleDto> rulesById,
-	        Map<String, Map<LocalDate, Set<String>>> leafCache
-	) {
-	    Map<RuleDto, Map<LocalDate, List<String>>> out = new HashMap<>();
 
-	    // Null-safe: when a regime has no entry/exit rules (e.g. bull leg of
-	    // Ronnan's ROC_SP500 where bull-mode has no entry filter and exits
-	    // only via max_time), the corresponding tree is null → leaf cache
-	    // is never built → both params arrive as null. Return empty map
-	    // rather than NPE on entrySet().
-	    if (leafCache == null || rulesById == null) {
-	        return out;
-	    }
+	public static Map<RuleDto, Map<LocalDate, List<String>>> toOldRuleMap(Map<String, RuleDto> rulesById,
+			Map<String, Map<LocalDate, Set<String>>> leafCache) {
+		Map<RuleDto, Map<LocalDate, List<String>>> out = new HashMap<>();
 
-	    for (Map.Entry<String, Map<LocalDate, Set<String>>> e : leafCache.entrySet()) {
-	        String leafId = e.getKey();
-	        RuleDto rule = rulesById.get(leafId);
-	        if (rule == null) continue;
+		// Null-safe: when a regime has no entry/exit rules (e.g. bull leg of
+		// Ronnan's ROC_SP500 where bull-mode has no entry filter and exits
+		// only via max_time), the corresponding tree is null → leaf cache
+		// is never built → both params arrive as null. Return empty map
+		// rather than NPE on entrySet().
+		if (leafCache == null || rulesById == null) {
+			return out;
+		}
 
-	        Map<LocalDate, List<String>> byDate = new HashMap<>();
-	        for (Map.Entry<LocalDate, Set<String>> row : e.getValue().entrySet()) {
-	            byDate.put(row.getKey(), new ArrayList<>(row.getValue()));
-	        }
-	        out.put(rule, byDate);
-	    }
-	    return out;
+		for (Map.Entry<String, Map<LocalDate, Set<String>>> e : leafCache.entrySet()) {
+			String leafId = e.getKey();
+			RuleDto rule = rulesById.get(leafId);
+			if (rule == null)
+				continue;
+
+			Map<LocalDate, List<String>> byDate = new HashMap<>();
+			for (Map.Entry<LocalDate, Set<String>> row : e.getValue().entrySet()) {
+				byDate.put(row.getKey(), new ArrayList<>(row.getValue()));
+			}
+			out.put(rule, byDate);
+		}
+		return out;
 	}
 
-	
 	@Override
 	public BuySellDataV2 generateSignalsV1(StrategyDataV2 strategyData, PriceDataV2 priceData) {
 
-	    if (strategyData.getEntryRulesTree() != null && strategyData.getEntryLeafCache() == null) {
-	        LeafCacheResult entryRes = RuleTreeCache.buildLeafCache(
-	                strategyData.getEntryRulesTree(),
-	                strategyData.getEntryIndicators(),
-	                priceData,
-	                this
-	        );
-	        strategyData.setEntryLeafRulesById(entryRes.getRulesByLeafId());
-	        strategyData.setEntryLeafCache(entryRes.getEligibleByLeafId());
-	    }
+		if (strategyData.getEntryRulesTree() != null && strategyData.getEntryLeafCache() == null) {
+			LeafCacheResult entryRes = RuleTreeCache.buildLeafCache(strategyData.getEntryRulesTree(),
+					strategyData.getEntryIndicators(), priceData, this);
+			strategyData.setEntryLeafRulesById(entryRes.getRulesByLeafId());
+			strategyData.setEntryLeafCache(entryRes.getEligibleByLeafId());
+		}
 
-	    if (strategyData.getExitRulesTree() != null && strategyData.getExitLeafCache() == null) {
-	        LeafCacheResult exitRes = RuleTreeCache.buildLeafCache(
-	                strategyData.getExitRulesTree(),
-	                strategyData.getExitIndicators(),
-	                priceData,
-	                this
-	        );
-	        strategyData.setExitLeafRulesById(exitRes.getRulesByLeafId());
-	        strategyData.setExitLeafCache(exitRes.getEligibleByLeafId());
-	    }
+		if (strategyData.getExitRulesTree() != null && strategyData.getExitLeafCache() == null) {
+			LeafCacheResult exitRes = RuleTreeCache.buildLeafCache(strategyData.getExitRulesTree(),
+					strategyData.getExitIndicators(), priceData, this);
+			strategyData.setExitLeafRulesById(exitRes.getRulesByLeafId());
+			strategyData.setExitLeafCache(exitRes.getEligibleByLeafId());
+		}
 
-	    // OPTIONAL: keep old buys/sells if you still need them for debugging
-	    Map<RuleDto, Map<LocalDate, List<String>>> buys =null;
-	    Map<RuleDto, Map<LocalDate, List<String>>> sells = null;
-	    buys  = toOldRuleMap(strategyData.getEntryLeafRulesById(), strategyData.getEntryLeafCache());
-	    sells = toOldRuleMap(strategyData.getExitLeafRulesById(),  strategyData.getExitLeafCache());
+		// OPTIONAL: keep old buys/sells if you still need them for debugging
+		Map<RuleDto, Map<LocalDate, List<String>>> buys = null;
+		Map<RuleDto, Map<LocalDate, List<String>>> sells = null;
+		buys = toOldRuleMap(strategyData.getEntryLeafRulesById(), strategyData.getEntryLeafCache());
+		sells = toOldRuleMap(strategyData.getExitLeafRulesById(), strategyData.getExitLeafCache());
 
-	    return BuySellDataV2.builder()
-	            .sells(sells)
-	            .buys(buys)
-	            .strategyData(strategyData)
-	            .build();
+		return BuySellDataV2.builder().sells(sells).buys(buys).strategyData(strategyData).build();
 	}
-
 
 	private Map<RuleDto, Map<LocalDate, List<String>>> generateSellSignals(StrategyDataV2 strategyData,
 			PriceDataV2 priceData) {
@@ -127,12 +111,17 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		}));
 		Map<RuleDto, Map<LocalDate, List<String>>> exitRuleMap = new HashMap<>();
 		for (RuleDto rule : strategyData.getExitRuleList()) {
-			Map<LocalDate, List<String>> list = evaluateRule(strategyData.getExitIndicators().get(rule.getIndicator() + "_" + rule.getLookback()),
-					rule, priceData,strategyData.getExitIndicators().containsKey(rule.getValueIndicator() + "_" + rule.getValueLookback()) ?
-						strategyData.getExitIndicators().get(rule.getValueIndicator() + "_" + rule.getValueLookback()) : null);
-			
+			Map<LocalDate, List<String>> list = evaluateRule(
+					strategyData.getExitIndicators().get(rule.getIndicator() + "_" + rule.getLookback()), rule,
+					priceData,
+					strategyData.getExitIndicators()
+							.containsKey(rule.getValueIndicator() + "_" + rule.getValueLookback())
+									? strategyData.getExitIndicators()
+											.get(rule.getValueIndicator() + "_" + rule.getValueLookback())
+									: null);
+
 //			System.err.println(list.get(LocalDate.of(2000, 1, 5)).size());
-			exitRuleMap.put(rule,list);
+			exitRuleMap.put(rule, list);
 		}
 
 		return exitRuleMap;
@@ -159,13 +148,15 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		for (RuleDto rule : strategyData.getEntryRulesList()) {
 
 			if (rule.getIndicator() != null && rule.getLookback() > -1) {
-				
-				
-				entryRuleMap.put(rule,
-						evaluateRule(
-								strategyData.getEntryIndicators().get(rule.getIndicator() + "_" + rule.getLookback()),
-								rule, priceData,strategyData.getEntryIndicators().containsKey(rule.getValueIndicator() + "_" + rule.getValueLookback()) ?
-										strategyData.getEntryIndicators().get(rule.getValueIndicator() + "_" + rule.getValueLookback()) : null));
+
+				entryRuleMap.put(rule, evaluateRule(
+						strategyData.getEntryIndicators().get(rule.getIndicator() + "_" + rule.getLookback()), rule,
+						priceData,
+						strategyData.getEntryIndicators()
+								.containsKey(rule.getValueIndicator() + "_" + rule.getValueLookback())
+										? strategyData.getEntryIndicators().get(
+												rule.getValueIndicator() + "_" + rule.getValueLookback())
+										: null));
 
 			}
 
@@ -212,16 +203,16 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 //		return eligibleByDate;
 //	}
 
-	public Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule,
-			PriceDataV2 priceData,ArrowDataFrame indicatorPriceDataFrame) {
+	public Map<LocalDate, List<String>> evaluateRule(ArrowDataFrame arrowDataFrame, RuleDto rule, PriceDataV2 priceData,
+			ArrowDataFrame indicatorPriceDataFrame) {
 
 		// ─────────────────────────────────────────────────────────────────────
 		// PRIMITIVE FAST PATH
 		// All branches below use ArrowDataFrame's parallel arrays (built once,
 		// reused per call) and primitive Float4Vector.get(int) reads. This avoids:
-		//   - ~6,500 HashMap allocations per date (one per getRow call)
-		//   - ~19.5M Float object allocations per leaf (boxing of primitive floats)
-		//   - BiPredicate<Float,Float> re-boxing inside the inner loop
+		// - ~6,500 HashMap allocations per date (one per getRow call)
+		// - ~19.5M Float object allocations per leaf (boxing of primitive floats)
+		// - BiPredicate<Float,Float> re-boxing inside the inner loop
 		// Logic is identical to the original; only allocation patterns differ.
 		// ─────────────────────────────────────────────────────────────────────
 		final String[] tickers = arrowDataFrame.getTickerArray();
@@ -239,10 +230,11 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		// ── Top N (within active universe) filter ──
 		// Identical to top_n but only ranks tickers that are in today's active
 		// universe (daily_universes parquet). Matches Python's
-		//     series[todays_universe.index].nsmallest(N)
+		// series[todays_universe.index].nsmallest(N)
 		// semantics, where ranking happens AFTER the universe filter.
 		if ("top_n_universe".equalsIgnoreCase(rule.getValueType())) {
-			return evaluateTopNInUniversePrimitive(rule, sortedDates, tickers, vectors, numTickers, arrowDataFrame, priceData);
+			return evaluateTopNInUniversePrimitive(rule, sortedDates, tickers, vectors, numTickers, arrowDataFrame,
+					priceData);
 		}
 
 		// ── Standard threshold / indicator_price comparison ──
@@ -251,8 +243,8 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		final int op = encodeOperator(rule);
 
 		if (rule.getValueType().equalsIgnoreCase("indicator_price")) {
-			return evaluateIndicatorPricePrimitive(rule, priceData, indicatorPriceDataFrame,
-					sortedDates, tickers, vectors, numTickers, op, arrowDataFrame);
+			return evaluateIndicatorPricePrimitive(rule, priceData, indicatorPriceDataFrame, sortedDates, tickers,
+					vectors, numTickers, op, arrowDataFrame);
 		}
 		return evaluateThresholdPrimitive(rule, sortedDates, tickers, vectors, numTickers, op, arrowDataFrame);
 	}
@@ -261,11 +253,11 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 	// Primitive helpers (boxing-free, allocation-light)
 	// ─────────────────────────────────────────────────────────────────────────
 
-	private static final int OP_LT  = 0;
-	private static final int OP_LE  = 1;
-	private static final int OP_GT  = 2;
-	private static final int OP_GE  = 3;
-	private static final int OP_EQ  = 4;
+	private static final int OP_LT = 0;
+	private static final int OP_LE = 1;
+	private static final int OP_GT = 2;
+	private static final int OP_GE = 3;
+	private static final int OP_EQ = 4;
 	private static final int OP_NEQ = 5;
 
 	private static int encodeOperator(RuleDto rule) {
@@ -277,51 +269,69 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			op = rule.getOperator();
 		}
 		switch (op) {
-			case "<":  return OP_LT;
-			case "<=": return OP_LE;
-			case ">":  return OP_GT;
-			case ">=": return OP_GE;
-			case "==": return OP_EQ;
-			case "!=": return OP_NEQ;
-			default: throw new IllegalArgumentException("Unknown operator: " + op);
+		case "<":
+			return OP_LT;
+		case "<=":
+			return OP_LE;
+		case ">":
+			return OP_GT;
+		case ">=":
+			return OP_GE;
+		case "==":
+			return OP_EQ;
+		case "!=":
+			return OP_NEQ;
+		default:
+			throw new IllegalArgumentException("Unknown operator: " + op);
 		}
 	}
 
 	private static boolean compare(float v, float t, int op) {
 		switch (op) {
-			case OP_LT:  return v < t;
-			case OP_LE:  return v <= t;
-			case OP_GT:  return v > t;
-			case OP_GE:  return v >= t;
-			case OP_EQ:  return Float.compare(v, t) == 0;
-			case OP_NEQ: return Float.compare(v, t) != 0;
-			default: return false;
+		case OP_LT:
+			return v < t;
+		case OP_LE:
+			return v <= t;
+		case OP_GT:
+			return v > t;
+		case OP_GE:
+			return v >= t;
+		case OP_EQ:
+			return Float.compare(v, t) == 0;
+		case OP_NEQ:
+			return Float.compare(v, t) != 0;
+		default:
+			return false;
 		}
 	}
 
 	/**
-	 * Threshold branch: each ticker's indicator value is compared against a fixed scalar.
-	 * Examples: hv_100 > 15, rsi_2 > 85, adx_10 >= 22.
+	 * Threshold branch: each ticker's indicator value is compared against a fixed
+	 * scalar. Examples: hv_100 > 15, rsi_2 > 85, adx_10 >= 22.
 	 */
-	private Map<LocalDate, List<String>> evaluateThresholdPrimitive(RuleDto rule,
-			List<LocalDate> sortedDates, String[] tickers, Float4Vector[] vectors,
-			int numTickers, int op, ArrowDataFrame arrowDataFrame) {
+	private Map<LocalDate, List<String>> evaluateThresholdPrimitive(RuleDto rule, List<LocalDate> sortedDates,
+			String[] tickers, Float4Vector[] vectors, int numTickers, int op, ArrowDataFrame arrowDataFrame) {
 
 		Map<LocalDate, List<String>> result = new HashMap<>(sortedDates.size() * 2);
 		final float thresh = rule.getValue();
 
 		for (LocalDate d : sortedDates) {
 			Integer rowBox = arrowDataFrame.getDateIndex(d);
-			if (rowBox == null) { result.put(d, Collections.emptyList()); continue; }
+			if (rowBox == null) {
+				result.put(d, Collections.emptyList());
+				continue;
+			}
 			int row = rowBox;
 
 			// Capacity 64: rough average of passing tickers per date. Grows if exceeded.
 			List<String> passing = new ArrayList<>(64);
 			for (int col = 0; col < numTickers; col++) {
 				Float4Vector vec = vectors[col];
-				if (row >= vec.getValueCount() || vec.isNull(row)) continue;
+				if (row >= vec.getValueCount() || vec.isNull(row))
+					continue;
 				float v = vec.get(row);
-				if (Float.isNaN(v) || Float.isInfinite(v)) continue;
+				if (Float.isNaN(v) || Float.isInfinite(v))
+					continue;
 				if (compare(v, thresh, op)) {
 					passing.add(tickers[col]);
 				}
@@ -332,22 +342,23 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 	}
 
 	/**
-	 * Indicator_price branch: each ticker's LHS indicator is compared against another
-	 * indicator's value for the same ticker (e.g. close_0 > sma_150).
+	 * Indicator_price branch: each ticker's LHS indicator is compared against
+	 * another indicator's value for the same ticker (e.g. close_0 > sma_150).
 	 *
 	 * Preserves original fallback: when the RHS value is null/missing, synthesize
-	 * MAX_VALUE for '>' or MIN_VALUE for '<' so the comparison resolves predictably.
-	 * For RHS = "close", uses PriceDataV2.getValue (unchanged behavior).
+	 * MAX_VALUE for '>' or MIN_VALUE for '<' so the comparison resolves
+	 * predictably. For RHS = "close", uses PriceDataV2.getValue (unchanged
+	 * behavior).
 	 */
-	private Map<LocalDate, List<String>> evaluateIndicatorPricePrimitive(RuleDto rule,
-			PriceDataV2 priceData, ArrowDataFrame rhsDf,
-			List<LocalDate> sortedDates, String[] tickers, Float4Vector[] vectors,
-			int numTickers, int op, ArrowDataFrame arrowDataFrame) {
+	private Map<LocalDate, List<String>> evaluateIndicatorPricePrimitive(RuleDto rule, PriceDataV2 priceData,
+			ArrowDataFrame rhsDf, List<LocalDate> sortedDates, String[] tickers, Float4Vector[] vectors, int numTickers,
+			int op, ArrowDataFrame arrowDataFrame) {
 
 		Map<LocalDate, List<String>> result = new HashMap<>(sortedDates.size() * 2);
 		final boolean rhsIsClose = rule.getValueIndicator().equalsIgnoreCase("close");
 
-		// Pre-build RHS ticker→column index ONCE (not per date) when RHS is an indicator frame
+		// Pre-build RHS ticker→column index ONCE (not per date) when RHS is an
+		// indicator frame
 		String[] rhsTickers = null;
 		Float4Vector[] rhsVectors = null;
 		Map<String, Integer> rhsTickerIdx = null;
@@ -362,7 +373,10 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 		for (LocalDate d : sortedDates) {
 			Integer lhsRowBox = arrowDataFrame.getDateIndex(d);
-			if (lhsRowBox == null) { result.put(d, Collections.emptyList()); continue; }
+			if (lhsRowBox == null) {
+				result.put(d, Collections.emptyList());
+				continue;
+			}
 			int lhsRow = lhsRowBox;
 
 			int rhsRow = -1;
@@ -375,36 +389,53 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 			for (int col = 0; col < numTickers; col++) {
 				Float4Vector lhsVec = vectors[col];
-				if (lhsRow >= lhsVec.getValueCount() || lhsVec.isNull(lhsRow)) continue;
+				if (lhsRow >= lhsVec.getValueCount() || lhsVec.isNull(lhsRow))
+					continue;
 				float v = lhsVec.get(lhsRow);
-				if (Float.isNaN(v)) continue;
+				if (Float.isNaN(v))
+					continue;
 
 				// Resolve RHS threshold
 				float thresh;
 				if (rhsIsClose) {
-					// Original behavior: PriceData.getValue(ticker, d, "close") — may return Float box
+					// Original behavior: PriceData.getValue(ticker, d, "close") — may return Float
+					// box
 					Float close = priceData.getValue(tickers[col], d, rule.getValueIndicator());
-					if (close == null) continue;
+					if (close == null)
+						continue;
 					thresh = close;
 				} else if (rhsDf == null || rhsRow < 0) {
-					// RHS frame missing or RHS date missing → use original synthetic-extreme fallback
-					if (op == OP_GT) { thresh = Integer.MAX_VALUE; }
-					else if (op == OP_LT) { thresh = Integer.MIN_VALUE; }
-					else { continue; }
+					// RHS frame missing or RHS date missing → use original synthetic-extreme
+					// fallback
+					if (op == OP_GT) {
+						thresh = Integer.MAX_VALUE;
+					} else if (op == OP_LT) {
+						thresh = Integer.MIN_VALUE;
+					} else {
+						continue;
+					}
 				} else {
 					Integer rhsColBox = rhsTickerIdx.get(tickers[col]);
 					if (rhsColBox == null) {
 						// Ticker not present in RHS frame → same fallback as original
-						if (op == OP_GT) { thresh = Integer.MAX_VALUE; }
-						else if (op == OP_LT) { thresh = Integer.MIN_VALUE; }
-						else { continue; }
+						if (op == OP_GT) {
+							thresh = Integer.MAX_VALUE;
+						} else if (op == OP_LT) {
+							thresh = Integer.MIN_VALUE;
+						} else {
+							continue;
+						}
 					} else {
 						int rhsCol = rhsColBox;
 						Float4Vector rhsVec = rhsVectors[rhsCol];
 						if (rhsRow >= rhsVec.getValueCount() || rhsVec.isNull(rhsRow)) {
-							if (op == OP_GT) { thresh = Integer.MAX_VALUE; }
-							else if (op == OP_LT) { thresh = Integer.MIN_VALUE; }
-							else { continue; }
+							if (op == OP_GT) {
+								thresh = Integer.MAX_VALUE;
+							} else if (op == OP_LT) {
+								thresh = Integer.MIN_VALUE;
+							} else {
+								continue;
+							}
 						} else {
 							thresh = rhsVec.get(rhsRow);
 						}
@@ -421,48 +452,53 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 	}
 
 	/**
-	 * Top-N branch: rank tickers by indicator value, keep the top N.
-	 * Uses parallel primitive arrays (int[] indices + float[] values) and a custom
-	 * sort that does not box. Preserves the original semantics (filter NaN/Inf,
-	 * descending by default, ascending if rankingOrder = "Ascending").
+	 * Top-N branch: rank tickers by indicator value, keep the top N. Uses parallel
+	 * primitive arrays (int[] indices + float[] values) and a custom sort that does
+	 * not box. Preserves the original semantics (filter NaN/Inf, descending by
+	 * default, ascending if rankingOrder = "Ascending").
 	 */
-	private Map<LocalDate, List<String>> evaluateTopNPrimitive(RuleDto rule,
-			List<LocalDate> sortedDates, String[] tickers, Float4Vector[] vectors,
-			int numTickers, ArrowDataFrame arrowDataFrame) {
+	private Map<LocalDate, List<String>> evaluateTopNPrimitive(RuleDto rule, List<LocalDate> sortedDates,
+			String[] tickers, Float4Vector[] vectors, int numTickers, ArrowDataFrame arrowDataFrame) {
 
 		Map<LocalDate, List<String>> result = new HashMap<>(sortedDates.size() * 2);
 		final int n = (int) rule.getValue();
 		final boolean descending = !"Ascending".equalsIgnoreCase(rule.getRankingOrder());
 
 		// Reusable scratch buffers — allocated once, reused for every date
-		int[]   colIdx = new int[numTickers];
-		float[] vals   = new float[numTickers];
+		int[] colIdx = new int[numTickers];
+		float[] vals = new float[numTickers];
 
 		for (LocalDate d : sortedDates) {
 			Integer rowBox = arrowDataFrame.getDateIndex(d);
-			if (rowBox == null) { result.put(d, Collections.emptyList()); continue; }
+			if (rowBox == null) {
+				result.put(d, Collections.emptyList());
+				continue;
+			}
 			int row = rowBox;
 
 			int count = 0;
 			for (int col = 0; col < numTickers; col++) {
 				Float4Vector vec = vectors[col];
-				if (row >= vec.getValueCount() || vec.isNull(row)) continue;
+				if (row >= vec.getValueCount() || vec.isNull(row))
+					continue;
 				float v = vec.get(row);
-				if (Float.isNaN(v) || Float.isInfinite(v)) continue;
+				if (Float.isNaN(v) || Float.isInfinite(v))
+					continue;
 				colIdx[count] = col;
 				vals[count] = v;
 				count++;
 			}
 
 			// Sort the (colIdx[0..count), vals[0..count)) prefix by vals.
-			// Use boxed Integer[] of indices (small — only `count` elements, not numTickers)
+			// Use boxed Integer[] of indices (small — only `count` elements, not
+			// numTickers)
 			// with a primitive-comparison comparator. Avoids stream + Map.Entry pipeline.
 			Integer[] orderIdx = new Integer[count];
-			for (int i = 0; i < count; i++) orderIdx[i] = i;
+			for (int i = 0; i < count; i++)
+				orderIdx[i] = i;
 			final float[] valsRef = vals;
-			java.util.Arrays.sort(orderIdx, (a, b) ->
-					descending ? Float.compare(valsRef[b], valsRef[a])
-					           : Float.compare(valsRef[a], valsRef[b]));
+			java.util.Arrays.sort(orderIdx, (a, b) -> descending ? Float.compare(valsRef[b], valsRef[a])
+					: Float.compare(valsRef[a], valsRef[b]));
 
 			int take = Math.min(n, count);
 			List<String> top = new ArrayList<>(take);
@@ -477,37 +513,40 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 	/**
 	 * Top-N within active universe.
 	 *
-	 * Mirrors Python's behavior:
-	 *     todays_universe = data.daily_universes.loc[d].dropna()
-	 *     todays_universe = todays_universe[todays_universe == 1]
-	 *     series[todays_universe.index].nsmallest(N)
+	 * Mirrors Python's behavior: todays_universe =
+	 * data.daily_universes.loc[d].dropna() todays_universe =
+	 * todays_universe[todays_universe == 1]
+	 * series[todays_universe.index].nsmallest(N)
 	 *
-	 * Identical to {@link #evaluateTopNPrimitive} except for one extra check
-	 * inside the ticker loop: tickers not in today's universe are skipped before
-	 * being considered for ranking. The universe is fetched once per date from
+	 * Identical to {@link #evaluateTopNPrimitive} except for one extra check inside
+	 * the ticker loop: tickers not in today's universe are skipped before being
+	 * considered for ranking. The universe is fetched once per date from
 	 * priceData.getDaily_universes().getRow(d) — a Set<String> lookup.
 	 *
-	 * Why this exists: the base top_n evaluator ranks across all ~2000 tickers
-	 * ever in the dataset, including delisted/non-universe ones. For dynamic
-	 * universes like Liquid_500 this picks the wrong worst-N because ~75% of
-	 * candidates aren't tradable today. Python filters universe FIRST, then
-	 * ranks. This method matches that.
+	 * Why this exists: the base top_n evaluator ranks across all ~2000 tickers ever
+	 * in the dataset, including delisted/non-universe ones. For dynamic universes
+	 * like Liquid_500 this picks the wrong worst-N because ~75% of candidates
+	 * aren't tradable today. Python filters universe FIRST, then ranks. This method
+	 * matches that.
 	 */
-	private Map<LocalDate, List<String>> evaluateTopNInUniversePrimitive(RuleDto rule,
-			List<LocalDate> sortedDates, String[] tickers, Float4Vector[] vectors,
-			int numTickers, ArrowDataFrame arrowDataFrame, PriceDataV2 priceData) {
+	private Map<LocalDate, List<String>> evaluateTopNInUniversePrimitive(RuleDto rule, List<LocalDate> sortedDates,
+			String[] tickers, Float4Vector[] vectors, int numTickers, ArrowDataFrame arrowDataFrame,
+			PriceDataV2 priceData) {
 
 		Map<LocalDate, List<String>> result = new HashMap<>(sortedDates.size() * 2);
 		final int n = (int) rule.getValue();
 		final boolean descending = !"Ascending".equalsIgnoreCase(rule.getRankingOrder());
 
 		// Reusable scratch buffers — allocated once, reused for every date
-		int[]   colIdx = new int[numTickers];
-		float[] vals   = new float[numTickers];
+		int[] colIdx = new int[numTickers];
+		float[] vals = new float[numTickers];
 
 		for (LocalDate d : sortedDates) {
 			Integer rowBox = arrowDataFrame.getDateIndex(d);
-			if (rowBox == null) { result.put(d, Collections.emptyList()); continue; }
+			if (rowBox == null) {
+				result.put(d, Collections.emptyList());
+				continue;
+			}
 			int row = rowBox;
 
 			// Fetch today's active universe (Set<String>). One lookup per date.
@@ -520,11 +559,14 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			int count = 0;
 			for (int col = 0; col < numTickers; col++) {
 				Float4Vector vec = vectors[col];
-				if (row >= vec.getValueCount() || vec.isNull(row)) continue;
+				if (row >= vec.getValueCount() || vec.isNull(row))
+					continue;
 				// Universe membership check — the only added line vs evaluateTopNPrimitive.
-				if (!todayUniverse.contains(tickers[col])) continue;
+				if (!todayUniverse.contains(tickers[col]))
+					continue;
 				float v = vec.get(row);
-				if (Float.isNaN(v) || Float.isInfinite(v)) continue;
+				if (Float.isNaN(v) || Float.isInfinite(v))
+					continue;
 				colIdx[count] = col;
 				vals[count] = v;
 				count++;
@@ -532,11 +574,11 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 			// Sort the (colIdx[0..count), vals[0..count)) prefix by vals.
 			Integer[] orderIdx = new Integer[count];
-			for (int i = 0; i < count; i++) orderIdx[i] = i;
+			for (int i = 0; i < count; i++)
+				orderIdx[i] = i;
 			final float[] valsRef = vals;
-			java.util.Arrays.sort(orderIdx, (a, b) ->
-					descending ? Float.compare(valsRef[b], valsRef[a])
-					           : Float.compare(valsRef[a], valsRef[b]));
+			java.util.Arrays.sort(orderIdx, (a, b) -> descending ? Float.compare(valsRef[b], valsRef[a])
+					: Float.compare(valsRef[a], valsRef[b]));
 
 			int take = Math.min(n, count);
 			List<String> top = new ArrayList<>(take);
@@ -653,7 +695,7 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		for (Map.Entry<RuleDto, Map<LocalDate, List<String>>> ruleEntry : buysRules.entrySet()) {
 			List<String> todays = ruleEntry.getValue().get(date);
 			if (i == 0) {
-				
+
 				entrySet.addAll(todays);
 			} else {
 				RuleDto prev = entryrules.get(i - 1);
@@ -678,25 +720,22 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 				continue;
 			}
 			if (i == 0) {
-				
-				
-				for(String live : portfolioService.getLiveHoldingsLogger()) {
-					if(todays.contains(live)) {
+
+				for (String live : portfolioService.getLiveHoldingsLogger()) {
+					if (todays.contains(live)) {
 						exitSet.add(live);
 					}
 				}
-				
-				
-				
+
 			} else {
 				RuleDto prev = exitrules.get(i - 1);
 				String conn = prev.getConnector();
 				if ("&&".equals(conn)) {
 					exitSet.retainAll(todays);
 				} else {
-					
-					for(String live : portfolioService.getLiveHoldingsLogger()) {
-						if(todays.contains(live)) {
+
+					for (String live : portfolioService.getLiveHoldingsLogger()) {
+						if (todays.contains(live)) {
 							exitSet.add(live);
 						}
 					}
@@ -720,7 +759,8 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			long currentDupSets = holdingCounts.values().stream().filter(c -> c >= 2).count();
 			// Remove tickers already at max duplicates
 			entrySet.removeIf(t -> holdingCounts.getOrDefault(t, 0L) >= maxDups);
-			// If at max duplicate sets, remove all held tickers (no more duplicates allowed)
+			// If at max duplicate sets, remove all held tickers (no more duplicates
+			// allowed)
 			if (maxDupSets > 0 && currentDupSets >= maxDupSets) {
 				entrySet.removeIf(t -> holdingCounts.containsKey(t));
 			}
@@ -732,8 +772,7 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		Map<String, Float> rank = buySellData.getStrategyData().getRanking().getRow(date);
 		if (rank != null && !rank.isEmpty()) {
 			if ("Ascending".equals(buySellData.getStrategyData().getRankingOrder())) {
-				
-				
+
 				entries_list.sort(Comparator.comparingDouble(e -> {
 					Float v = rank.get(e);
 					return v != null ? v : Float.MAX_VALUE;
@@ -888,19 +927,15 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 //
 //		return entryExitMap;
 //	}
-	
-	
-	
-	
-	
+
 	@Override
 	public Map<String, List<String>> signalsForTheDayV1(LocalDate date, PriceDataV2 priceData,
 			BuySellDataV2 buySellData, PortfolioServiceV2 portfolioService) {
 		long startTotal = System.nanoTime();
-		
-	    if (date.equals(LocalDate.of(2026, 6, 24))) {
-	        System.err.println();  // ← put breakpoint here
-	    }
+
+		if (date.equals(LocalDate.of(2026, 6, 24))) {
+			System.err.println(); // ← put breakpoint here
+		}
 
 		Map<String, List<String>> entryExitMap = new HashMap<>();
 		entryExitMap.put("entry", Collections.emptyList());
@@ -943,8 +978,7 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		// still fires from BacktestServiceImplV2.checkMaxTime, matching Python's
 		// bull-leg behaviour (only max_time exits, no signal exits).
 		Set<String> todayUniverseForEval = priceData.getDaily_universes().getRow(date);
-		Set<String> entrySet = (entryTree == null || entryRes == null)
-				? new HashSet<>(todayUniverseForEval)
+		Set<String> entrySet = (entryTree == null || entryRes == null) ? new HashSet<>(todayUniverseForEval)
 				: new HashSet<>(RuleTreeEvaluator.evalForDate(entryTree, date, entryRes.getEligibleByLeafId()));
 
 		Set<String> exitSet = (exitTree == null || exitRes == null) ? new HashSet<>()
@@ -976,7 +1010,8 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			long currentDupSets = holdingCounts.values().stream().filter(c -> c >= 2).count();
 			// Remove tickers already at max duplicates
 			entrySet.removeIf(t -> holdingCounts.getOrDefault(t, 0L) >= maxDups);
-			// If at max duplicate sets, remove all held tickers (no more duplicates allowed)
+			// If at max duplicate sets, remove all held tickers (no more duplicates
+			// allowed)
 			if (maxDupSets > 0 && currentDupSets >= maxDupSets) {
 				entrySet.removeIf(t -> holdingCounts.containsKey(t));
 			}
@@ -984,18 +1019,97 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			entrySet.removeAll(liveHoldings);
 		}
 
+		// ── Hold Blackout ──────────────────────────────────────────────────
+		// Drop any candidate that exited within the configured window. 0 (the
+		// default) disables. Unit "trading" counts trading days via all_dates;
+		// anything else counts calendar days. Sits beside the held-exclusion
+		// above so "recently exited" is filtered the same place as "held now".
+		final int blackoutDays = sd.getHoldBlackoutDays();
+		if (blackoutDays > 0) {
+			Map<String, LocalDate> lastExit = portfolioService.getLastExitDateByTicker();
+			if (lastExit != null && !lastExit.isEmpty()) {
+				final boolean tradingUnit = "trading".equalsIgnoreCase(sd.getHoldBlackoutUnit());
+				Map<LocalDate, Integer> tmpIdx = null;
+				int tmpToday = -1;
+				if (tradingUnit) {
+					List<LocalDate> allDates = priceData.getAll_dates();
+					tmpIdx = new HashMap<>(allDates.size() * 2);
+					for (int i = 0; i < allDates.size(); i++) {
+						tmpIdx.put(allDates.get(i), i);
+					}
+					Integer ti = tmpIdx.get(date);
+					tmpToday = (ti != null) ? ti : -1;
+				}
+				final Map<LocalDate, Integer> dateIdx = tmpIdx;
+				final int todayIdx = tmpToday;
+				entrySet.removeIf(t -> {
+					LocalDate ex = lastExit.get(t);
+					if (ex == null)
+						return false;
+					long gap;
+					if (tradingUnit && dateIdx != null && todayIdx >= 0 && dateIdx.get(ex) != null) {
+						gap = todayIdx - dateIdx.get(ex);
+					} else {
+						// calendar days (also the fallback if a date is off-calendar)
+						gap = java.time.temporal.ChronoUnit.DAYS.between(ex, date);
+					}
+					return gap < blackoutDays; // still inside the blackout window
+				});
+			}
+		}
+
+		// ── Weekly rotation (first trading day of the week) ────────────────
+		// When rebalance_weekday is set, rotate the whole book weekly on the
+		// FIRST trading day of each week that is on/after that weekday (0=Mon).
+		// signalsForTheDayV1 runs in the CLOSE phase (signal on `date`'s close,
+		// fill at the NEXT trading day's open), so we test the FILL day. On a
+		// rotation day: the new top-N enters AND every held name is exited, both
+		// at that open — the legacy's weekly sell-all/rebuy. Because we test
+		// "first trading day of the week" (not an exact weekday), a holiday
+		// Monday rolls the rotation to the first available day (e.g. Tuesday)
+		// rather than skipping the week. Off-days: no new entries, hold. This
+		// replaces max_time (set it to 0); stop/vix/freeze still fire daily.
+		final Integer rebalanceWeekday = sd.getRebalanceWeekday();
+		if (rebalanceWeekday != null) {
+			java.util.List<java.time.LocalDate> allDatesRb = priceData.getAll_dates();
+			int rbIdx = allDatesRb.indexOf(date);
+			java.time.LocalDate fillDate =
+					(rbIdx >= 0 && rbIdx + 1 < allDatesRb.size()) ? allDatesRb.get(rbIdx + 1) : null;
+			boolean rotationDay = false;
+			if (fillDate != null) {
+				int fillWd = fillDate.getDayOfWeek().getValue() - 1; // 0=Mon .. 6=Sun
+				int prevWd = date.getDayOfWeek().getValue() - 1;
+				java.time.LocalDate fillWeekStart = fillDate
+						.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+				java.time.LocalDate prevWeekStart = date
+						.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+				boolean sameWeek = fillWeekStart.equals(prevWeekStart);
+				// fillDate is the first trading day of its week on/after the target
+				rotationDay = (fillWd >= rebalanceWeekday) && (!sameWeek || prevWd < rebalanceWeekday);
+			}
+			if (rotationDay) {
+				// rotate the whole book: exit every held name at the fill open
+				// (the new top-N, already excluding held via removeAll above,
+				// enters the same open).
+				exitSet.addAll(liveHoldings);
+			} else {
+				// not a rotation day — no new entries, hold existing positions.
+				entrySet.clear();
+			}
+		}
+
 		List<String> entries_list = new ArrayList<>(entrySet);
 
 		// ── Vol/Turnover filter — applied BEFORE ranking ──────────────────────
-		// Matches Python: todays_entries filtered by avg_volume/avg_turnover >= threshold
+		// Matches Python: todays_entries filtered by avg_volume/avg_turnover >=
+		// threshold
 		// Threshold is set yearly by BacktestServiceImplV2.computeVolThresholds().
 		// When filter is disabled or thresholds are 0, all entries pass.
-		if (sd.getVolFilter() != null && sd.getVolFilter().isEnabled()
-				&& sd.getAvgVolume() != null && sd.getAvgTurnover() != null) {
+		if (sd.getVolFilter() != null && sd.getVolFilter().isEnabled() && sd.getAvgVolume() != null
+				&& sd.getAvgTurnover() != null) {
 			// Use previousDate (yesterday) — matches Python iloc[index_today-1]
-			LocalDate prevDate = priceData.getAll_dates().stream()
-					.filter(d -> d.isBefore(date))
-					.reduce((a, b) -> b).orElse(null);
+			LocalDate prevDate = priceData.getAll_dates().stream().filter(d -> d.isBefore(date)).reduce((a, b) -> b)
+					.orElse(null);
 			if (prevDate != null) {
 				float volThresh = sd.getVolThreshold();
 				float toThresh = sd.getTurnoverThreshold();
@@ -1004,16 +1118,24 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 						if (volThresh > 0) {
 							try {
 								Float av = sd.getAvgVolume().hasValue(prevDate, ticker)
-										? sd.getAvgVolume().getValue(prevDate, ticker) : null;
-								if (av == null || av < volThresh) return true;
-							} catch (Exception ignored) { return true; }
+										? sd.getAvgVolume().getValue(prevDate, ticker)
+										: null;
+								if (av == null || av < volThresh)
+									return true;
+							} catch (Exception ignored) {
+								return true;
+							}
 						}
 						if (toThresh > 0) {
 							try {
 								Float at = sd.getAvgTurnover().hasValue(prevDate, ticker)
-										? sd.getAvgTurnover().getValue(prevDate, ticker) : null;
-								if (at == null || at < toThresh) return true;
-							} catch (Exception ignored) { return true; }
+										? sd.getAvgTurnover().getValue(prevDate, ticker)
+										: null;
+								if (at == null || at < toThresh)
+									return true;
+							} catch (Exception ignored) {
+								return true;
+							}
 						}
 						return false;
 					});
@@ -1080,8 +1202,6 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		return entryExitMap;
 	}
 
-
-	
 	private void validEntriesTommorow(LocalDate date, Set<String> entrySet, PriceDataV2 priceData) {
 
 		int idx = Collections.binarySearch(priceData.getTrading_dates(), date);

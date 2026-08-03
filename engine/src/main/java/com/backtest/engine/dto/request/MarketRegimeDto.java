@@ -57,6 +57,10 @@ public class MarketRegimeDto {
     @JsonProperty("stoploss_pct")
     private float stoplossPct;
 
+    // Patch 99: cap on ATR stop offset as % of anchor price. 0/null = disabled.
+    @JsonProperty("stoploss_max_pct")
+    private float stoplossMaxPct;
+
     @JsonProperty("takeprofit_pct")
     private float takeprofitPct;
 
@@ -93,7 +97,12 @@ public class MarketRegimeDto {
 
     @JsonProperty("atr_limit_lookback")
     private int atrLimitLookback;
-
+    // Patch 167 v2: mode-specific limit parameters (mirrors middleware's
+    // limit_params_json). LIMIT_HV keys: hv_lookback, divider, lower,
+    // upper, reduction. Future LIMIT_* modes reuse this map -- no new fields.
+    @JsonProperty("limit_params")
+    private java.util.Map<String, Float> limitParams;
+    
     private String universe;
     private float capital;
     private int slots;
@@ -164,6 +173,18 @@ public class MarketRegimeDto {
  
     @JsonProperty("sector_limit")
     private int sectorLimit;
+
+    // Hold Blackout — block re-entry of a stock for N days after it exits.
+    // holdBlackoutDays 0/null disables; holdBlackoutUnit = "calendar"|"trading".
+    @JsonProperty("hold_blackout_days")
+    private Integer holdBlackoutDays;
+
+    @JsonProperty("hold_blackout_unit")
+    private String holdBlackoutUnit;
+    
+ // Rebalance weekday: restrict entries to one weekday (0=Mon .. 4=Fri).
+    @JsonProperty("rebalance_weekday")
+    private Integer rebalanceWeekday;
     
     @JsonProperty("gap_filter_pct")
     private float gapFilterPct;

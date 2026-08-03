@@ -36,4 +36,5 @@ public class ProposedEntryDto {
     // NORMAL/MKT entries leave these null — middleware writes MKT orders.
     private Float limitPrice;
     private Float stopPrice;        // initial stop for LIMIT_ATR bracket
+    private Float tpPrice;          // Patch 90: initial take-profit for LIMIT_ATR bracket
 }

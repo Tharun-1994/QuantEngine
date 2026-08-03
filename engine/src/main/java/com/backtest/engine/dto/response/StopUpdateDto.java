@@ -25,5 +25,9 @@ public class StopUpdateDto {
     private String tradeId;
     private String symbol;
     private Float newStopPrice;
+    // Patch 108: daily take-profit maintenance value (legacy take_profit_orders).
+    // ATR_BASED: entry + takeProfitPct x stoplossPct x ATR(today), UNCAPPED.
+    // Null = no TP bracket needed. Engine-computed only (no D3 override).
+    private Float newTpPrice;
     private String source;
 }

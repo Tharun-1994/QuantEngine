@@ -117,7 +117,8 @@ public class BacktestContext implements AutoCloseable {
 					.atrLimitLookback(marketRegime.getAtrLimitLookback())
 					.atrLookbackStp(marketRegime.getAtrLookbackStp()).atrLookbackTp(marketRegime.getAtrLookbackTp())
 					.rebalance(strategyRequest.getRebalance()).rankingIndicator(marketRegime.getRanking())
-					.rankingLookback(marketRegime.getRankingLookback()).volFilterEnabled(volEnabled).build();
+					.rankingLookback(marketRegime.getRankingLookback()).volFilterEnabled(volEnabled)
+					.hvLimitEnabled("LIMIT_HV".equalsIgnoreCase(marketRegime.getOrderType())).build(); // Patch 167 v2
 
 			priceLoaderPathMap.put(i, priceLoader.getFilesForRebalance(strategyRequest.getRegimes()));
 			i++;
@@ -160,9 +161,39 @@ public class BacktestContext implements AutoCloseable {
 										strategyRequest.getRegimes().get(0).getUniverse(), backtestDataPath));
 						parquetFileValueMap.put(keyFile, currentDf);
 					}
-				} catch (Exception e) { // Broadened from SQLException, as no SQL is involved
-					// Replace with proper logging or error handling
+				} catch (Exception e) {
+					// Patch 178: NAME the failure. An anonymous stack trace made
+					// a missing/corrupt parquet indistinguishable from a key that
+					// was never requested -- days were lost to that ambiguity.
+					System.err.println("[loader] FAILED loading key='" + keyFile
+							+ "' file='" + priceLoaderPathMap.get(regimeIndex).get(keyFile)
+							+ "' universe='" + strategyRequest.getRegimes().get(0).getUniverse()
+							+ "': " + e.getClass().getSimpleName() + ": " + e.getMessage());
 					e.printStackTrace();
+				}
+			}
+		}
+
+
+		// Patch 178: post-load audit. Every key the file map REQUESTED must
+		// have landed in one of the three sinks; anything else is printed by
+		// name so 'null downstream' can never again masquerade as 'never
+		// requested'. Placeholder/blank entries are skipped (same guards as
+		// the load loop above).
+		for (Integer auditIdx : priceLoaderPathMap.keySet()) {
+			for (Map.Entry<String, String> auditEntry : priceLoaderPathMap.get(auditIdx).entrySet()) {
+				String aKey = auditEntry.getKey();
+				String aFile = auditEntry.getValue();
+				if (aFile == null || aFile.isBlank() || aFile.isEmpty() || aFile.contains("null")) {
+					continue;
+				}
+				boolean landed = parquetFileValueMap.containsKey(aKey)
+						|| parquetDatesMapList.containsKey(aKey)
+						|| parquetMapSet.containsKey(aKey);
+				if (!landed) {
+					System.err.println("[loader] AUDIT: key='" + aKey + "' (file='" + aFile
+							+ "') was in the file map but did NOT load -- see the"
+							+ " [loader] FAILED line above for the reason.");
 				}
 			}
 		}
@@ -198,6 +229,44 @@ public class BacktestContext implements AutoCloseable {
 
 		return priceData;
 
+	}
+
+	/**
+	 * Patch 185: build the safety-net policy instances for a request --
+	 * additive twin of the Stage-3b block inside getBuySellData, exposed
+	 * so the EXECUTION path (SingleBarEvaluator) can run the SAME policies
+	 * the backtest runs. Policies self-load their frames via the same
+	 * loadVolatilityCutFrames loader; a missing frame logs a loud no-op.
+	 */
+	public java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> buildSafetyPolicies(
+			StrategyBucketRequestDto strategyRequest, PriceDataV2 priceData, String backtestDataPath) {
+		String univ = strategyRequest.getRegimes().get(0).getUniverse();
+		// Patch 185c: the mapper MUST mirror getBuySellData's construction.
+		// findAndRegisterModules() pulls in the ParameterNames module, which
+		// is what lets Jackson build RuleDto (no default ctor) through its
+		// all-args constructor when SpyVolatilityPolicy.synthesiseFrames
+		// convertValue()s its synthetic tree. A bare ObjectMapper throws
+		// "no Creators" -- exactly the ldeq_1_static failure.
+		ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
+				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+				.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
+		java.util.List<SafetyNetItemDto> resolvedSafetyNets = resolveSafetyNets(strategyRequest);
+		SafetyNetInitContext safetyInitCtx = SafetyNetInitContext.builder().strategyRequest(strategyRequest)
+				.universe(univ).priceData(priceData).allDates(priceData.getAll_dates()).objectMapper(mapper)
+				.frameLoader((RuleGroupNodeDto tree) -> loadVolatilityCutFrames(tree, strategyRequest, univ,
+						backtestDataPath))
+				.build();
+		java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> safetyPolicies = new java.util.ArrayList<>();
+		for (SafetyNetItemDto item : resolvedSafetyNets) {
+			SafetyNetPolicy policy = SafetyNetRegistry.create(item.getType());
+			if (policy == null)
+				continue;
+			policy.initialize(item, safetyInitCtx);
+			safetyPolicies.add(policy);
+		}
+		System.out.println("[safety-nets] (exec) resolved=" + resolvedSafetyNets.size()
+				+ " active=" + safetyPolicies.size());
+		return safetyPolicies;
 	}
 
 	public BuySellDataV2 getBuySellData(StrategyBucketRequestDto strategyRequest, PriceDataV2 priceData,
@@ -284,7 +353,11 @@ public class BacktestContext implements AutoCloseable {
 				.exitRuleList(exitLeafRules).entryIndicators(entryMap).exitIndicators(exitMap)
 				.startingCapital(strategyRequest.getRegimes().get(0).getCapital())
 				.slots(strategyRequest.getRegimes().get(0).getSlots())
+				.holdBlackoutDays(strategyRequest.getRegimes().get(0).getHoldBlackoutDays() == null ? 0 : strategyRequest.getRegimes().get(0).getHoldBlackoutDays())
+				.holdBlackoutUnit(strategyRequest.getRegimes().get(0).getHoldBlackoutUnit())
+				.rebalanceWeekday(strategyRequest.getRegimes().get(0).getRebalanceWeekday())
 				.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
+				.stoplossMaxPct(strategyRequest.getRegimes().get(0).getStoplossMaxPct()) // Patch 99
 				.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
 				.stoplossTiming(strategyRequest.getRegimes().get(0).getStoplossTiming())
 				.takeprofitTiming(strategyRequest.getRegimes().get(0).getTakeprofitTiming())
@@ -314,7 +387,20 @@ public class BacktestContext implements AutoCloseable {
 				.volFilter(strategyRequest.getRegimes().get(0).getVolFilter())
 				.avgVolume(this.parquetFileValueMap.get("avg_volume"))
 				.avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
-				.spyCloses(this.parquetFileValueMap.get("closes_spy")).entryRulesTree(entryTree).exitRulesTree(exitTree)
+				.spyCloses(this.parquetFileValueMap.get("closes_spy"))
+                // Patch 167 v2: LIMIT_HV frame + scalars unpacked from the
+                // limit_params map (null-safe: absent key -> 0f, and the
+                // math branches skip on divider <= 0f).
+                .hvLimit(this.parquetFileValueMap.get("hv_limit"))
+				.hvLimitDivider(strategyRequest.getRegimes().get(0).getLimitParams() != null && strategyRequest.getRegimes().get(0).getLimitParams().get("divider") != null
+						? strategyRequest.getRegimes().get(0).getLimitParams().get("divider") : 0f)
+				.hvLimitLower(strategyRequest.getRegimes().get(0).getLimitParams() != null && strategyRequest.getRegimes().get(0).getLimitParams().get("lower") != null
+						? strategyRequest.getRegimes().get(0).getLimitParams().get("lower") : 0f)
+				.hvLimitUpper(strategyRequest.getRegimes().get(0).getLimitParams() != null && strategyRequest.getRegimes().get(0).getLimitParams().get("upper") != null
+						? strategyRequest.getRegimes().get(0).getLimitParams().get("upper") : 0f)
+				.hvLimitReduction(strategyRequest.getRegimes().get(0).getLimitParams() != null && strategyRequest.getRegimes().get(0).getLimitParams().get("reduction") != null
+						? strategyRequest.getRegimes().get(0).getLimitParams().get("reduction") : 0f)
+				.entryRulesTree(entryTree).exitRulesTree(exitTree)
 				.freezeRulesTree(freezeTree).resumeRulesTree(resumeTree).freezeDays(freezeDays).resumeDays(resumeDays)
 				.freezeTiming(strategyRequest.getRegimes().get(0).getFreezeTiming() == null ? "open"
 						: strategyRequest.getRegimes().get(0).getFreezeTiming().toLowerCase())
@@ -502,7 +588,25 @@ public class BacktestContext implements AutoCloseable {
 
 		String universe = strategyRequest.getRegimes().get(0).getUniverse();
 
+		// Patch 179: getSimplePriceData is the loader the Simple/Normal book
+		// actually runs through -- the Patch-167 flags on getPriceData never
+		// applied here, so avg_volume/avg_turnover/closes_spy/hv_limit were
+		// never REQUESTED on this path. That single omission is the root
+		// cause behind every 'VOL SEEDING INEFFECTIVE' line and every null
+		// LIMIT_HV price at execution. Flags OR across regimes (multi-regime).
+		boolean volEnabledSimple = false;
+		boolean hvLimitEnabledSimple = false;
+		for (MarketRegimeDto r179 : strategyRequest.getRegimes()) {
+			if (r179.getVolFilter() != null && r179.getVolFilter().isEnabled()) {
+				volEnabledSimple = true;
+			}
+			if ("LIMIT_HV".equalsIgnoreCase(r179.getOrderType())) {
+				hvLimitEnabledSimple = true;
+			}
+		}
 		PriceLoader coreLoader = PriceLoader.builder().universe(universe).rebalance(strategyRequest.getRebalance())
+				.volFilterEnabled(volEnabledSimple)
+				.hvLimitEnabled(hvLimitEnabledSimple)
 				.build();
 
 		Map<String, String> priceLoaderPathMap = coreLoader.getFilesForRebalance(strategyRequest.getRegimes());
@@ -524,6 +628,11 @@ public class BacktestContext implements AutoCloseable {
 					parquetFileValueMap.put(keyFile, currentDf);
 				}
 			} catch (Exception e) {
+				// Patch 179: name the failure (same as Patch 178 on the V2 loop)
+				System.err.println("[loader-simple] FAILED loading key='" + keyFile
+						+ "' file='" + priceLoaderPathMap.get(keyFile)
+						+ "' universe='" + universe + "': "
+						+ e.getClass().getSimpleName() + ": " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -599,6 +708,10 @@ public class BacktestContext implements AutoCloseable {
 			StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryLeafRules)
 					.exitRuleList(exitLeafRules).entryIndicators(entryMap).exitIndicators(exitMap)
 					.startingCapital(regime.getCapital()).slots(regime.getSlots()).stopLossPct(regime.getStoplossPct())
+					.holdBlackoutDays(regime.getHoldBlackoutDays() == null ? 0 : regime.getHoldBlackoutDays())
+					.holdBlackoutUnit(regime.getHoldBlackoutUnit())
+					.rebalanceWeekday(regime.getRebalanceWeekday())
+					.stoplossMaxPct(regime.getStoplossMaxPct()) // Patch 99
 					.productionCapital(regime.getProductionCapital())   // Patch 50
 					.takeProfitPct(regime.getTakeprofitPct()).stoplossTiming(regime.getStoplossTiming())
 					.takeprofitTiming(regime.getTakeprofitTiming()).entryTiming(regime.getEntryTiming())
@@ -619,6 +732,17 @@ public class BacktestContext implements AutoCloseable {
                     .avgVolume(this.parquetFileValueMap.get("avg_volume"))
                     .avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
                     .spyCloses(this.parquetFileValueMap.get("closes_spy"))
+                    // Patch 179: LIMIT_HV frame + scalars for the Simple flow
+                    // (mirror of the Patch-167 wiring in getBuySellData).
+                    .hvLimit(this.parquetFileValueMap.get("hv_limit"))
+                    .hvLimitDivider(regime.getLimitParams() != null && regime.getLimitParams().get("divider") != null
+                            ? regime.getLimitParams().get("divider") : 0f)
+                    .hvLimitLower(regime.getLimitParams() != null && regime.getLimitParams().get("lower") != null
+                            ? regime.getLimitParams().get("lower") : 0f)
+                    .hvLimitUpper(regime.getLimitParams() != null && regime.getLimitParams().get("upper") != null
+                            ? regime.getLimitParams().get("upper") : 0f)
+                    .hvLimitReduction(regime.getLimitParams() != null && regime.getLimitParams().get("reduction") != null
+                            ? regime.getLimitParams().get("reduction") : 0f)
                     .dailyAtr(overlay.getDailyAtr())                 // Spec 1: ATR frame from regime overlay
                     .entryRulesTree(entryTree)
                     .exitRulesTree(exitTree)

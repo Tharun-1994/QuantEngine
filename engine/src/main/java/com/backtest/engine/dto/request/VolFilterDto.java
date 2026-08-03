@@ -52,4 +52,20 @@ public class VolFilterDto {
      */
     @JsonProperty("turnover_pct_bear")
     private float turnoverPctBear;
+
+    // Patch 115: configurable SPY SMA lookback for bull/bear regime detection.
+    // Integer (not int) so payloads without the key deserialize as null and
+    // fall back to the legacy default (200) in computeVolThresholds — avoids
+    // Jackson primitive-default 0 silently producing a zero-length SMA.
+    @JsonProperty("spy_sma_lookback")
+    private Integer spySmaLookback;
+
+    // Patch 115: configurable annual recalibration trigger. Legacy hardcodes
+    // (month==1 && tdom==0), i.e. first trading day of January. null → 1.
+    @JsonProperty("trigger_month")
+    private Integer triggerMonth;
+
+    // Patch 115: 0-indexed trading day of month for the trigger. null → 0.
+    @JsonProperty("trigger_tdom")
+    private Integer triggerTdom;
 }
