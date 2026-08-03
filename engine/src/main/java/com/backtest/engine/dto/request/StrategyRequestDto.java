@@ -74,4 +74,12 @@ public class StrategyRequestDto {
 	@JsonProperty("atr_limit_lookback")
 	private int atrLimitLookback;
 	
+	
+	@JsonProperty("atr_lookback_stp")
+	private int atrLookbackStp;
+	
+	
+	@JsonProperty("atr_lookback_tp")
+	private int atrLookbackTp;
+	
 }	

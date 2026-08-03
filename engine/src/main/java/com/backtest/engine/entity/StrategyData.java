@@ -13,8 +13,8 @@ public class StrategyData {
 
 	private List<RuleCondition> entryRulesList;
 	private List<RuleCondition> exitRuleList;
-	private Map<String, Map<LocalDate, Map<String, Double>>> entryIndicators;
-	private Map<String, Map<LocalDate, Map<String, Double>>> exitIndicators;
+	private Map<String, Map<LocalDate, Map<String, Float>>> entryIndicators;
+	private Map<String, Map<LocalDate, Map<String, Float>>> exitIndicators;
 	private int stopLossPct;
 	private int takeProfitPct;
 	private int maxSameTicker;
@@ -30,7 +30,7 @@ public class StrategyData {
 
 	private String exitTiming;
 
-	private Map<LocalDate, Map<String, Double>> ranking;
+	private Map<LocalDate, Map<String, Float>> ranking;
 	private String rankingOrder;
 	private float minQuantity;
 	private float minPrice;
@@ -41,5 +41,9 @@ public class StrategyData {
 	private String orderType;
 	private float limitPct;
 	private int atrLimitLookback;
+	
+	private Map<String,String> paths;
+	
+	
 
 }
