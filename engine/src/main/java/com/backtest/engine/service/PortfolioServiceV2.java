@@ -35,6 +35,10 @@ public interface PortfolioServiceV2 {
 
 	public Map<String, Long> getLiveHoldingsTickerCounts();
 
+	// Hold Blackout — most recent exit date per ticker (from closed trades),
+	// so the entry filter can freeze recently-exited tickers.
+	public Map<String, LocalDate> getLastExitDateByTicker();
+
 	public void checkLivePositionsOnTommorow(LocalDate date);
 
 	public void checkStoplossHit(LocalDate date, String systemType, String timing);
@@ -55,7 +59,7 @@ public interface PortfolioServiceV2 {
 
 	public void updateTradeDayCount(LocalDate tradeDate);
 
-	public void checkMaxTime(LocalDate date, int maxTime, PriceDataV2 priceData);
+	public void checkMaxTime(LocalDate date, int maxTime, PriceDataV2 priceData, String exitTiming);
 
 	public void closeAllPositionsAtEodClose(LocalDate date);
 

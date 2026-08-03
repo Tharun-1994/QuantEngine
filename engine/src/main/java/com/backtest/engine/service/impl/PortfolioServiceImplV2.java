@@ -199,6 +199,24 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 				.collect(Collectors.groupingBy(t -> t, Collectors.counting()));
 	}
 
+	// Hold Blackout — scan the trade logger (which retains closed trades with
+	// exitDate stamped) and return each symbol's most recent exit date.
+	@Override
+	public Map<String, LocalDate> getLastExitDateByTicker() {
+		Map<String, LocalDate> lastExit = new HashMap<>();
+		for (TradeLog t : this.tradeLogger.values()) {
+			if (t == null) continue;
+			LocalDate ex = t.getExitDate();
+			String sym = t.getSymbol();
+			if (ex == null || sym == null) continue;
+			LocalDate cur = lastExit.get(sym);
+			if (cur == null || ex.isAfter(cur)) {
+				lastExit.put(sym, ex);
+			}
+		}
+		return lastExit;
+	}
+
 	@Override
 	public void executeExitSignals(ExitSignalsRequestDto exitSignalsRequest) {
 
@@ -1440,7 +1458,7 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 	}
 
 	@Override
-	public void checkMaxTime(LocalDate tradeDate, int maxTime, PriceDataV2 priceData) {
+	public void checkMaxTime(LocalDate tradeDate, int maxTime, PriceDataV2 priceData, String exitTiming) {
 		List<LocalDate> allDates = priceData.getAll_dates();
 //		if (tradeDate.equals(allDates.get(allDates.size() - 1))) {
 //			return;
@@ -1459,9 +1477,12 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 					trade.setTradeId(tradeId);
 					trade.setTradeDate(tradeDate);
 
-					float closePrice = this.priceData.getDaily_closes().getValue(tradeDate, tick);
-					trade.setExitPrice(closePrice);
-					trade.setPriceUsed("close");
+					boolean atOpen = "open".equalsIgnoreCase(exitTiming);
+					float exitPx = atOpen
+							? this.priceData.getDaily_opens().getValue(tradeDate, tick)
+							: this.priceData.getDaily_closes().getValue(tradeDate, tick);
+					trade.setExitPrice(exitPx);
+					trade.setPriceUsed(atOpen ? "open" : "close");
 
 					String reasonForExit = String.format("MaxTime %s", maxTime);
 					trade.setExitReason(reasonForExit);

@@ -428,9 +428,12 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 					|| date.isEqual(buySellData.getStrategyData().getEndDate())) {
 
-				// Max Time is Enabled
-				if (buySellData.getStrategyData().getMaxTime() > 0) {
-					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData);
+				// Max Time — OPEN exits fire at the START of the day (open phase).
+				// CLOSE/EOD exits are handled at the END of the loop (before
+				// signalsForTheDayV1) so they price at the close with no look-ahead.
+				if (buySellData.getStrategyData().getMaxTime() > 0
+						&& "open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
+					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
 				}
 
 				if (priceData.getTrading_dates().contains(date)) {
@@ -554,10 +557,18 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					suspended = dispatchSafetyNetsAtClose(safetyPolicies, date, suspended);
 				}
 
+				// Max Time — CLOSE/EOD exits fire at the END of the day (close
+				// phase), before signalsForTheDayV1 so getTodaysMaxTimeExits still
+				// counts them for the sector cap. Prices at the close, no look-ahead.
+				if (buySellData.getStrategyData().getMaxTime() > 0
+						&& !"open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
+					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
+				}
+
 				// Recalculate vol/turnover thresholds yearly (1st Jan trading day)
 				computeVolThresholds(date, previousDate, buySellData, priceData, tdomMap);
 
-				entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
+ 				entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
 						this.portfolioService);
 
 				// If exit_timing is "close", execute exits immediately at today's close
@@ -1069,9 +1080,11 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 						}
 					}
 
-					// Max Time is Enabled
-					if (buySellData.getStrategyData().getMaxTime() > 0) {
-						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData);
+					// Max Time — OPEN exits fire at the START of the day (open phase);
+					// CLOSE/EOD exits are handled at the END (before signalsForTheDayV1).
+					if (buySellData.getStrategyData().getMaxTime() > 0
+							&& "open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
+						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
 					}
 
 					// REGIME SHIFT
@@ -1203,6 +1216,14 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					// sticky once set so a swap mid-trip doesn't restart evaluation.
 					this.portfolioService
 							.setPortfolioStoplossAnchor(buySellData.getStrategyData().getPortfolioStoplossAnchor());
+
+					// Max Time — CLOSE/EOD exits fire at the END of the day (close
+					// phase), before signalsForTheDayV1 so getTodaysMaxTimeExits still
+					// counts them for the sector cap. Prices at the close, no look-ahead.
+					if (buySellData.getStrategyData().getMaxTime() > 0
+							&& !"open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
+						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
+					}
 
 //					long start = System.nanoTime();
 					entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,

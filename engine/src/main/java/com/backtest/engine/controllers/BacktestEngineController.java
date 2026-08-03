@@ -591,6 +591,9 @@ public class BacktestEngineController {
 					.exitRuleList(exitRuleConditions).entryIndicators(entryMap).exitIndicators(exitMap)
 					.startingCapital(strategyRequest.getRegimes().get(0).getCapital())
 					.slots(strategyRequest.getRegimes().get(0).getSlots())
+					.holdBlackoutDays(strategyRequest.getRegimes().get(0).getHoldBlackoutDays() == null ? 0 : strategyRequest.getRegimes().get(0).getHoldBlackoutDays())
+					.holdBlackoutUnit(strategyRequest.getRegimes().get(0).getHoldBlackoutUnit())
+					.rebalanceWeekday(strategyRequest.getRegimes().get(0).getRebalanceWeekday())
 					.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
 					.stoplossMaxPct(strategyRequest.getRegimes().get(0).getStoplossMaxPct()) // Patch 99
 					.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
@@ -849,6 +852,9 @@ public class BacktestEngineController {
 					StrategyDataV2 strategyData = StrategyDataV2.builder().entryRulesList(entryRuleConditions)
 							.exitRuleList(exitRuleConditions).entryIndicators(entryMap).exitIndicators(exitMap)
 							.startingCapital(regime.getCapital()).slots(regime.getSlots())
+							.holdBlackoutDays(regime.getHoldBlackoutDays() == null ? 0 : regime.getHoldBlackoutDays())
+							.holdBlackoutUnit(regime.getHoldBlackoutUnit())
+							.rebalanceWeekday(regime.getRebalanceWeekday())
 							.stopLossPct(regime.getStoplossPct()).stoplossMaxPct(regime.getStoplossMaxPct()) // Patch 99
 							.takeProfitPct(regime.getTakeprofitPct())
 							.stoplossTiming(regime.getStoplossTiming()).takeprofitTiming(regime.getTakeprofitTiming())

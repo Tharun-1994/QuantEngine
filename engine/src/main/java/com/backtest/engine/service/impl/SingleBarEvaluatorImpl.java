@@ -144,6 +144,11 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 			// backtest only gates the entry block).
 			boolean entriesBanned = false;
 			String banReason = null;
+			// Freeze liquidation flag — set ONLY by the safety-net suspend below,
+			// never by banned_months / tdom bans. A freeze sells the whole book;
+			// a calendar/tdom ban only blocks entries. Keeping them separate stops
+			// a tdom ban from wrongly liquidating live positions.
+			boolean freezeSuspended = false;
 			LocalDate intendedTradeDate = request.getRunDate();
 			if (intendedTradeDate == null) {
 				System.err.println("[single-bar] " + strategy.getName()
@@ -264,9 +269,14 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				System.err.println("[single-bar] " + strategy.getName() + " safety-net: policies="
 						+ safetyPolicies185.size() + " suspendedThroughLastBar=" + suspended185
 						+ " intended(" + intendedTradeDate + ")=" + intendedSuspended185);
-				if (intendedSuspended185 && !entriesBanned) {
-					entriesBanned = true;
-					banReason = "safety_net suspended (state through " + lastBar + ")";
+				if (intendedSuspended185) {
+					// Freeze fired for the intended trade date. Two effects: block
+					// new entries (below) AND liquidate the held book (step 8.5).
+					freezeSuspended = true;
+					if (!entriesBanned) {
+						entriesBanned = true;
+						banReason = "safety_net suspended (state through " + lastBar + ")";
+					}
 				}
 			}
 			Map<LocalDate, Integer> tdomMapForVol = backtestServiceImplV2
@@ -597,6 +607,30 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 						stopUpdates = new ArrayList<>();
 					}
 				}
+			}
+
+			// ── 8.5 Freeze liquidation (safety net) ─────────────────────────
+			// When the safety net (e.g. VIX>=50) is suspended for the intended
+			// trade date, the strategy liquidates the WHOLE book at the freeze
+			// timing — mirroring the backtest's dispatchSafetyNetsAtOpen →
+			// closeAllPositionsOnOpenPrice — not just blocking entries. Sell
+			// every live holding, and drop entries + stop updates. Guarded
+			// against a PORTFOLIO trip, which already liquidated above and, unlike
+			// a temporary freeze, permanently halts the strategy. This is the
+			// "liquidate" half of vol_switch; entry-suspension is the other half.
+			if (freezeSuspended && !portfolioTripped) {
+				String freezeTiming = sd.getFreezeTiming();
+				if (freezeTiming == null || freezeTiming.isBlank()) {
+					freezeTiming = "open";
+				}
+				proposedExits = new ArrayList<>();
+				for (LiveHoldingsSeedDto h : liveHoldings) {
+					proposedExits.add(ProposedExitDto.builder().tradeId(h.getTradeId()).symbol(h.getSymbol())
+							.exitReason("Volatility Cut").exitDate(request.getRunDate())
+							.exitTiming(freezeTiming).build());
+				}
+				entries = new ArrayList<>();
+				stopUpdates = new ArrayList<>();
 			}
 
 			// ── 9. Response ──────────────────────────────────────────────────
