@@ -380,6 +380,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		Map<LocalDate, Integer> tdomMap = computeTdomMap(priceData.getAll_dates());
 
 		for (LocalDate date : priceData.getAll_dates()) {
+			if (date.equals(LocalDate.of(2007, 8, 23))) {
+				System.err.println();
+			}
 
 			// Patch 65d (revised): PORTFOLIO halt guard. Once the trip flag is
 			// set (by checkPortfolioStoplossHit on a prior close), this guard:
@@ -418,9 +421,10 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				continue;
 			}
 
-			if (date.equals(LocalDate.of(2026, 6, 26))) {
+			if (date.equals(LocalDate.of(2008, 5, 6))) {
 				System.err.println();
 			}
+//			System.err.println(date);
 
 			if (((date.isEqual(priceData.getTrading_dates().get(0))
 					|| date.isAfter(priceData.getTrading_dates().get(0)))
@@ -432,8 +436,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				// CLOSE/EOD exits are handled at the END of the loop (before
 				// signalsForTheDayV1) so they price at the close with no look-ahead.
 				if (buySellData.getStrategyData().getMaxTime() > 0
-						&& "open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
-					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
+						&& "open".equalsIgnoreCase(buySellData.getStrategyData().getEffectiveMaxTimeTiming())) {
+					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getEffectiveMaxTimeTiming());
 				}
 
 				if (priceData.getTrading_dates().contains(date)) {
@@ -447,6 +451,19 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					// Stage 3b: dispatch through the policy list. Every active
 					// policy gets a vote on freeze/resume at the open phase.
 					suspended = dispatchSafetyNetsAtOpen(safetyPolicies, date, previousDate, suspended, priceData);
+					// Patch 191 (GIVEBACK TP): profit-armed give-back take-profit — port of
+					// find_X_Y. OPEN-timed: decision on the close path through previousDate
+					// (T-1), fill at today's open. Runs before markToMarket so an exited
+					// position is not also marked at today's close. Long-only.
+					if (StaticConfig.takeProfitType.get("giveback")
+							.equals(buySellData.getStrategyData().getTakeprofitType())
+							&& buySellData.getStrategyData().getTakeProfitPct() > 0
+							&& buySellData.getStrategyData().getTakeprofitGivebackPct() > 0) {
+						this.portfolioService.checkTakeProfitGiveback(date, previousDate,
+								buySellData.getStrategyData().getSystemType(),
+								buySellData.getStrategyData().getTakeProfitPct(),
+								buySellData.getStrategyData().getTakeprofitGivebackPct());
+					}
 
 					// Exit Orders
 					if (buySellData.getStrategyData().getExitTiming().equals("open")) {
@@ -511,10 +528,26 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				// On trip, isPortfolioStoplossTripped() returns true and the
 				// guard at the top of the next iteration (Patch 65d) closes all
 				// at next-day open + skips all subsequent dates.
-				if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())
-						&& buySellData.getStrategyData().getStopLossPct() > 0) {
-					this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
-							buySellData.getStrategyData().getStoplossTiming());
+				if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())) {
+					// DualStopPct: when stoplossPctByDate is present, pick the state's %
+					// for previousDate (T-1) and apply it portfolio-wide; no match =>
+					// loud-fail, no stop this bar. Else legacy single-pct path.
+					java.util.Map<java.time.LocalDate, Float> slByDate = buySellData.getStrategyData().getStoplossPctByDate();
+					if (slByDate != null && !slByDate.isEmpty()) {
+						Float dualPct = (previousDate != null) ? slByDate.get(previousDate) : null;
+						if (dualPct != null) {
+							this.portfolioService.setStoplossPctForDay(dualPct);
+							this.portfolioService.checkStoplossHit(date,
+									buySellData.getStrategyData().getSystemType(),
+									buySellData.getStrategyData().getStoplossTiming());
+						} else {
+							System.err.println("[DualStopPct] no state matched " + previousDate
+									+ " (bar " + date + ") — no stop applied");
+						}
+					} else if (buySellData.getStrategyData().getStopLossPct() > 0) {
+						this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
+								buySellData.getStrategyData().getStoplossTiming());
+					}
 				} else if (StaticConfig.stoplossType.get("atr_based")
 						.equals(buySellData.getStrategyData().getStoplossType())
 						&& buySellData.getStrategyData().getStopLossPct() > 0) {
@@ -561,15 +594,62 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				// phase), before signalsForTheDayV1 so getTodaysMaxTimeExits still
 				// counts them for the sector cap. Prices at the close, no look-ahead.
 				if (buySellData.getStrategyData().getMaxTime() > 0
-						&& !"open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
-					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
+						&& !"open".equalsIgnoreCase(buySellData.getStrategyData().getEffectiveMaxTimeTiming())) {
+					this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getEffectiveMaxTimeTiming());
 				}
 
 				// Recalculate vol/turnover thresholds yearly (1st Jan trading day)
 				computeVolThresholds(date, previousDate, buySellData, priceData, tdomMap);
 
- 				entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
-						this.portfolioService);
+				// Patch 211: only (re)generate signals on TRADING days. all_dates includes
+				// weekends; signalsForTheDayV1 on a weekend is a non-rotation day that clears
+				// entrySet, wiping Friday's Monday-fill signals before Monday's open. Keeping
+				// the prior entryExitMap lets them survive. markToMarket still runs every day.
+				if (priceData.getTrading_dates().contains(date)) {
+					entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
+							this.portfolioService);
+				}
+
+				// Patch 213: LEGACY fill model — signal on the rebalance day (Friday), fill on the
+				// NEXT ACTUAL TRADING DAY (Monday), sized on the signal day's (date) close.
+				// The fill day is found by scanning all_dates forward for the first day that has a
+				// real open price for a signalled ticker — this skips weekend/holiday gaps no
+				// matter how all_dates is built, and is NOT the weekly trading_dates (which would
+				// land on the next Friday). Exits fire first (free slots), then entries. Both are
+				// cleared after firing so the open-phase execution cannot double-fill. NORMAL +
+				// open timing only.
+				if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))
+						&& priceData.getTrading_dates().contains(date) && entryExitMap != null) {
+					java.util.List<LocalDate> p213ad = priceData.getAll_dates();
+					java.util.List<String> p213tk = new java.util.ArrayList<>();
+					if (entryExitMap.get("entry") != null) p213tk.addAll(entryExitMap.get("entry"));
+					if (entryExitMap.get("exit") != null) p213tk.addAll(entryExitMap.get("exit"));
+					LocalDate p213fill = null;
+					int p213i = p213ad.indexOf(date);
+					if (p213i >= 0 && !p213tk.isEmpty()) {
+						for (int k = p213i + 1; k < p213ad.size() && p213fill == null; k++) {
+							LocalDate cand = p213ad.get(k);
+							for (String tk : p213tk) {
+								Float o = priceData.getDaily_opens().getValue(cand, tk);
+								if (o != null && !o.isNaN() && !o.isInfinite()) { p213fill = cand; break; }
+							}
+						}
+					}
+					if (p213fill != null) {
+						if (buySellData.getStrategyData().getExitTiming().equals("open")
+								&& entryExitMap.get("exit") != null && !entryExitMap.get("exit").isEmpty()) {
+							ExitSignalsRequestDto p213ex = ExitSignalsRequestDto.builder().tradeDate(p213fill)
+									.exits(entryExitMap.get("exit")).reasonForExit("Exits").exitTime("open").build();
+							this.portfolioService.executeExitSignals(p213ex);
+							entryExitMap.get("exit").clear();
+						}
+						if (!suspended && buySellData.getStrategyData().getEntryTiming().equals("open")
+								&& entryExitMap.get("entry") != null && !entryExitMap.get("entry").isEmpty()) {
+							processNormalOrders(p213fill, date, entryExitMap, buySellData, "open");
+							entryExitMap.get("entry").clear();
+						}
+					}
+				}
 
 				// If exit_timing is "close", execute exits immediately at today's close
 				if (buySellData.getStrategyData().getExitTiming().equals("close")) {
@@ -619,10 +699,10 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 							if (buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("short"))) {
 								// SHORT: limit ABOVE close — stock must rally up to fill
-								limit_price = closePrice * (1 + (buySellData.getStrategyData().getLimitPct() / 100));
+								limit_price = closePrice * (1 + (buySellData.getStrategyData().getEffectiveLimitPct(previousDate) / 100));
 							} else {
 								// LONG: limit BELOW close — stock must dip down to fill
-								limit_price = closePrice * (1 - (buySellData.getStrategyData().getLimitPct() / 100));
+								limit_price = closePrice * (1 - (buySellData.getStrategyData().getEffectiveLimitPct(previousDate) / 100));
 							}
 							limitOrdersList.add(LimitOrder.builder().ticker(entry).limitPrice(limit_price).build());
 							targetSec--;
@@ -677,7 +757,11 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				this.portfolioService.endOfBacktest(date);
 			}
 
-			previousDate = date;
+			// Patch 211: advance previousDate only on TRADING days so Monday's "yesterday"
+			// is Friday, not the weekend (else sizing looks up a Sunday close -> null -> skip).
+			if (priceData.getTrading_dates().contains(date)) {
+				previousDate = date;
+			}
 
 		}
 		return this.portfolioService.getPortfolio();
@@ -818,10 +902,26 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				this.portfolioService.markToMarket(date);
 
 				// StopLoss — Patch 65b: added dollar_based + portfolio branches.
-				if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())
-						&& buySellData.getStrategyData().getStopLossPct() > 0) {
-					this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
-							buySellData.getStrategyData().getStoplossTiming());
+				if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())) {
+					// DualStopPct: when stoplossPctByDate is present, pick the state's %
+					// for previousDate (T-1) and apply it portfolio-wide; no match =>
+					// loud-fail, no stop this bar. Else legacy single-pct path.
+					java.util.Map<java.time.LocalDate, Float> slByDate = buySellData.getStrategyData().getStoplossPctByDate();
+					if (slByDate != null && !slByDate.isEmpty()) {
+						Float dualPct = (previousDate != null) ? slByDate.get(previousDate) : null;
+						if (dualPct != null) {
+							this.portfolioService.setStoplossPctForDay(dualPct);
+							this.portfolioService.checkStoplossHit(date,
+									buySellData.getStrategyData().getSystemType(),
+									buySellData.getStrategyData().getStoplossTiming());
+						} else {
+							System.err.println("[DualStopPct] no state matched " + previousDate
+									+ " (bar " + date + ") — no stop applied");
+						}
+					} else if (buySellData.getStrategyData().getStopLossPct() > 0) {
+						this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
+								buySellData.getStrategyData().getStoplossTiming());
+					}
 				} else if (StaticConfig.stoplossType.get("dollar_based")
 						.equals(buySellData.getStrategyData().getStoplossType())) {
 					this.portfolioService.checkStoplossHitDollar(date, buySellData.getStrategyData().getSystemType(),
@@ -886,7 +986,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					}
 					limitOrderMap.put("limit_orders", limitOrdersList);
 
-				} else if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit"))) {
+				} else if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("limit"))
+						|| "LIMIT_RULE".equals(buySellData.getStrategyData().getOrderType())) {
 					Set<String> livePositions = this.portfolioService.getLiveHoldingsLogger();
 					int targetSec = buySellData.getStrategyData().getSlots() - livePositions.size();
 					limitOrderMap = new HashMap<>();
@@ -897,9 +998,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 							float limit_price;
 							if (buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("short"))) {
-								limit_price = closePrice * (1 + (buySellData.getStrategyData().getLimitPct() / 100));
+								limit_price = closePrice * (1 + (buySellData.getStrategyData().getEffectiveLimitPct(previousDate) / 100));
 							} else {
-								limit_price = closePrice * (1 - (buySellData.getStrategyData().getLimitPct() / 100));
+								limit_price = closePrice * (1 - (buySellData.getStrategyData().getEffectiveLimitPct(previousDate) / 100));
 							}
 							limitOrdersList.add(LimitOrder.builder().ticker(entry).limitPrice(limit_price).build());
 							targetSec--;
@@ -953,7 +1054,11 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				this.portfolioService.endOfBacktest(date);
 			}
 
-			previousDate = date;
+			// Patch 211: advance previousDate only on TRADING days so Monday's "yesterday"
+			// is Friday, not the weekend (else sizing looks up a Sunday close -> null -> skip).
+			if (priceData.getTrading_dates().contains(date)) {
+				previousDate = date;
+			}
 
 		}
 		return this.portfolioService.getPortfolio();
@@ -988,6 +1093,9 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 		Map<String, List<LimitOrder>> limitOrderMap = null;
 
 		LocalDate previousDate = null;
+
+		// Patch 207: safety-net suspend state for the multi-regime path (mirrors :373).
+		boolean suspended = false;
 
 		BuySellDataV2 buySellData = null;
 
@@ -1067,6 +1175,11 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 
 				if (priceData.getTrading_dates().contains(date) && buySellData != null) {
 
+					// Patch 207: safety-net freeze/resume at open (mirrors :450). FREEZE
+					// liquidates all positions at open + suspends new entries; RESUME lifts it.
+					suspended = dispatchSafetyNetsAtOpen(buySellData.getStrategyData().getSafetyPolicies(),
+							date, previousDate, suspended, priceData);
+
 					// Exit Orders
 					if (buySellData.getStrategyData().getExitTiming().equals("open")) {
 
@@ -1083,8 +1196,8 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					// Max Time — OPEN exits fire at the START of the day (open phase);
 					// CLOSE/EOD exits are handled at the END (before signalsForTheDayV1).
 					if (buySellData.getStrategyData().getMaxTime() > 0
-							&& "open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
-						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
+							&& "open".equalsIgnoreCase(buySellData.getStrategyData().getEffectiveMaxTimeTiming())) {
+						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getEffectiveMaxTimeTiming());
 					}
 
 					// REGIME SHIFT
@@ -1109,7 +1222,7 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					}
 
 					// Entry Orders
-					if (buySellData.getStrategyData().getEntryTiming().equals("open")) {
+					if (!suspended && buySellData.getStrategyData().getEntryTiming().equals("open")) {
 						if (buySellData.getStrategyData().getOrderType().equals(StaticConfig.orderType.get("normal"))) {
 							if (buySellData.getStrategyData().getSystemType()
 									.equals(StaticConfig.systemType.get("long"))
@@ -1158,10 +1271,26 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 				if (buySellData != null) {
 
 					// StopLoss — Patch 65c: added dollar_based + portfolio branches.
-					if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())
-							&& buySellData.getStrategyData().getStopLossPct() > 0) {
-						this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
-								buySellData.getStrategyData().getStoplossTiming());
+					if (StaticConfig.stoplossType.get("nrml").equals(buySellData.getStrategyData().getStoplossType())) {
+						// DualStopPct: when stoplossPctByDate is present, pick the state's %
+						// for previousDate (T-1) and apply it portfolio-wide; no match =>
+						// loud-fail, no stop this bar. Else legacy single-pct path.
+						java.util.Map<java.time.LocalDate, Float> slByDate = buySellData.getStrategyData().getStoplossPctByDate();
+						if (slByDate != null && !slByDate.isEmpty()) {
+							Float dualPct = (previousDate != null) ? slByDate.get(previousDate) : null;
+							if (dualPct != null) {
+								this.portfolioService.setStoplossPctForDay(dualPct);
+								this.portfolioService.checkStoplossHit(date,
+										buySellData.getStrategyData().getSystemType(),
+										buySellData.getStrategyData().getStoplossTiming());
+							} else {
+								System.err.println("[DualStopPct] no state matched " + previousDate
+										+ " (bar " + date + ") — no stop applied");
+							}
+						} else if (buySellData.getStrategyData().getStopLossPct() > 0) {
+							this.portfolioService.checkStoplossHit(date, buySellData.getStrategyData().getSystemType(),
+									buySellData.getStrategyData().getStoplossTiming());
+						}
 					} else if (StaticConfig.stoplossType.get("dollar_based")
 							.equals(buySellData.getStrategyData().getStoplossType())) {
 						this.portfolioService.checkStoplossHitDollar(date,
@@ -1221,13 +1350,31 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					// phase), before signalsForTheDayV1 so getTodaysMaxTimeExits still
 					// counts them for the sector cap. Prices at the close, no look-ahead.
 					if (buySellData.getStrategyData().getMaxTime() > 0
-							&& !"open".equalsIgnoreCase(buySellData.getStrategyData().getExitTiming())) {
-						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getExitTiming());
+							&& !"open".equalsIgnoreCase(buySellData.getStrategyData().getEffectiveMaxTimeTiming())) {
+						this.portfolioService.checkMaxTime(date, buySellData.getStrategyData().getMaxTime(), priceData, buySellData.getStrategyData().getEffectiveMaxTimeTiming());
+					}
+
+					// Patch 206: yearly vol/turnover threshold on the simple path (mirrors
+					// runBacktestV2). Compute on the ACTIVE regime, then copy the result to
+					// ALL regimes so the threshold is GLOBAL -- matches the legacy single
+					// new_volume_threshold that both bull/bear branches read, recomputed only
+					// on the Jan trigger day. Copying every day carries the value across
+					// regime flips (a non-active regime's sd would otherwise stay 0).
+					computeVolThresholds(date, previousDate, buySellData, priceData, tdomMap);
+					float volThr206 = buySellData.getStrategyData().getVolThreshold();
+					float turnThr206 = buySellData.getStrategyData().getTurnoverThreshold();
+					for (BuySellDataV2 regime206 : rulesOfDayRegimes.values()) {
+						regime206.getStrategyData().setVolThreshold(volThr206);
+						regime206.getStrategyData().setTurnoverThreshold(turnThr206);
 					}
 
 //					long start = System.nanoTime();
 					entryExitMap = strategyBuilderService.signalsForTheDayV1(date, priceData, buySellData,
 							this.portfolioService);
+					// Patch 207: safety-net freeze/resume at close (mirrors :571). No-op for
+					// open-timing policies (RSI Ronnan); active only for close-timing freeze.
+					suspended = dispatchSafetyNetsAtClose(buySellData.getStrategyData().getSafetyPolicies(),
+							date, suspended);
 
 					// If exit_timing is "close", execute exits immediately at today's close.
 					// NOT gated on regimeActiveToday — open positions need exit management
@@ -1347,14 +1494,21 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 					} else if (buySellData.getStrategyData().getOrderType()
 							.equals(StaticConfig.orderType.get("limit"))) {
 						Set<String> livePositions = this.portfolioService.getLiveHoldingsLogger();
-						int exitCount = 0;
-						for (String live : livePositions) {
-							if (entryExitMap.get("exit").contains(live)) {
-								exitCount++;
+						// Duplicate-aware slot accounting: count open LEGS (a doubled ticker is 2
+						// positions, not 1) so slots stay correct once duplicates exist, and allow
+						// a ticker to re-enter up to max_duplicates. The signal already vetted
+						// duplicate eligibility and the one-pair-at-a-time (max_duplicate_sets) cap.
+						Map<String, Long> holdingCounts = this.portfolioService.getLiveHoldingsTickerCounts();
+						int maxDups = buySellData.getStrategyData().getMaxDuplicates();
+						long totalLegs = holdingCounts.values().stream().mapToLong(Long::longValue).sum();
+						long exitingLegs = 0;
+						for (Map.Entry<String, Long> hc : holdingCounts.entrySet()) {
+							if (entryExitMap.get("exit").contains(hc.getKey())) {
+								exitingLegs += hc.getValue();
 							}
 						}
 
-						int targetSec = buySellData.getStrategyData().getSlots() - (livePositions.size() - exitCount);
+						int targetSec = buySellData.getStrategyData().getSlots() - (int) (totalLegs - exitingLegs);
 						if (isLastBarExecMode) {
 							targetSec = Integer.MAX_VALUE;
 						}
@@ -1366,16 +1520,16 @@ public class BacktestServiceImplV2 implements BacktestServiceV2 {
 							rankRow_L = buySellData.getStrategyData().getRanking().getRow(date);
 						}
 						for (String entry : entryExitMap.get("entry")) {
-							if (!livePositions.contains(entry) && targetSec > 0) {
+							if (holdingCounts.getOrDefault(entry, 0L) < maxDups && targetSec > 0) {
 								float closePrice = priceData.getDaily_closes().getValue(date, entry);
 								float limit_price;
 								if (buySellData.getStrategyData().getSystemType()
 										.equals(StaticConfig.systemType.get("short"))) {
 									limit_price = closePrice
-											* (1 + (buySellData.getStrategyData().getLimitPct() / 100));
+											* (1 + (buySellData.getStrategyData().getEffectiveLimitPct(previousDate) / 100));
 								} else {
 									limit_price = closePrice
-											* (1 - (buySellData.getStrategyData().getLimitPct() / 100));
+											* (1 - (buySellData.getStrategyData().getEffectiveLimitPct(previousDate) / 100));
 								}
 
 								// Patch 15: rich fields populated only in execution mode.

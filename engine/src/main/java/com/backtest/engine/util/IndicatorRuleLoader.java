@@ -279,6 +279,49 @@ public class IndicatorRuleLoader {
 		return tableMap;
 	}
 
+	// DualStop/DualLimit: load market-indicator frames (LHS + value_indicator) for a list of
+	// state-tree leaves, keyed {ticker}_{indicator}_{lookback} to match the market-trend eval.
+	// Modeled on loadTablesMarketTrendV3's per-rule body.
+	public static Map<String, ArrowDataFrame> loadTablesForMarketRules(List<RuleDto> rules, String dataDir) {
+		Set<String> PRICE_INDICATORS = Set.of("close", "open", "high", "low");
+		Map<String, ArrowDataFrame> tableMap = new HashMap<>();
+		for (RuleDto rule : rules) {
+			String ticker = (rule.getRegimeTicker() != null ? rule.getRegimeTicker() : "").toLowerCase();
+			if (rule.getIndicator() != null && !PRICE_INDICATORS.contains(rule.getIndicator().toLowerCase())) {
+				String tableKey = String.format("%s_%s_%d", ticker, rule.getIndicator(), rule.getLookback());
+				String fileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getIndicator(),
+						rule.getLookback());
+				Path parquetPath = Paths.get(dataDir, fileName);
+				tableMap.computeIfAbsent(tableKey, k -> {
+					try {
+						return loadIndicator(parquetPath.toUri().toString());
+					} catch (Exception e) {
+						e.printStackTrace();
+						return null;
+					}
+				});
+			}
+			if ("indicator_price".equalsIgnoreCase(rule.getValueType()) && rule.getValueIndicator() != null
+					&& !rule.getValueIndicator().isBlank()
+					&& !PRICE_INDICATORS.contains(rule.getValueIndicator().toLowerCase())) {
+				String valKey = String.format("%s_%s_%d", ticker, rule.getValueIndicator(), rule.getValueLookback());
+				String valFileName = RuleParser.buildParquetFileNameMarketTrend(ticker, rule.getValueIndicator(),
+						rule.getValueLookback());
+				Path valPath = Paths.get(dataDir, valFileName);
+				tableMap.computeIfAbsent(valKey, k -> {
+					try {
+						return loadIndicator(valPath.toUri().toString());
+					} catch (Exception e) {
+						e.printStackTrace();
+						return null;
+					}
+				});
+			}
+		}
+		tableMap.values().removeIf(Objects::isNull);
+		return tableMap;
+	}
+
 	public static Map<String, ArrowDataFrame> loadTables(List<RuleDto> conditions, String dataDir,
 			Map<String, Set<Integer>> indicatorLookbackMap) {
 

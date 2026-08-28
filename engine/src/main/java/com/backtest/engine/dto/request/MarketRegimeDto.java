@@ -1,7 +1,5 @@
 package com.backtest.engine.dto.request;
 
-
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -16,238 +14,281 @@ import lombok.Data;
 @Builder
 public class MarketRegimeDto {
 
-    private int id;
+	private int id;
 
-    @JsonProperty("strategy_id")
-    private int strategyId;
+	@JsonProperty("strategy_id")
+	private int strategyId;
 
-    @JsonProperty("regime_type")
-    private String regimeType;   // Normal | Simple | Complex
+	@JsonProperty("regime_type")
+	private String regimeType; // Normal | Simple | Complex
 
-    @JsonProperty("regime_ticker")
-    private String regimeTicker;
+	@JsonProperty("regime_ticker")
+	private String regimeTicker;
 
-    @JsonProperty("market_trend_type")
-    private String marketTrendType;
+	@JsonProperty("market_trend_type")
+	private String marketTrendType;
 
-    @JsonProperty("market_trend_rules")
-    private List<RuleDto> marketTrendRules;
+	@JsonProperty("market_trend_rules")
+	private List<RuleDto> marketTrendRules;
 
-    @JsonProperty("volatility_rules")
-    private List<RuleDto> volatilityRules;
+	@JsonProperty("volatility_rules")
+	private List<RuleDto> volatilityRules;
 
-    @JsonProperty("entry_rules")
-    private List<RuleDto> entryRules;
+	@JsonProperty("entry_rules")
+	private List<RuleDto> entryRules;
 
-    @JsonProperty("exit_rules")
-    private List<RuleDto> exitRules;
+	@JsonProperty("exit_rules")
+	private List<RuleDto> exitRules;
 
-    @JsonProperty("entry_timing")
-    private String entryTiming;
+	@JsonProperty("entry_timing")
+	private String entryTiming;
 
-    @JsonProperty("exit_timing")
-    private String exitTiming;
+	@JsonProperty("exit_timing")
+	private String exitTiming;
 
-    @JsonProperty("stoploss_type")
-    private String stoplossType;
+	@JsonProperty("stoploss_type")
+	private String stoplossType;
 
-    @JsonProperty("takeprofit_type")
-    private String takeprofitType;
+	@JsonProperty("takeprofit_type")
+	private String takeprofitType;
 
-    @JsonProperty("stoploss_pct")
-    private float stoplossPct;
+	@JsonProperty("stoploss_pct")
+	private float stoplossPct;
 
-    // Patch 99: cap on ATR stop offset as % of anchor price. 0/null = disabled.
-    @JsonProperty("stoploss_max_pct")
-    private float stoplossMaxPct;
+	// Patch 99: cap on ATR stop offset as % of anchor price. 0/null = disabled.
+	@JsonProperty("stoploss_max_pct")
+	private float stoplossMaxPct;
 
-    @JsonProperty("takeprofit_pct")
-    private float takeprofitPct;
+	@JsonProperty("takeprofit_pct")
+	private float takeprofitPct;
+	// Patch 191 (GIVEBACK TP): give-back % (Y_lose_thresh * 100). 0 for other
+	// types.
+	@JsonProperty("takeprofit_giveback_pct")
+	private float takeprofitGivebackPct;
+	@JsonProperty("stoploss_timing")
+	private String stoplossTiming;
 
-    @JsonProperty("stoploss_timing")
-    private String stoplossTiming;
+	@JsonProperty("takeprofit_timing")
+	private String takeprofitTiming;
 
-    @JsonProperty("takeprofit_timing")
-    private String takeprofitTiming;
+	// Patch 72k: PORTFOLIO drawdown anchor. PEAK or DAILY. Null when
+	// stoploss_type != PORTFOLIO. Validated at the Python save layer.
+	@JsonProperty("portfolio_stoploss_anchor")
+	private String portfolioStoplossAnchor;
 
-    // Patch 72k: PORTFOLIO drawdown anchor. PEAK or DAILY. Null when
-    // stoploss_type != PORTFOLIO. Validated at the Python save layer.
-    @JsonProperty("portfolio_stoploss_anchor")
-    private String portfolioStoplossAnchor;
-    
-    @JsonProperty("atr_lookback_stp")
-    private int atrLookbackStp;
+	@JsonProperty("atr_lookback_stp")
+	private int atrLookbackStp;
 
-    @JsonProperty("atr_lookback_tp")
-    private int atrLookbackTp;
+	@JsonProperty("atr_lookback_tp")
+	private int atrLookbackTp;
 
-    private String ranking;
+	private String ranking;
 
-    @JsonProperty("ranking_lookback")
-    private int rankingLookback;
+	@JsonProperty("ranking_lookback")
+	private int rankingLookback;
 
-    @JsonProperty("ranking_order")
-    private String rankingOrder;
+	@JsonProperty("ranking_order")
+	private String rankingOrder;
 
-    @JsonProperty("order_type")
-    private String orderType;
+	@JsonProperty("order_type")
+	private String orderType;
 
-    @JsonProperty("limit_pct")
-    private float limitPct;
+	@JsonProperty("limit_pct")
+	private float limitPct;
 
-    @JsonProperty("atr_limit_lookback")
-    private int atrLimitLookback;
-    // Patch 167 v2: mode-specific limit parameters (mirrors middleware's
-    // limit_params_json). LIMIT_HV keys: hv_lookback, divider, lower,
-    // upper, reduction. Future LIMIT_* modes reuse this map -- no new fields.
-    @JsonProperty("limit_params")
-    private java.util.Map<String, Float> limitParams;
-    
-    private String universe;
-    private float capital;
-    private int slots;
-    private String rebalance;
-    
-    @JsonProperty("production_capital")
-    private Float productionCapital;   // Patch 50: nullable — null means not set
+	@JsonProperty("atr_limit_lookback")
+	private int atrLimitLookback;
+	// Patch 167 v2: mode-specific limit parameters (mirrors middleware's
+	// limit_params_json). LIMIT_HV keys: hv_lookback, divider, lower,
+	// upper, reduction. Future LIMIT_* modes reuse this map -- no new fields.
+	@JsonProperty("limit_params")
+	private java.util.Map<String, Float> limitParams;
+	
+	// DualLimitPct: LIMIT_RULE states (regime-split limit %). Raw map; converted
+	// in the controller like market_trend_rules_tree. Null unless order_type=LIMIT_RULE.
+	@JsonProperty("limit_states")
+	private java.util.Map<String, Object> limitStates;
 
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
-    
-    @JsonProperty("max_time")
-    private int maxTime;    
-    
-    @JsonProperty("banned_months")
-    private List<Integer> bannedMonths;
-    
- // --- New Rule Tree Integration (Dict[str, Any] equivalent) ---
-    @JsonProperty("market_trend_rules_tree")
-    private Map<String, Object> marketTrendRulesTree;
+	private String universe;
+	private float capital;
+	private int slots;
+	private String rebalance;
 
-    @JsonProperty("volatility_rules_tree")
-    private Map<String, Object> volatilityRulesTree;
+	@JsonProperty("production_capital")
+	private Float productionCapital; // Patch 50: nullable — null means not set
 
-    @JsonProperty("entry_rules_tree")
-    private Map<String, Object> entryRulesTree;
+	@JsonProperty("created_at")
+	private LocalDateTime createdAt;
 
-    @JsonProperty("exit_rules_tree")
-    private Map<String, Object> exitRulesTree;
+	@JsonProperty("max_time")
+	private int maxTime;
 
-    @JsonProperty("freeze_rules_tree")
-    private Map<String, Object> freezeRulesTree;
+	@JsonProperty("banned_months")
+	private List<Integer> bannedMonths;
 
-    @JsonProperty("resume_rules_tree")
-    private Map<String, Object> resumeRulesTree;
-    
-    @JsonProperty("freeze_timing")
-    private String freezeTiming;
+	// --- New Rule Tree Integration (Dict[str, Any] equivalent) ---
+	@JsonProperty("market_trend_rules_tree")
+	private Map<String, Object> marketTrendRulesTree;
 
-    /** "open" (default) — resume check uses previousDate. "close" — uses today. */
-    @JsonProperty("resume_timing")
-    private String resumeTiming;
-    
-    /**
-     * Volatility safety net type for this regime.
-     *   "none"           — no safety net (default)
-     *   "simple"         — stateless freeze/resume rule trees (current behaviour)
-     *   "spy_volatility" — stateful 4-escape state machine (Stage 3 — not yet wired)
-     */
-    @JsonProperty("safety_net_type")
-    private String safetyNetType;
-    
-    /**
-     * List-based safety-net contract (Stage 3a). Each item is a stateful
-     * policy with its own {@code params} blob. The engine iterates the list
-     * each day; any item saying "freeze" stops trading. Null/empty means
-     * "no safety nets configured".
-     *
-     * <p>Plumbed but inert in Stage 3a — engine reads only {@link #safetyNetType}
-     * for behaviour. Stage 3b adds the policy registry and switches dispatch
-     * to this list.</p>
-     */
-    @JsonProperty("safety_nets")
-    private java.util.List<SafetyNetItemDto> safetyNets;
-    
-    @JsonProperty("sector_level")
-    private int sectorLevel;
- 
-    @JsonProperty("sector_limit")
-    private int sectorLimit;
+	@JsonProperty("volatility_rules_tree")
+	private Map<String, Object> volatilityRulesTree;
 
-    // Hold Blackout — block re-entry of a stock for N days after it exits.
-    // holdBlackoutDays 0/null disables; holdBlackoutUnit = "calendar"|"trading".
-    @JsonProperty("hold_blackout_days")
-    private Integer holdBlackoutDays;
+	@JsonProperty("entry_rules_tree")
+	private Map<String, Object> entryRulesTree;
 
-    @JsonProperty("hold_blackout_unit")
-    private String holdBlackoutUnit;
-    
- // Rebalance weekday: restrict entries to one weekday (0=Mon .. 4=Fri).
-    @JsonProperty("rebalance_weekday")
-    private Integer rebalanceWeekday;
-    
-    @JsonProperty("gap_filter_pct")
-    private float gapFilterPct;
-    
-    @JsonProperty("max_duplicates")
-    private int maxDuplicates;
+	@JsonProperty("exit_rules_tree")
+	private Map<String, Object> exitRulesTree;
 
-    @JsonProperty("max_duplicate_sets")
-    private int maxDuplicateSets;
+	@JsonProperty("freeze_rules_tree")
+	private Map<String, Object> freezeRulesTree;
 
+	@JsonProperty("resume_rules_tree")
+	private Map<String, Object> resumeRulesTree;
 
-    @JsonProperty("tdom_filters")
-    private List<TdomFilterDto> tdomFilters;
+	@JsonProperty("freeze_timing")
+	private String freezeTiming;
 
-    /**
-     * Optional vol/turnover filter config.
-     * When null or !enabled the engine skips vol/turnover threshold logic.
-     */
-    @JsonProperty("vol_filter")
-    private VolFilterDto volFilter;
-    /**
-     * If true, all open positions belonging to THIS regime are force-closed at
-     * next open when the market trend shifts away from this regime.
-     * Default false (matches Python: positions exit normally via signals/stop).
-     */
-    @JsonProperty("close_positions_on_regime_exit")
-    private boolean closePositionsOnRegimeExit;
+	/** "open" (default) — resume check uses previousDate. "close" — uses today. */
+	@JsonProperty("resume_timing")
+	private String resumeTiming;
 
-    // LRA Patch 22a: 5 new fields for LONGSHORT (pair-trading) regimes.
-    // For LONG / SHORT strategies the middleware doesn't send these, so
-    // Jackson leaves them null. The engine only reads them on the LONGSHORT
-    // dispatch arm (Patch 22b); existing code paths never touch them.
+	/**
+	 * Volatility safety net type for this regime. "none" — no safety net (default)
+	 * "simple" — stateless freeze/resume rule trees (current behaviour)
+	 * "spy_volatility" — stateful 4-escape state machine (Stage 3 — not yet wired)
+	 */
+	@JsonProperty("safety_net_type")
+	private String safetyNetType;
 
-    /** Per-ticker static metadata: {symbol -> {risk:..., range_tier:..., ...}} */
-    @JsonProperty("ticker_classification")
-    private Map<String, Object> tickerClassification;
+	/**
+	 * List-based safety-net contract (Stage 3a). Each item is a stateful policy
+	 * with its own {@code params} blob. The engine iterates the list each day; any
+	 * item saying "freeze" stops trading. Null/empty means "no safety nets
+	 * configured".
+	 *
+	 * <p>
+	 * Plumbed but inert in Stage 3a — engine reads only {@link #safetyNetType} for
+	 * behaviour. Stage 3b adds the policy registry and switches dispatch to this
+	 * list.
+	 * </p>
+	 */
+	@JsonProperty("safety_nets")
+	private java.util.List<SafetyNetItemDto> safetyNets;
 
-    /** disallowed_combos + backtracking config — consumed by PairingService */
-    @JsonProperty("pairing_entry_rules")
-    private Map<String, Object> pairingEntryRules;
+	@JsonProperty("sector_level")
+	private int sectorLevel;
 
-    /** Reserved for future pair-level exit rule trees. Empty for LRA. */
-    @JsonProperty("pairing_exit_rules")
-    private Map<String, Object> pairingExitRules;
+	@JsonProperty("sector_limit")
+	private int sectorLimit;
 
-    /** VIX bands + per-leg cap assignment — consumed by SizingPolicyResolver */
-    @JsonProperty("sizing_policy")
-    private Map<String, Object> sizingPolicy;
+	// Hold Blackout — block re-entry of a stock for N days after it exits.
+	// holdBlackoutDays 0/null disables; holdBlackoutUnit = "calendar"|"trading".
+	@JsonProperty("hold_blackout_days")
+	private Integer holdBlackoutDays;
 
-    /** max_hold_sessions + force_close + profit_exit — consumed by exit processors */
-    @JsonProperty("pair_exit_policy")
-    private Map<String, Object> pairExitPolicy;
-    // LRA Patch 25b: per-leg entry rule trees for LONGSHORT strategies.
-    // Each leg has its own tree (e.g. LRA bull regime: long side = IBS bottom-N
-    // + daily_range_pct + RSI carve-out; short side = IBS top-N + daily_range_pct
-    // + RSI > 50). For LONG / SHORT strategies, both stay null and the existing
-    // entryRulesTree is used instead.
+	@JsonProperty("hold_blackout_unit")
+	private String holdBlackoutUnit;
 
-    /** Rule tree producing long-side entry candidates. Null on LONG / SHORT strategies. */
-    @JsonProperty("entry_rules_tree_long")
-    private Map<String, Object> entryRulesTreeLong;
+	// Rebalance weekday: restrict entries to one weekday (0=Mon .. 4=Fri).
+	@JsonProperty("rebalance_weekday")
+	private Integer rebalanceWeekday;
 
-    /** Rule tree producing short-side entry candidates. Null on LONG / SHORT strategies. */
-    @JsonProperty("entry_rules_tree_short")
-    private Map<String, Object> entryRulesTreeShort;
+	// Patch 190: every-Nth-rebalance stride (legacy weekly_intervals). null/1 =
+	// every weekday.
+	@JsonProperty("weekly_intervals")
+	private Integer weeklyIntervals;
+	
+	// Patch 192: rebalance rotation mode. "sell_all" (default)=liquidate+rebuy;
+	// "set_difference"=keep overlap (exit held-topN, enter topN-held).
+	@JsonProperty("rotation_mode")
+	private String rotationMode;
+	
+	@JsonProperty("max_time_timing")
+	private String maxTimeTiming;
+	
+	// Patch 193: midweek replacement — refill mid-week freed slots. false/null = off.
+	@JsonProperty("midweek_replacement")
+	private Boolean midweekReplacement;
+	
+	// Patch 194: mid-week replacement "banned" — skip the last N closed trades'
+	// symbols when refilling. 0/null = off. Legacy uses 10.
+	@JsonProperty("replacement_ban_count")
+	private Integer replacementBanCount;
+
+	@JsonProperty("gap_filter_pct")
+	private float gapFilterPct;
+
+	@JsonProperty("max_duplicates")
+	private int maxDuplicates;
+
+	@JsonProperty("max_duplicate_sets")
+	private int maxDuplicateSets;
+
+	@JsonProperty("tdom_filters")
+	private List<TdomFilterDto> tdomFilters;
+
+	/**
+	 * Optional vol/turnover filter config. When null or !enabled the engine skips
+	 * vol/turnover threshold logic.
+	 */
+	@JsonProperty("vol_filter")
+	private VolFilterDto volFilter;
+	
+	// DualStopPct: regime-split stop states. Received as a raw map; converted to
+	// typed nodes in the engine (same as market_trend_rules_tree). Null => legacy.
+	@JsonProperty("stoploss_params")
+	private Map<String, Object> stoplossParams;
+	/**
+	 * If true, all open positions belonging to THIS regime are force-closed at next
+	 * open when the market trend shifts away from this regime. Default false
+	 * (matches Python: positions exit normally via signals/stop).
+	 */
+	@JsonProperty("close_positions_on_regime_exit")
+	private boolean closePositionsOnRegimeExit;
+
+	// LRA Patch 22a: 5 new fields for LONGSHORT (pair-trading) regimes.
+	// For LONG / SHORT strategies the middleware doesn't send these, so
+	// Jackson leaves them null. The engine only reads them on the LONGSHORT
+	// dispatch arm (Patch 22b); existing code paths never touch them.
+
+	/** Per-ticker static metadata: {symbol -> {risk:..., range_tier:..., ...}} */
+	@JsonProperty("ticker_classification")
+	private Map<String, Object> tickerClassification;
+
+	/** disallowed_combos + backtracking config — consumed by PairingService */
+	@JsonProperty("pairing_entry_rules")
+	private Map<String, Object> pairingEntryRules;
+
+	/** Reserved for future pair-level exit rule trees. Empty for LRA. */
+	@JsonProperty("pairing_exit_rules")
+	private Map<String, Object> pairingExitRules;
+
+	/** VIX bands + per-leg cap assignment — consumed by SizingPolicyResolver */
+	@JsonProperty("sizing_policy")
+	private Map<String, Object> sizingPolicy;
+
+	/**
+	 * max_hold_sessions + force_close + profit_exit — consumed by exit processors
+	 */
+	@JsonProperty("pair_exit_policy")
+	private Map<String, Object> pairExitPolicy;
+	// LRA Patch 25b: per-leg entry rule trees for LONGSHORT strategies.
+	// Each leg has its own tree (e.g. LRA bull regime: long side = IBS bottom-N
+	// + daily_range_pct + RSI carve-out; short side = IBS top-N + daily_range_pct
+	// + RSI > 50). For LONG / SHORT strategies, both stay null and the existing
+	// entryRulesTree is used instead.
+
+	/**
+	 * Rule tree producing long-side entry candidates. Null on LONG / SHORT
+	 * strategies.
+	 */
+	@JsonProperty("entry_rules_tree_long")
+	private Map<String, Object> entryRulesTreeLong;
+
+	/**
+	 * Rule tree producing short-side entry candidates. Null on LONG / SHORT
+	 * strategies.
+	 */
+	@JsonProperty("entry_rules_tree_short")
+	private Map<String, Object> entryRulesTreeShort;
 }

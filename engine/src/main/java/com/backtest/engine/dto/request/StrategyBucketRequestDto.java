@@ -28,6 +28,10 @@ public class StrategyBucketRequestDto {
 
 	@JsonProperty("end_date")
 	private LocalDate endDate;
+	
+	// Patch 190: skip N leading rebalance dates when applying the weekly_intervals stride.
+	@JsonProperty("skip_days")
+	private Integer skipDays;
 
 	// Min constraints
 	@JsonProperty("min_quantity")

@@ -356,9 +356,15 @@ public class BacktestContext implements AutoCloseable {
 				.holdBlackoutDays(strategyRequest.getRegimes().get(0).getHoldBlackoutDays() == null ? 0 : strategyRequest.getRegimes().get(0).getHoldBlackoutDays())
 				.holdBlackoutUnit(strategyRequest.getRegimes().get(0).getHoldBlackoutUnit())
 				.rebalanceWeekday(strategyRequest.getRegimes().get(0).getRebalanceWeekday())
+				.weeklyIntervals(strategyRequest.getRegimes().get(0).getWeeklyIntervals()) // Patch 190
+				.skipDays(strategyRequest.getSkipDays()) // Patch 190
+				.rotationMode(strategyRequest.getRegimes().get(0).getRotationMode()) // Patch 192
+				.midweekReplacement(strategyRequest.getRegimes().get(0).getMidweekReplacement()) // Patch 193
+				.replacementBanCount(strategyRequest.getRegimes().get(0).getReplacementBanCount()) // Patch 194
 				.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
 				.stoplossMaxPct(strategyRequest.getRegimes().get(0).getStoplossMaxPct()) // Patch 99
 				.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
+				.takeprofitGivebackPct(strategyRequest.getRegimes().get(0).getTakeprofitGivebackPct())
 				.stoplossTiming(strategyRequest.getRegimes().get(0).getStoplossTiming())
 				.takeprofitTiming(strategyRequest.getRegimes().get(0).getTakeprofitTiming())
 				.entryTiming(strategyRequest.getRegimes().get(0).getEntryTiming())
@@ -683,6 +689,13 @@ public class BacktestContext implements AutoCloseable {
 			}
 		}
 
+		// Patch 207: build safety-net policies once (resolveSafetyNets uses regime 0)
+		// and attach to every regime's StrategyData so the multi-regime day-loop can
+		// dispatch freeze/resume. Mirrors the Normal path (getBuySellData). Without
+		// this the simple path never evaluates the vol switch.
+		java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> simpleSafetyPolicies =
+				buildSafetyPolicies(strategyRequest, priceData, backtestDataPath);
+
 		for (MarketRegimeDto regime : strategyRequest.getRegimes()) {
 			String universe = regime.getUniverse();
 			String inputDir = inputPath(strategyRequest.getName(), universe, backtestDataPath);
@@ -711,13 +724,20 @@ public class BacktestContext implements AutoCloseable {
 					.holdBlackoutDays(regime.getHoldBlackoutDays() == null ? 0 : regime.getHoldBlackoutDays())
 					.holdBlackoutUnit(regime.getHoldBlackoutUnit())
 					.rebalanceWeekday(regime.getRebalanceWeekday())
+					.weeklyIntervals(regime.getWeeklyIntervals()) // Patch 190
+					.skipDays(strategyRequest.getSkipDays()) // Patch 190
+					.rotationMode(regime.getRotationMode()) // Patch 192
+					.midweekReplacement(regime.getMidweekReplacement()) // Patch 193
+					.replacementBanCount(regime.getReplacementBanCount()) // Patch 194
 					.stoplossMaxPct(regime.getStoplossMaxPct()) // Patch 99
 					.productionCapital(regime.getProductionCapital())   // Patch 50
 					.takeProfitPct(regime.getTakeprofitPct()).stoplossTiming(regime.getStoplossTiming())
 					.takeprofitTiming(regime.getTakeprofitTiming()).entryTiming(regime.getEntryTiming())
 					.exitTiming(regime.getExitTiming()).ranking(overlay.getRanking())
 					.rankingOrder(regime.getRankingOrder()).sectorMap(simpleSectorMap).sectorLevel(simpleSectorLevel)
-					.closePositionsOnRegimeExit(regime.isClosePositionsOnRegimeExit()).sectorLimit(simpleSectorLimit)
+					.closePositionsOnRegimeExit(regime.isClosePositionsOnRegimeExit())
+					// Patch 214: per-regime sector cap (legacy max_per_industry 2 bull / 3 bear); falls back to regimes[0]
+					.sectorLimit(regime.getSectorLimit() > 0 ? regime.getSectorLimit() : simpleSectorLimit)
 					.gapFilterPct(regime.getGapFilterPct()).maxDuplicates(regime.getMaxDuplicates())
 					.maxDuplicateSets(regime.getMaxDuplicateSets()).startDate(strategyRequest.getStartDate())
 					.endDate(strategyRequest.getEndDate()).minPrice(strategyRequest.getMinPrice())
@@ -727,7 +747,7 @@ public class BacktestContext implements AutoCloseable {
 					.portfolioStoplossAnchor(regime.getPortfolioStoplossAnchor())
                     .orderType(regime.getOrderType()).atrLimitLookback(regime.getAtrLimitLookback())
                     .atrLookbackStp(regime.getAtrLookbackStp())      // Spec 1: needed for stop price computation
-                    .limitPct(regime.getLimitPct()).maxTime(regime.getMaxTime()).bannedMonths(regime.getBannedMonths())
+                    .limitPct(regime.getLimitPct()).maxTime(regime.getMaxTime()).maxTimeTiming(regime.getMaxTimeTiming()).bannedMonths(regime.getBannedMonths())
                     .tdomFilters(regime.getTdomFilters()).volFilter(regime.getVolFilter())
                     .avgVolume(this.parquetFileValueMap.get("avg_volume"))
                     .avgTurnover(this.parquetFileValueMap.get("avg_turnover"))
@@ -746,6 +766,7 @@ public class BacktestContext implements AutoCloseable {
                     .dailyAtr(overlay.getDailyAtr())                 // Spec 1: ATR frame from regime overlay
                     .entryRulesTree(entryTree)
                     .exitRulesTree(exitTree)
+                    .safetyPolicies(simpleSafetyPolicies)   // Patch 207
                     .build();
 
 			// generateSignalsV1 detects trees → builds LeafCache → uses RuleTreeEvaluator
@@ -764,7 +785,7 @@ public class BacktestContext implements AutoCloseable {
 	 * market_trend_rules_tree, uses per-rule ticker for indicator lookup.
 	 */
 	public Map<LocalDate, String> getMarketTrends(StrategyBucketRequestDto strategyRequest, PriceDataV2 priceData,
-			String backtestDataPath) {
+			String backtestDataPath, Map<String, BuySellDataV2> regimeSignals) {
 
 		ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
 				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -799,7 +820,129 @@ public class BacktestContext implements AutoCloseable {
 				.loadTablesMarketTrendV3(strategyRequest.getRegimes(), inputDir, indicatorLookbackMap);
 		allArrowMaps.add(marketTrendMap);
 
+		// DualStop/DualLimit: load state-tree indicator frames + resolve each regime's stop/limit
+		// state trees to date->% maps on its StrategyData. This is the LIVE path (runBacktestV3).
+		applyDualStateTrees(strategyRequest.getRegimes(), regimeSignals, marketTrendMap, priceData, inputDir, mapper);
+
 		return this.marketTrendServiceV2.generateMarketTrend(strategyRequest.getRegimes(), marketTrendMap, priceData);
+	}
+
+	// DualStop/DualLimit: (1) load the state-tree indicator frames into marketTrendMap, then
+	// (2) evaluate each regime's stop + limit state trees (first match wins) to a resolved
+	// date->% map stashed on its StrategyData. The regime's BuySellData is found in
+	// regimeSignals via the same buildRegimeLabel key getSimpleBuySellDataMap used.
+	private void applyDualStateTrees(List<MarketRegimeDto> regimes, Map<String, BuySellDataV2> regimeSignals,
+			Map<String, ArrowDataFrame> marketTrendMap, PriceDataV2 priceData, String inputDir, ObjectMapper mapper) {
+		if (regimeSignals == null) {
+			return;
+		}
+		java.util.List<RuleDto> stateLeaves = new java.util.ArrayList<>();
+		for (MarketRegimeDto regime : regimes) {
+			stateLeaves.addAll(collectStateLeaves(regime.getStoplossParams(), mapper));
+			stateLeaves.addAll(collectStateLeaves(regime.getLimitStates(), mapper));
+		}
+		if (!stateLeaves.isEmpty()) {
+			Map<String, ArrowDataFrame> stateMap = IndicatorRuleLoader.loadTablesForMarketRules(stateLeaves, inputDir);
+			allArrowMaps.add(stateMap);
+			marketTrendMap.putAll(stateMap);
+		}
+		for (MarketRegimeDto regime : regimes) {
+			BuySellDataV2 bsd = regimeSignals.get(buildRegimeLabel(regime, mapper));
+			if (bsd == null) {
+				continue;
+			}
+			Map<LocalDate, Float> stopByDate = resolveStatePct(regime.getStoplossParams(), marketTrendMap, priceData);
+			if (stopByDate != null) {
+				bsd.getStrategyData().setStoplossPctByDate(stopByDate);
+			}
+			Map<LocalDate, Float> limitByDate = resolveStatePct(regime.getLimitStates(), marketTrendMap, priceData);
+			if (limitByDate != null) {
+				bsd.getStrategyData().setLimitPctByDate(limitByDate);
+				// Route LIMIT_RULE through the LIMIT price path; pct comes from getEffectiveLimitPct.
+				bsd.getStrategyData().setOrderType("LIMIT");
+			}
+		}
+	}
+
+	// Flatten a {states:[{rules_tree,...}]} block's rule trees to leaf RuleDtos (for frame loading).
+	private java.util.List<RuleDto> collectStateLeaves(Map<String, Object> params, ObjectMapper mapper) {
+		java.util.List<RuleDto> leaves = new java.util.ArrayList<>();
+		if (params == null || !(params.get("states") instanceof java.util.List)) {
+			return leaves;
+		}
+		for (Object o : (java.util.List<?>) params.get("states")) {
+			if (!(o instanceof Map)) {
+				continue;
+			}
+			Object treeObj = ((Map<?, ?>) o).get("rules_tree");
+			if (!(treeObj instanceof Map)) {
+				continue;
+			}
+			try {
+				RuleGroupNodeDto tree = mapper.convertValue(treeObj, RuleGroupNodeDto.class);
+				leaves.addAll(RuleTreeFlattener.flatten(tree));
+			} catch (Exception ex) {
+				System.err.println("[DualState] failed to flatten a state tree — skipped: " + ex.getMessage());
+			}
+		}
+		return leaves;
+	}
+
+	// Evaluate a {states:[{rules_tree,pct}]} block: first matching state wins per date.
+	// Returns date->pct, or null when there are no usable states.
+	private Map<LocalDate, Float> resolveStatePct(Map<String, Object> params,
+			Map<String, ArrowDataFrame> marketTrendMap, PriceDataV2 priceData) {
+		if (params == null || !(params.get("states") instanceof java.util.List)) {
+			return null;
+		}
+		java.util.List<Float> pcts = new java.util.ArrayList<>();
+		java.util.List<java.util.Set<LocalDate>> sets = new java.util.ArrayList<>();
+		for (Object o : (java.util.List<?>) params.get("states")) {
+			if (!(o instanceof Map)) {
+				continue;
+			}
+			@SuppressWarnings("unchecked")
+			Map<String, Object> st = (Map<String, Object>) o;
+			Object treeObj = st.get("rules_tree");
+			Object pctObj = st.get("pct");
+			if (!(treeObj instanceof Map) || !(pctObj instanceof Number)) {
+				continue;
+			}
+			@SuppressWarnings("unchecked")
+			Map<String, Object> tree = (Map<String, Object>) treeObj;
+			Map<LocalDate, String> matched;
+			try {
+				matched = this.marketTrendServiceV2.generateMarketSignalsFromTree(tree, marketTrendMap, priceData);
+			} catch (Exception ex) {
+				System.err.println("[DualState] state '" + st.get("label")
+						+ "' failed to evaluate (is every leaf complete?) — skipped: " + ex.getMessage());
+				continue;
+			}
+			pcts.add(((Number) pctObj).floatValue());
+			sets.add(matched.keySet());
+		}
+		if (pcts.isEmpty()) {
+			return null;
+		}
+		// First match wins; the LAST state is the base/default for any date that no
+		// earlier state matched (legacy: "strong-bull -> 6, otherwise -> 4"). Without
+		// this, unmatched mixed-condition dates (e.g. above SMA50 but below SMA200)
+		// were absent from the map and getEffectiveLimitPct / the stop equivalent fell
+		// through to the regime's flat limitPct / stoploss_pct -- which is why the
+		// DualLimit entered at 6% on days it should have used the 4% base.
+		float basePct = pcts.get(pcts.size() - 1);
+		Map<LocalDate, Float> byDate = new java.util.HashMap<>();
+		for (LocalDate d : priceData.getAll_dates()) {
+			float chosen = basePct;
+			for (int i = 0; i < sets.size(); i++) {
+				if (sets.get(i).contains(d)) {
+					chosen = pcts.get(i);
+					break;
+				}
+			}
+			byDate.put(d, chosen);
+		}
+		return byDate;
 	}
 
 	// ── Private helpers ─────────────────────────────────────────────

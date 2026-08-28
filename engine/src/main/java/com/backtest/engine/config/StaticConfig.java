@@ -9,14 +9,14 @@ public class StaticConfig {
 	public static final Map<String, String> systemType = Map.of("long", "LONG", "short", "SHORT", "long_short",
 			"LONGSHORT");
 
-	public static final Map<String, String> timing = Map.of("eod", "EOD", "intraday", "INTRADAY");
+	public static final Map<String, String> timing = Map.of("eod", "EOD", "intraday", "INTRADAY", "open", "OPEN"); // Patch 191
 
 	// Patch 62: dollar_based (ETF-only stop in absolute $) and portfolio
 	// (portfolio-level kill switch on drawdown). Mirror of Python
 	// static_config.py::STOPLOSS_TYPE and React options.ts::STOPLOSS_TYPE.
 	public static final Map<String, String> stoplossType = Map.of("nrml", "NORMAL", "atr_based", "ATR_BASED",
 			"dollar_based", "DOLLAR_BASED", "portfolio", "PORTFOLIO");
-	public static final Map<String, String> takeProfitType = Map.of("nrml", "NORMAL", "atr_based", "ATR_BASED");
+	public static final Map<String, String> takeProfitType = Map.of("nrml", "NORMAL", "atr_based", "ATR_BASED","giveback", "GIVEBACK");
 	// Patch 72q: PORTFOLIO drawdown anchor mirror of Python + React enums.
 	public static final Map<String, String> portfolioStoplossAnchor = Map.of("peak", "PEAK", "daily", "DAILY");
 	public static final String PORTFOLIO_STOPLOSS_ANCHOR_DEFAULT = "PEAK";

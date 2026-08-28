@@ -114,7 +114,7 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 					marketTrends.put(d, soleLabel);
 				}
 			} else {
-				marketTrends = context.getMarketTrends(strategy, priceData, backtestDataPath);
+				marketTrends = context.getMarketTrends(strategy, priceData, backtestDataPath, regimeSignals);
 			}
 
 			String activeRegime = marketTrends.get(lastBar);
@@ -223,36 +223,23 @@ public class SingleBarEvaluatorImpl implements SingleBarEvaluator {
 				}
 			}
 
-			// Patch 160: vol-filter threshold seeding — the ONE rule class the
-			// single-bar path lacked (thresholds stayed 0 → the StrategyBuilder
-			// gate at ~:1002 never engaged → candidates were vol-UNfiltered).
-			// The day-loop recalibrates at each trigger (BacktestServiceImplV2:553
-			// → computeVolThresholds: first trading day OR triggerMonth/Tdom,
-			// SPY-vs-SMA(prev) branch, percentile over the ACTIVE universe's
-			// avg volume/turnover on prev). Replay that EXACT method over every
-			// trading date up to lastBar — off-trigger dates no-op inside it —
-			// so the thresholds signalsForTheDayV1 reads below are
-			// identical-by-construction to what the same date sees in a
-			// backtest. Per-date active regime is honoured for multi-regime
-			// strategies via marketTrends.
-			// Patch 185: safety-net gate at execution. Replays the SAME
-			// open/close state machine the backtest day-loop runs
-			// (dispatchSafetyNetsAtOpen/AtClose; suspended gates ENTRIES only,
-			// mirroring BSIv2 :463) through lastBar, then evaluates the
-			// intended trade date's open using data <= lastBar (no forward
-			// bias). Policies self-load spy_close_0 / spy_rolling_vol_close_N
-			// frames; if absent they log a loud no-op and never suspend.
-			// Patch 185b: EXPLICIT opt-in only. resolveSafetyNets has a legacy
-			// fallback (safety_net_type='simple' synthesizes a policy); running
-			// that at execution would silently change books that never asked.
-			// The gate activates ONLY for strategies whose regime carries an
-			// explicit safety_nets list (e.g. Lsmr_static). Everything else --
-			// CRDT shorts, QAS, PullBack, all combined members -- skips this
-			// entire block, log line included: zero change to existing books.
+			// Patch 190: also honour tree-based 'simple' freeze at execution.
+			// Patch 185b gated this on an explicit safety_nets list, skipping
+			// strategies whose freeze is safety_net_type='simple' + freeze_rules_tree
+			// with safety_nets=null (e.g. Low_Volatility VIX>=50). buildSafetyPolicies
+			// already synthesises + initialises the SimpleFreezeResumePolicy from the
+			// trees (resolveSafetyNets -> BacktestContext:489-505; frames via
+			// inputPath -> executionDataRoot), identical to the backtest day-loop.
+			// An empty/null freeze tree yields an empty freezeDays set
+			// (VolatilityCutEvaluator:69,85) -> no-op, so non-freeze 'simple' books
+			// are unchanged.
 			java.util.List<com.backtest.engine.dto.request.SafetyNetItemDto> explicitNets185 = strategy
 					.getRegimes().get(0).getSafetyNets();
-			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> safetyPolicies185 = (explicitNets185 != null
-					&& !explicitNets185.isEmpty())
+			boolean hasExplicitNets185 = explicitNets185 != null && !explicitNets185.isEmpty();
+			boolean simpleFreeze185 = "simple"
+					.equalsIgnoreCase(strategy.getRegimes().get(0).getSafetyNetType());
+			java.util.List<com.backtest.engine.service.safetynet.SafetyNetPolicy> safetyPolicies185 = (hasExplicitNets185
+					|| simpleFreeze185)
 							? context.buildSafetyPolicies(strategy, priceData, backtestDataPath)
 							: java.util.Collections.emptyList();
 			if (!safetyPolicies185.isEmpty()) {

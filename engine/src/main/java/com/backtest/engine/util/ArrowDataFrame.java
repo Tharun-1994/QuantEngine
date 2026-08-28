@@ -193,7 +193,13 @@ public class ArrowDataFrame implements Cacheable {
         return row < vec.getValueCount() && !vec.isNull(row);
     }
 
-    /** Convenience: get all values for one ticker across all dates */
+ // Direct column access for hot loops (e.g. give-back TP) — O(1), avoids
+    // rebuilding a full-history Map on every call. Pair with getDateIndex(date)
+    // to iterate a row range; rows are chronological (parquet order).
+    public org.apache.arrow.vector.Float4Vector getVector(String ticker) {
+        return tickerVectors.get(ticker);
+    }
+
     public Map<LocalDate, Float> getTickerSeries(String ticker) {
         Float4Vector vec = tickerVectors.get(ticker);
         if (vec == null) {

@@ -27,6 +27,8 @@ public class StrategyDataV2 {
 	private Map<String, ArrowDataFrame> exitIndicators;
 	private float stopLossPct;
 	private float takeProfitPct;
+	// Patch 191 (GIVEBACK TP): give-back % (Y_lose_thresh * 100) for GIVEBACK type.
+	private float takeprofitGivebackPct;
 	private float stoplossMaxPct;
 	private int maxSameTicker;
 	private float startingCapital;
@@ -84,6 +86,9 @@ public class StrategyDataV2 {
 	private java.util.Set<java.time.LocalDate> resumeDays;
 	private String freezeTiming;
 	private String resumeTiming;
+	
+	private String maxTimeTiming;
+
 	/**
 	 * Volatility safety net type — "none" | "simple" | "spy_volatility". Plumbed
 	 * through but not yet consumed by the day-loop (Stage 3).
@@ -132,6 +137,19 @@ public class StrategyDataV2 {
 	// null = every day (Integer so null means "no gate").
 	private Integer rebalanceWeekday;
 
+	// Patch 190: legacy every-Nth-rebalance stride params + cached rebalance-date
+	// set.
+	private Integer weeklyIntervals;
+	private Integer skipDays;
+	private java.util.Set<java.time.LocalDate> rebalanceDateSet;
+	// Patch 192: rebalance rotation mode ("sell_all" default / "set_difference").
+	private String rotationMode;
+	
+	// Patch 193: midweek replacement (refill mid-week freed slots). null/false = off.
+	private Boolean midweekReplacement;
+	
+	// Patch 194: mid-week replacement ban — skip last N closed trades. 0/null = off.
+	private Integer replacementBanCount;
 	/**
 	 * Dynamic TDOM calendar filters — passed through from MarketRegimeDto.
 	 * Evaluated per-day in the backtest loop before any limit orders are placed.
@@ -152,7 +170,25 @@ public class StrategyDataV2 {
 
 	/** SPY close prices for SMA(200) bull/bear detection. Date×1col. */
 	private ArrowDataFrame spyCloses;
+	/**
+	 * DualStopPct: regime-split NORMAL stop. Pre-resolved date→% (first matching
+	 * state's pct; states evaluated in the controller). Null => legacy single
+	 * stoploss_pct. Read at previousDate (T-1) in the backtest loop.
+	 */
+	private Map<LocalDate, Float> stoplossPctByDate;
+	
+	/** DualLimitPct: resolved date->limit% (first matching state). Null => use
+	 *  the fixed limitPct. Read at previousDate (T-1) in the limit-order path. */
+	private Map<LocalDate, Float> limitPctByDate;
 
+	/** DualLimitPct: the limit % to use for a bar — the T-1 state's pct when
+	 *  present, else the fixed limitPct. */
+	public float getEffectiveLimitPct(LocalDate prevDate) {
+		if (limitPctByDate != null && prevDate != null && limitPctByDate.containsKey(prevDate)) {
+			return limitPctByDate.get(prevDate);
+		}
+		return limitPct;
+	}
 	/**
 	 * Per-regime: when this regime ends (market trend shifts away), force-close its
 	 * open positions at next open. Default false (Python-compatible).
@@ -204,5 +240,9 @@ public class StrategyDataV2 {
 
 	/** Rule tree producing short-side entry candidates on the LONGSHORT path. */
 	private Map<String, Object> entryRulesTreeShort;
+	
+	public String getEffectiveMaxTimeTiming() {
+		return (maxTimeTiming == null || maxTimeTiming.isBlank()) ? this.exitTiming : this.maxTimeTiming;
+	}
 
 }

@@ -35,9 +35,17 @@ public interface PortfolioServiceV2 {
 
 	public Map<String, Long> getLiveHoldingsTickerCounts();
 
+	// Patch 194: symbols of the last N closed trades (entry order) for the mid-week
+	// replacement ban. Unique symbols (a symbol traded twice in-window counts
+	// once).
+	public java.util.Set<String> getRecentlyClosedSymbols(int n);
+
 	// Hold Blackout — most recent exit date per ticker (from closed trades),
 	// so the entry filter can freeze recently-exited tickers.
 	public Map<String, LocalDate> getLastExitDateByTicker();
+
+	// Patch 209: stop/take-profit-only variant for Hold Blackout (legacy parity).
+	public Map<String, LocalDate> getStopTakeProfitExitDateByTicker();
 
 	public void checkLivePositionsOnTommorow(LocalDate date);
 
@@ -90,6 +98,9 @@ public interface PortfolioServiceV2 {
 	// before).
 	public void setStoplossDollar(float stoplossDollar);
 
+	// DualStopPct: override the per-position stop % for the current bar.
+	public void setStoplossPctForDay(float pct);
+
 	// Patch 72n: drawdown anchor for PORTFOLIO stoploss. PEAK uses maxEquity
 	// (all-time peak); DAILY uses previous trading day's logged equity.
 	// Null/empty defaults to PEAK in the implementation. Called by
@@ -117,8 +128,14 @@ public interface PortfolioServiceV2 {
 	// Patch 12: overwrite the captured-orders field. Called by
 	// runBacktestSimpleV2 in execution mode on the last bar.
 	public void recordProposedOrders(java.util.List<com.backtest.engine.entity.LimitOrder> orders);
-	
+
 	// Patch 77: trades closed today by checkMaxTime — for sector cap accounting
 	List<TradeLog> getTodaysMaxTimeExits(LocalDate date);
+
+	// Patch 191 (GIVEBACK TP): profit-armed give-back take-profit (port of
+	// find_X_Y).
+	// Long-only, open-timed. gainArmPct/givebackPct are percents (10 => 0.10).
+	public void checkTakeProfitGiveback(LocalDate date, LocalDate previousDate, String systemType, float gainArmPct,
+			float givebackPct);
 
 }

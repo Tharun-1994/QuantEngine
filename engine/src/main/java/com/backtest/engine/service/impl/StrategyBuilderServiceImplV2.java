@@ -777,7 +777,8 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 					Float v = rank.get(e);
 					return v != null ? v : Float.MAX_VALUE;
 				}));
-			} else if ("Descending".equals(buySellData.getStrategyData().getRankingOrder())) {
+			} else if ("Descending".equals(buySellData.getStrategyData().getRankingOrder())
+					|| "Descending Top N Slots".equals(buySellData.getStrategyData().getRankingOrder())) { // Patch 192
 				entries_list.sort(Comparator.comparingDouble((String e) -> {
 					Float v = rank.get(e);
 //					Float v = rank.get("STI-201912");
@@ -787,13 +788,41 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		}
 		long endRank = System.nanoTime();
 
+		// Patch 199: legacy-parity duplicate admission. The Python keeps only
+		// the TOP-RANKED already-held ticker as a duplicate candidate each day
+		// (to_enter = sorted_vols.loc[possible_duplicates]; to_drop =
+		// to_enter[1:]), so at most ONE new duplicate can open per day and
+		// max_duplicate_sets can never be breached intra-day. The dedupe block
+		// above already removed at-max tickers and (when the set cap is hit)
+		// every held ticker; here the RANKED list is trimmed to the single
+		// best held candidate. No-op when maxDups <= 1 (held tickers were
+		// already removed entirely).
+		if (maxDups > 1) {
+			Map<String, Long> dupTrimCounts = portfolioService.getLiveHoldingsTickerCounts();
+			boolean dupKeptOne = false;
+			List<String> dupTrimmed = new ArrayList<>(entries_list.size());
+			for (String dupTick : entries_list) {
+				if (dupTrimCounts.getOrDefault(dupTick, 0L) > 0L) {
+					if (!dupKeptOne) {
+						dupTrimmed.add(dupTick);
+						dupKeptOne = true;
+					}
+				} else {
+					dupTrimmed.add(dupTick);
+				}
+			}
+			entries_list = dupTrimmed;
+		}
+
 		// ── Sector filter: cap entries per sector (counting current holdings) ──
 		StrategyDataV2 sdForSector = buySellData.getStrategyData();
 		if (sdForSector.getSectorLimit() > 0 && sdForSector.getSectorMap() != null) {
 			Map<String, Integer> sectorCount = new HashMap<>();
-			for (String holding : portfolioService.getLiveHoldingsLogger()) {
-				String sector = sdForSector.getSectorMap().getOrDefault(holding, "undefined");
-				sectorCount.merge(sector, 1, Integer::sum);
+			// Patch 214: count every open trade row (duplicate pair = 2) — legacy
+			// industry_current_df
+			for (Map.Entry<String, Long> hEnt : portfolioService.getLiveHoldingsTickerCounts().entrySet()) {
+				String sector = sdForSector.getSectorMap().getOrDefault(hEnt.getKey(), "undefined");
+				sectorCount.merge(sector, hEnt.getValue().intValue(), Integer::sum);
 			}
 			List<String> sectorFiltered = new ArrayList<>();
 			for (String ticker : entries_list) {
@@ -933,15 +962,23 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			BuySellDataV2 buySellData, PortfolioServiceV2 portfolioService) {
 		long startTotal = System.nanoTime();
 
-		if (date.equals(LocalDate.of(2026, 6, 24))) {
-			System.err.println(); // ← put breakpoint here
-		}
+//		if (date.equals(LocalDate.of(2026, 6, 24))) {
+//			System.err.println(); // ← put breakpoint here
+//		}
 
 		Map<String, List<String>> entryExitMap = new HashMap<>();
 		entryExitMap.put("entry", Collections.emptyList());
 		entryExitMap.put("exit", Collections.emptyList());
 
 		StrategyDataV2 sd = buySellData.getStrategyData();
+
+		// TEMP — prints once on the first trading day. Remove after.
+		if (date.equals(priceData.getTrading_dates().get(0))) {
+			System.out.println("[cfg] rebalanceWeekday=" + sd.getRebalanceWeekday() + " weeklyIntervals="
+					+ sd.getWeeklyIntervals() + " rotationMode=" + sd.getRotationMode()
+					+ " | block2/Patch210 fillDate uses getTrading_dates()="
+					+ (priceData.getTrading_dates().indexOf(date) >= 0));
+		}
 
 		// ---------- Tree evaluation timing ----------
 		long startTree = System.nanoTime();
@@ -983,6 +1020,11 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 
 		Set<String> exitSet = (exitTree == null || exitRes == null) ? new HashSet<>()
 				: new HashSet<>(RuleTreeEvaluator.evalForDate(exitTree, date, exitRes.getEligibleByLeafId()));
+
+		// TEMP DEBUG — remove after. Raw rule-pass counts on Fridays (the
+		// Monday-rebalance signal day).
+//		if (date.getDayOfWeek() == java.time.DayOfWeek.FRIDAY)
+//			System.out.println("[dbg] " + date + " rawEntry=" + entrySet.size() + " rawExit=" + exitSet.size());
 
 		long endTree = System.nanoTime();
 
@@ -1026,7 +1068,8 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		// above so "recently exited" is filtered the same place as "held now".
 		final int blackoutDays = sd.getHoldBlackoutDays();
 		if (blackoutDays > 0) {
-			Map<String, LocalDate> lastExit = portfolioService.getLastExitDateByTicker();
+			// Patch 209: stop/take-profit exits only (legacy blacklist parity).
+			Map<String, LocalDate> lastExit = portfolioService.getStopTakeProfitExitDateByTicker();
 			if (lastExit != null && !lastExit.isEmpty()) {
 				final boolean tradingUnit = "trading".equalsIgnoreCase(sd.getHoldBlackoutUnit());
 				Map<LocalDate, Integer> tmpIdx = null;
@@ -1070,11 +1113,134 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 		// rather than skipping the week. Off-days: no new entries, hold. This
 		// replaces max_time (set it to 0); stop/vix/freeze still fire daily.
 		final Integer rebalanceWeekday = sd.getRebalanceWeekday();
-		if (rebalanceWeekday != null) {
+		// ── Patch 190: every-Nth-rebalance stride (legacy weekly_intervals +
+		// skip_days) ──
+		// When weekly_intervals is set, rebalance dates are the legacy's
+		// all_valid_dates.iloc[skip_days::weekly_intervals]
+		// computed ONCE over the FULL all_dates calendar, anchored at index 0
+		// (all_dates[0] — the SAME anchor as the legacy's data.all_dates). Trading is
+		// already gated to the [start,end] window by the loop, so pre-window strided
+		// dates drop out and the first in-window strided date is the legacy's first
+		// trade. Rotation fires when the FILL day is in the set. weekly_intervals ==
+		// null
+		// falls through to the legacy first-trading-day rule below (unchanged —
+		// protects
+		// existing rebalance_weekday systems such as LWEq3).
+		final Integer weeklyIntervals = sd.getWeeklyIntervals();
+		if (rebalanceWeekday != null && weeklyIntervals != null && weeklyIntervals >= 1) {
 			java.util.List<java.time.LocalDate> allDatesRb = priceData.getAll_dates();
 			int rbIdx = allDatesRb.indexOf(date);
-			java.time.LocalDate fillDate =
-					(rbIdx >= 0 && rbIdx + 1 < allDatesRb.size()) ? allDatesRb.get(rbIdx + 1) : null;
+			java.time.LocalDate fillDate = (rbIdx >= 0 && rbIdx + 1 < allDatesRb.size()) ? allDatesRb.get(rbIdx + 1)
+					: null;
+			java.util.Set<java.time.LocalDate> rebalanceDates = sd.getRebalanceDateSet();
+			if (rebalanceDates == null) {
+				int skip = (sd.getSkipDays() == null || sd.getSkipDays() < 0) ? 0 : sd.getSkipDays();
+				java.util.List<java.time.LocalDate> weekdayDates = new java.util.ArrayList<>();
+				for (java.time.LocalDate d : allDatesRb) {
+					if ((d.getDayOfWeek().getValue() - 1) == rebalanceWeekday.intValue()) {
+						weekdayDates.add(d);
+					}
+				}
+				rebalanceDates = new java.util.HashSet<>();
+				for (int i = skip; i < weekdayDates.size(); i += weeklyIntervals) {
+					rebalanceDates.add(weekdayDates.get(i));
+				}
+				sd.setRebalanceDateSet(rebalanceDates);
+			}
+			if (fillDate != null && rebalanceDates.contains(fillDate)) {
+				// ── Patch 192: rotation on a strided rebalance day ──
+				if ("set_difference".equalsIgnoreCase(sd.getRotationMode())) {
+					// Legacy set-difference (keep overlap): topN = today's universe ranked
+					// by momentum desc, first `slots` (== stock_momentum_sorted.iloc[:slots]);
+					// exit (held - topN), enter (topN - held). A name still in the top-N is
+					// left untouched → held continuously. Requires the DESCENDING_TOP_N ranking
+					// so topN is defined; reject loudly otherwise (no silent no-topN run).
+					if (sd.getRanking() == null || !"Descending Top N Slots".equals(sd.getRankingOrder())) {
+						throw new IllegalStateException(
+								"rotation_mode=set_difference requires ranking_order='Descending Top N Slots' "
+										+ "with a configured ranking; got ranking_order=" + sd.getRankingOrder());
+					}
+					Map<String, Float> rrTop = sd.getRanking().getRow(date);
+					if (rrTop == null || rrTop.isEmpty()) {
+						throw new IllegalStateException("rotation_mode=set_difference: no ranking values on " + date);
+					}
+					java.util.List<String> rankedUniv = new java.util.ArrayList<>(todayUniverse);
+
+					final Map<String, Float> rrFinal = rrTop;
+					rankedUniv.sort((a, b) -> {
+						float va = (rrFinal.get(a) != null) ? rrFinal.get(a) : Float.NEGATIVE_INFINITY;
+						float vb = (rrFinal.get(b) != null) ? rrFinal.get(b) : Float.NEGATIVE_INFINITY;
+						return Float.compare(vb, va); // descending
+					});
+					int slotsTop = sd.getSlots();
+					java.util.Set<String> topN = new java.util.HashSet<>(
+							rankedUniv.subList(0, Math.min(slotsTop, rankedUniv.size())));
+					for (String h : liveHoldings) {
+						if (!topN.contains(h)) {
+							exitSet.add(h); // exit only the fallen-out names
+						}
+					}
+					entrySet.clear();
+					for (String t : topN) {
+						if (!liveHoldings.contains(t)) {
+							entrySet.add(t); // enter only the new names
+						}
+					}
+					// Patch 192a: entrySet was rebuilt AFTER the earlier next-day-validity
+					// gate (~line 1004), so re-apply it here or a topN name with no next-day
+					// close NPEs when the fill prices it. Exits (held-topN) are unaffected;
+					// topN still keeps names in the legacy's top_positions.
+					validEntriesTommorow(date, entrySet, priceData);
+				} else if ("hold".equalsIgnoreCase(sd.getRotationMode())) {
+					// Patch 208 (hold mode): rule-driven exits only — NO sell-all.
+					// exitSet stays = names hitting the exit rules; entrySet stays =
+					// names passing the entry rules; positions not exiting are held.
+					// Matches the legacy weekly-hold. Stops / take-profit / VIX still
+					// fire daily on their own paths.
+				} else {
+					// sell_all (default) — unchanged: liquidate + rebuy top-N at the fill open
+					exitSet.addAll(liveHoldings);
+				}
+			} else {
+				// not a strided rebalance day.
+				// not a strided rebalance day.
+				if ("hold".equalsIgnoreCase(sd.getRotationMode())) {
+					// Patch 208 (hold mode): no new entries mid-week AND no rule-exit
+					// mid-week — signal exits fire only on the rebalance day.
+					entrySet.clear();
+					exitSet.clear();
+				} else if (Boolean.TRUE.equals(sd.getMidweekReplacement())) {
+					// Patch 193a: entrySet is empty here (this strategy's selection is
+					// rank/top-N based, not a rule tree that fills entrySet), so BUILD the
+					// replacement pool = today's universe minus held
+					// (== legacy all_positions - current_positions). The rank-sort below
+					// orders it descending and the fill caps at free_spaces (slots - held).
+					entrySet.clear();
+					entrySet.addAll(todayUniverse);
+					entrySet.removeAll(liveHoldings);
+					validEntriesTommorow(date, entrySet, priceData);
+					// Patch 194: mid-week "banned" — drop the last N closed trades' symbols
+					// (== legacy to_enter - last_banned). Applied HERE, after the pool is
+					// (re)built, and ONLY in the replacement branch so the rotation (topN)
+					// is never ban-filtered — matching the legacy. Today's freeze/stop/TP
+					// exits are already recorded (exits run before this signal).
+					int banN = (sd.getReplacementBanCount() == null) ? 0 : sd.getReplacementBanCount();
+					if (banN > 0) {
+						entrySet.removeAll(portfolioService.getRecentlyClosedSymbols(banN));
+					}
+				} else {
+					// no replacement (default) — hold, no new entries
+					entrySet.clear();
+				}
+			}
+		} else if (rebalanceWeekday != null) {
+			// Patch 210: fill day must be the next TRADING day, not the next all_dates
+			// entry (all_dates includes weekends, so a Friday's next entry is Saturday
+			// and a Monday rebalance never fires). Mirrors validEntriesTommorow.
+			java.util.List<java.time.LocalDate> allDatesRb = priceData.getTrading_dates();
+			int rbIdx = allDatesRb.indexOf(date);
+			java.time.LocalDate fillDate = (rbIdx >= 0 && rbIdx + 1 < allDatesRb.size()) ? allDatesRb.get(rbIdx + 1)
+					: null;
 			boolean rotationDay = false;
 			if (fillDate != null) {
 				int fillWd = fillDate.getDayOfWeek().getValue() - 1; // 0=Mon .. 6=Sun
@@ -1088,13 +1254,21 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 				rotationDay = (fillWd >= rebalanceWeekday) && (!sameWeek || prevWd < rebalanceWeekday);
 			}
 			if (rotationDay) {
-				// rotate the whole book: exit every held name at the fill open
-				// (the new top-N, already excluding held via removeAll above,
-				// enters the same open).
-				exitSet.addAll(liveHoldings);
+				if ("hold".equalsIgnoreCase(sd.getRotationMode())) {
+					// Patch 208 (hold mode): rule-driven exits only — no sell-all.
+				} else {
+					// rotate the whole book: exit every held name at the fill open
+					// (the new top-N, already excluding held via removeAll above,
+					// enters the same open).
+					exitSet.addAll(liveHoldings);
+				}
 			} else {
 				// not a rotation day — no new entries, hold existing positions.
 				entrySet.clear();
+				if ("hold".equalsIgnoreCase(sd.getRotationMode())) {
+					// Patch 208 (hold mode): suppress mid-week rule exits.
+					exitSet.clear();
+				}
 			}
 		}
 
@@ -1150,15 +1324,44 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 					Float v = rank.get(e);
 					return v != null ? v : Float.MAX_VALUE;
 				}));
-			} else if ("Descending".equals(sd.getRankingOrder())) {
+			} else if ("Descending".equals(sd.getRankingOrder())
+					|| "Descending Top N Slots".equals(sd.getRankingOrder())) { // Patch 192
 				entries_list.sort(Comparator.comparingDouble((String e) -> {
+
 					Float v = rank.get(e);
+
 					return v != null ? v : Float.MIN_VALUE;
 				}).reversed());
 			}
 		}
 
 		long endRank = System.nanoTime();
+
+		// Patch 199: legacy-parity duplicate admission. The Python keeps only
+		// the TOP-RANKED already-held ticker as a duplicate candidate each day
+		// (to_enter = sorted_vols.loc[possible_duplicates]; to_drop =
+		// to_enter[1:]), so at most ONE new duplicate can open per day and
+		// max_duplicate_sets can never be breached intra-day. The dedupe block
+		// above already removed at-max tickers and (when the set cap is hit)
+		// every held ticker; here the RANKED list is trimmed to the single
+		// best held candidate. No-op when maxDups <= 1 (held tickers were
+		// already removed entirely).
+		if (maxDups > 1) {
+			Map<String, Long> dupTrimCounts = portfolioService.getLiveHoldingsTickerCounts();
+			boolean dupKeptOne = false;
+			List<String> dupTrimmed = new ArrayList<>(entries_list.size());
+			for (String dupTick : entries_list) {
+				if (dupTrimCounts.getOrDefault(dupTick, 0L) > 0L) {
+					if (!dupKeptOne) {
+						dupTrimmed.add(dupTick);
+						dupKeptOne = true;
+					}
+				} else {
+					dupTrimmed.add(dupTick);
+				}
+			}
+			entries_list = dupTrimmed;
+		}
 
 		// ── Sector filter: cap entries per sector (counting current holdings) ──
 		if (sd.getSectorLimit() > 0 && sd.getSectorMap() != null) {
@@ -1184,6 +1387,10 @@ public class StrategyBuilderServiceImplV2 implements StrategyBuilderServiceV2 {
 			entries_list = sectorFiltered;
 		}
 
+		if (date.getYear() == 2000 && date.getMonthValue() <= 3 && date.getDayOfWeek() == java.time.DayOfWeek.FRIDAY) {
+			System.out
+					.println("[traceA] " + date + " FINAL entries=" + entries_list.size() + " exits=" + exitSet.size());
+		}
 		entryExitMap.put("entry", entries_list);
 		entryExitMap.put("exit", new ArrayList<>(exitSet));
 

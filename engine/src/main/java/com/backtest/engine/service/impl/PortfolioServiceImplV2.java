@@ -109,6 +109,10 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 			return;
 		}
 		LocalDate tradeDate = entrySignalsRequest.getTradeDate();
+		if (tradeDate.getYear() == 2000 && tradeDate.getMonthValue() == 1) {
+			System.out.println("[exec] tradeDate=" + tradeDate + " " + tradeDate.getDayOfWeek() + " nEntries="
+					+ entrySignalsRequest.getEntries().size());
+		}
 		LocalDate previousDate = entrySignalsRequest.getPreviousDate();
 		List<LocalDate> allDates = priceData.getAll_dates();
 
@@ -205,10 +209,12 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 	public Map<String, LocalDate> getLastExitDateByTicker() {
 		Map<String, LocalDate> lastExit = new HashMap<>();
 		for (TradeLog t : this.tradeLogger.values()) {
-			if (t == null) continue;
+			if (t == null)
+				continue;
 			LocalDate ex = t.getExitDate();
 			String sym = t.getSymbol();
-			if (ex == null || sym == null) continue;
+			if (ex == null || sym == null)
+				continue;
 			LocalDate cur = lastExit.get(sym);
 			if (cur == null || ex.isAfter(cur)) {
 				lastExit.put(sym, ex);
@@ -323,7 +329,6 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 																								// single-direction
 					.currentStopPrice(h.getCurrentStopPrice()) // D3 — null falls through to recompute
 					.build();
-			
 
 			boolean isDigitId = NumberUtils.isDigits(h.getTradeId());
 			String id = isDigitId ? "%s_%s".formatted(h.getSymbol(), h.getTradeId()) : h.getTradeId();
@@ -347,6 +352,12 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 	@Override
 	public void recordProposedOrders(java.util.List<com.backtest.engine.entity.LimitOrder> orders) {
 		this.lastBarUnfilledOrders = orders;
+	}
+
+	// DualStopPct: override the per-position stop % for the current bar.
+	@Override
+	public void setStoplossPctForDay(float pct) {
+		this.stoplossPct = pct;
 	}
 
 	// ─────────────────────────────────────────────────────────────────────
@@ -1478,8 +1489,7 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 					trade.setTradeDate(tradeDate);
 
 					boolean atOpen = "open".equalsIgnoreCase(exitTiming);
-					float exitPx = atOpen
-							? this.priceData.getDaily_opens().getValue(tradeDate, tick)
+					float exitPx = atOpen ? this.priceData.getDaily_opens().getValue(tradeDate, tick)
 							: this.priceData.getDaily_closes().getValue(tradeDate, tick);
 					trade.setExitPrice(exitPx);
 					trade.setPriceUsed(atOpen ? "open" : "close");
@@ -1660,6 +1670,145 @@ public class PortfolioServiceImplV2 implements PortfolioServiceV2 {
 			this.maxEquity = eq.getEquityValue();
 			this.maxEquityDate = asOfDate;
 		}
+	}
+
+	// Patch 191 (GIVEBACK TP): profit-armed give-back take-profit. Faithful port of
+	// Python find_X_Y / take_profit(). Long-only. For each live position, replay
+	// the
+	// close path [entryDate .. previousDate] (strictly before today):
+	// arm (X): first close >= (1 + gainArm) * entryPrice
+	// fire (Y): first LATER close <= (1 - giveBack) * X -> exit
+	// X is pinned at the FIRST arming close (not trailed), matching find_X_Y
+	// exactly.
+	// Fill is today's open. Decision uses only closes through previousDate (the
+	// Python
+	// .iloc[:-1]) -> no forward bias. Runs in the open phase BEFORE markToMarket.
+	@Override
+	public void checkTakeProfitGiveback(LocalDate date, LocalDate previousDate, String systemType, float gainArmPct,
+			float givebackPct) {
+
+		if (!StaticConfig.systemType.get("long").equals(systemType)) {
+			return; // long-only, mirroring the reference (gain = price up)
+		}
+		if (this.liveHoldingsLogger.isEmpty()) {
+			return;
+		}
+		float gainArm = gainArmPct / 100f; // X_gain_thresh
+		float giveBack = givebackPct / 100f; // Y_lose_thresh
+		if (gainArm <= 0f || giveBack <= 0f) {
+			return;
+		}
+
+		com.backtest.engine.util.ArrowDataFrame closes = this.priceData.getDaily_closes();
+		com.backtest.engine.util.ArrowDataFrame opens = this.priceData.getDaily_opens();
+
+		List<String> liveTradeIds = new ArrayList<>(this.liveHoldingsLogger.keySet());
+		for (String tradeId : liveTradeIds) {
+			TradeLog tradeRow = this.tradeLogger.get(tradeId);
+			String symbol = tradeRow.getSymbol();
+			float entryPrice = tradeRow.getEntryPrice();
+			LocalDate entryDate = tradeRow.getEntryDate();
+			if (entryDate == null) {
+				continue;
+			}
+
+			float armPrice = (1f + gainArm) * entryPrice;
+			float x = -1f;
+			float y = -1f;
+			boolean foundX = false;
+
+			// Patch 191 (perf): ordered close path over the row range [entryDate, today).
+			// Parquet rows are chronological and dateIndexMap is O(1), so iterate the
+			// ticker vector directly by row index instead of rebuilding + sorting a
+			// full-history Map every position every day. Semantics unchanged: window is
+			// [entryDate, today) exclusive (== daily_closes[open:today].iloc[:-1]); null/
+			// NaN closes skipped; x = first close >= armPrice, y = first later close
+			// <= (1 - giveBack) * x.
+			org.apache.arrow.vector.Float4Vector vec = closes.getVector(symbol);
+			Integer entryIdx = closes.getDateIndex(entryDate);
+			Integer todayIdx = closes.getDateIndex(date);
+			if (vec == null || entryIdx == null || todayIdx == null) {
+				continue;
+			}
+			for (int row = entryIdx; row < todayIdx; row++) {
+				if (row >= vec.getValueCount() || vec.isNull(row)) {
+					continue;
+				}
+				float c = vec.get(row);
+				if (Float.isNaN(c)) {
+					continue;
+				}
+				if (!foundX && c >= armPrice) {
+					x = c;
+					foundX = true;
+				}
+				if (foundX && c <= (1f - giveBack) * x) {
+					y = c;
+					break;
+				}
+			}
+
+			if (x > 0f && y > 0f) {
+				Float openObj = opens.getValue(date, symbol);
+				if (openObj == null || openObj.isNaN()) {
+					continue; // no open to fill against today; leave position (loud-fail-safe)
+				}
+				TradeExitRequestDto req = new TradeExitRequestDto();
+				req.setExitPrice(openObj);
+				req.setTradeDate(date);
+				req.setTradeId(tradeId);
+				req.setExitReason(String.format("TakeProfit Give-Back: armed %.2f gaveback %.2f", x, y));
+				req.setPriceUsed("open");
+				this.exitTrade(req);
+			}
+		}
+	}
+
+	@Override
+	public java.util.Set<String> getRecentlyClosedSymbols(int n) {
+		if (n <= 0) {
+			return java.util.Collections.emptySet();
+		}
+		// Closed trades in ENTRY order (tradeLogger is a LinkedHashMap); take the last
+		// N and collect symbols into a set (== legacy
+		// set(trade_df[~close_date.isna()].iloc[-n:]['symbol'])). A symbol traded more
+		// than once inside that window counts once.
+		java.util.List<TradeLog> closed = new java.util.ArrayList<>();
+		for (TradeLog t : this.tradeLogger.values()) {
+			if (t.getExitDate() != null) {
+				closed.add(t);
+			}
+		}
+		java.util.Set<String> banned = new java.util.HashSet<>();
+		for (int i = Math.max(0, closed.size() - n); i < closed.size(); i++) {
+			banned.add(closed.get(i).getSymbol());
+		}
+		return banned;
+	}
+
+	// Patch 209: like getLastExitDateByTicker, but ONLY stop-loss and take-profit
+	// exits — mirrors the legacy Portfolio_quantity_correction blacklist, which is
+	// set on a stop OR a (non-giveback) take-profit, not on RSI/signal exits or
+	// VIX.
+	@Override
+	public Map<String, LocalDate> getStopTakeProfitExitDateByTicker() {
+		Map<String, LocalDate> lastExit = new HashMap<>();
+		for (TradeLog t : this.tradeLogger.values()) {
+			if (t == null)
+				continue;
+			LocalDate ex = t.getExitDate();
+			String sym = t.getSymbol();
+			String reason = t.getExitReason();
+			if (ex == null || sym == null || reason == null)
+				continue;
+			if (!(reason.startsWith("StopLoss Hit") || reason.startsWith("TakeProfit Hit")))
+				continue;
+			LocalDate cur = lastExit.get(sym);
+			if (cur == null || ex.isAfter(cur)) {
+				lastExit.put(sym, ex);
+			}
+		}
+		return lastExit;
 	}
 
 }

@@ -13,12 +13,17 @@ public class RuleDto {
 
     private String indicator;
     private Integer lookback;
+    
+    // Shift (bars-ago): read this leaf N trading bars before the evaluation bar.
+    // null/0 = evaluation bar (unchanged). Used by the freeze/resume evaluator.
+    private Integer shift;
     private String operator;
     private float value;
     private String connector;
     
 	@JsonProperty("value_indicator")
     private String valueIndicator;
+	
 	@JsonProperty("value_type")
     private String valueType;
 	

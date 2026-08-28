@@ -134,7 +134,9 @@ public class PriceLoader {
 	    files.put("universes", univ + "universe.parquet");
 	    files.put("trading_dates", "trading_dates.parquet");
 	    files.put("all_dates", "all_dates.parquet");
-	    files.put("ranking", ranking + ".parquet");
+	    if (rankingIndicator != null && !rankingIndicator.isBlank() && rankingLookback > 0) {
+	        files.put("ranking", ranking + ".parquet");
+	    }
 
 	    if (atrLimitLookback > 0) {
 	        files.put("atr_limit", String.format("%s_%d.parquet", StaticConfig.AVGTRUERANGE, atrLimitLookback));

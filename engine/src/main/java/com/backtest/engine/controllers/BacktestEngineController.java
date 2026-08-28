@@ -597,6 +597,7 @@ public class BacktestEngineController {
 					.stopLossPct(strategyRequest.getRegimes().get(0).getStoplossPct())
 					.stoplossMaxPct(strategyRequest.getRegimes().get(0).getStoplossMaxPct()) // Patch 99
 					.takeProfitPct(strategyRequest.getRegimes().get(0).getTakeprofitPct())
+					.takeprofitGivebackPct(strategyRequest.getRegimes().get(0).getTakeprofitGivebackPct()) // Patch 191
 					.stoplossTiming(strategyRequest.getRegimes().get(0).getStoplossTiming())
 					// Patch 72m.2: anchor passes through builder.
 					.portfolioStoplossAnchor(strategyRequest.getRegimes().get(0).getPortfolioStoplossAnchor())
@@ -754,6 +755,10 @@ public class BacktestEngineController {
 				Map<MarketRegimeDto, RegimeOverlay> overlays = new HashMap<>();
 
 				Map<String, BuySellDataV2> rulesOfDayRegimes = new HashMap<>();
+				
+				// DualStopPct: regime -> its BuySellData, to resolve stop-state %s after
+				// marketTrendMap is loaded and stash them on each StrategyData.
+				Map<MarketRegimeDto, BuySellDataV2> dualStopRegimeBuySell = new java.util.HashMap<>();
 
 				for (MarketRegimeDto regime : strategyRequest.getRegimes()) {
 
@@ -857,6 +862,7 @@ public class BacktestEngineController {
 							.rebalanceWeekday(regime.getRebalanceWeekday())
 							.stopLossPct(regime.getStoplossPct()).stoplossMaxPct(regime.getStoplossMaxPct()) // Patch 99
 							.takeProfitPct(regime.getTakeprofitPct())
+							.takeprofitGivebackPct(regime.getTakeprofitGivebackPct()) // Patch 191
 							.stoplossTiming(regime.getStoplossTiming()).takeprofitTiming(regime.getTakeprofitTiming())
 							// Patch 72m.3: anchor passes through builder.
 							.portfolioStoplossAnchor(regime.getPortfolioStoplossAnchor())
@@ -895,7 +901,7 @@ public class BacktestEngineController {
 					buySellData.getStrategyData().setMaxSameTicker(1);
 
 					rulesOfDayRegimes.put(marketRuleOfDay, buySellData);
-
+					dualStopRegimeBuySell.put(regime, buySellData);
 				}
 
 				// Pricedata has the OHLC,
@@ -909,6 +915,92 @@ public class BacktestEngineController {
 
 				Map<LocalDate, String> marketTrends = this.marketTrendServiceV2
 						.generateMarketTrend(strategyRequest.getRegimes(), marketTrendMap, priceData);
+				
+				// DualStopPct: pre-evaluate each regime's stop-state trees to a resolved
+				// date->% map (first matching state wins) and stash on its StrategyData.
+				// Reuses marketTrendMap + the same tree evaluator as market-trend regimes.
+				for (Map.Entry<MarketRegimeDto, BuySellDataV2> dse : dualStopRegimeBuySell.entrySet()) {
+					Map<String, Object> sp = dse.getKey().getStoplossParams();
+					if (sp == null || !(sp.get("states") instanceof java.util.List)) {
+						continue;
+					}
+					java.util.List<?> states = (java.util.List<?>) sp.get("states");
+					java.util.List<Float> pcts = new java.util.ArrayList<>();
+					java.util.List<java.util.Set<LocalDate>> dateSets = new java.util.ArrayList<>();
+					for (Object o : states) {
+						if (!(o instanceof Map)) continue;
+						@SuppressWarnings("unchecked")
+						Map<String, Object> st = (Map<String, Object>) o;
+						Object treeObj = st.get("rules_tree");
+						Object pctObj = st.get("pct");
+						if (!(treeObj instanceof Map) || !(pctObj instanceof Number)) continue;
+						@SuppressWarnings("unchecked")
+						Map<String, Object> tree = (Map<String, Object>) treeObj;
+						Map<LocalDate, String> matched;
+						try {
+							matched = this.marketTrendServiceV2
+									.generateMarketSignalsFromTree(tree, marketTrendMap, priceData);
+						} catch (Exception ex) {
+							System.err.println("[DualStopPct] stop state '" + st.get("label")
+									+ "' failed to evaluate (is every leaf complete?) — skipped: " + ex.getMessage());
+							continue;
+						}
+						pcts.add(((Number) pctObj).floatValue());
+						dateSets.add(matched.keySet());
+					}
+					if (pcts.isEmpty()) continue;
+					Map<LocalDate, Float> byDate = new java.util.HashMap<>();
+					for (LocalDate d : priceData.getAll_dates()) {
+						for (int i = 0; i < dateSets.size(); i++) {
+							if (dateSets.get(i).contains(d)) { byDate.put(d, pcts.get(i)); break; }
+						}
+					}
+					dse.getValue().getStrategyData().setStoplossPctByDate(byDate);
+				}
+
+				// DualLimitPct: same pre-eval for LIMIT_RULE limit-% states.
+				for (Map.Entry<MarketRegimeDto, BuySellDataV2> dle : dualStopRegimeBuySell.entrySet()) {
+					Map<String, Object> lp = dle.getKey().getLimitStates();
+					if (lp == null || !(lp.get("states") instanceof java.util.List)) {
+						continue;
+					}
+					java.util.List<?> lstates = (java.util.List<?>) lp.get("states");
+					java.util.List<Float> lpcts = new java.util.ArrayList<>();
+					java.util.List<java.util.Set<LocalDate>> lsets = new java.util.ArrayList<>();
+					for (Object o : lstates) {
+						if (!(o instanceof Map)) continue;
+						@SuppressWarnings("unchecked")
+						Map<String, Object> st = (Map<String, Object>) o;
+						Object treeObj = st.get("rules_tree");
+						Object pctObj = st.get("pct");
+						if (!(treeObj instanceof Map) || !(pctObj instanceof Number)) continue;
+						@SuppressWarnings("unchecked")
+						Map<String, Object> tree = (Map<String, Object>) treeObj;
+						Map<LocalDate, String> matched;
+						try {
+							matched = this.marketTrendServiceV2
+									.generateMarketSignalsFromTree(tree, marketTrendMap, priceData);
+						} catch (Exception ex) {
+							System.err.println("[DualLimitPct] limit state '" + st.get("label")
+									+ "' failed to evaluate (is every leaf complete?) — skipped: " + ex.getMessage());
+							continue;
+						}
+						lpcts.add(((Number) pctObj).floatValue());
+						lsets.add(matched.keySet());
+					}
+					if (lpcts.isEmpty()) continue;
+					Map<LocalDate, Float> lByDate = new java.util.HashMap<>();
+					for (LocalDate d : priceData.getAll_dates()) {
+						for (int i = 0; i < lsets.size(); i++) {
+							if (lsets.get(i).contains(d)) { lByDate.put(d, lpcts.get(i)); break; }
+						}
+					}
+					dle.getValue().getStrategyData().setLimitPctByDate(lByDate);
+					// DualLimitPct: run LIMIT_RULE through the existing LIMIT price path
+					// so every order-type "limit" check matches (entry-signal AND
+					// limit-price, all methods). Rule pct still comes from getEffectiveLimitPct.
+					dle.getValue().getStrategyData().setOrderType("LIMIT");
+				}
 
 				long start = System.nanoTime();
 
@@ -1039,7 +1131,7 @@ public class BacktestEngineController {
 
 				// 3. Evaluate market trend rules → date → active regime label
 				Map<LocalDate, String> marketTrends = context.getMarketTrends(strategyRequest, priceData,
-						backtestDataPath);
+						backtestDataPath, regimeSignals);
 
 				// 4. Run multi-regime backtest with daily regime switching
 				BacktestReponseDto backtestResponse = backtestServiceV2.runBacktestSimpleV2(priceData, marketTrends,
@@ -1121,7 +1213,7 @@ public class BacktestEngineController {
 				System.err.println("[execution] Normal strategy → synthesized " + marketTrends.size()
 						+ " marketTrend entries → label=" + soleLabel);
 			} else {
-				marketTrends = context.getMarketTrends(strategy, priceData, backtestDataPath);
+				marketTrends = context.getMarketTrends(strategy, priceData, backtestDataPath, regimeSignals);
 			}
 
 			// 4-arg overload with seedHoldings — engine attaches proposedOrders

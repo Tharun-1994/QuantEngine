@@ -69,9 +69,9 @@ public final class VolatilityCutEvaluator {
         if (tree == null || tree.getChildren() == null || tree.getChildren().isEmpty()) {
             return result;
         }
-        for (LocalDate d : sortedDates) {
-            if (evalNode(tree, frames, d)) {
-                result.add(d);
+        for (int i = 0; i < sortedDates.size(); i++) {
+            if (evalNode(tree, frames, sortedDates, i)) {
+                result.add(sortedDates.get(i));
             }
         }
         return result;
@@ -79,28 +79,41 @@ public final class VolatilityCutEvaluator {
 
     // ── Node evaluation ──────────────────────────────────────────────────────
 
-    private static boolean evalNode(RuleNodeDto node, Map<String, ArrowDataFrame> frames, LocalDate d) {
+    private static boolean evalNode(RuleNodeDto node, Map<String, ArrowDataFrame> frames,
+            List<LocalDate> sortedDates, int i) {
         if (node instanceof RuleGroupNodeDto group) {
             List<RuleNodeDto> children = group.getChildren();
             if (children == null || children.isEmpty()) return false;
             boolean isAnd = group.getLogic() != RuleGroupNodeDto.Logic.OR;
             for (RuleNodeDto child : children) {
-                boolean childVal = evalNode(child, frames, d);
+                boolean childVal = evalNode(child, frames, sortedDates, i);
                 if (isAnd && !childVal) return false;
                 if (!isAnd && childVal)  return true;
             }
             return isAnd;
         }
         if (node instanceof RuleLeafNodeDto leaf) {
-            return evalLeaf(leaf.getRule(), frames, d);
+            return evalLeaf(leaf.getRule(), frames, sortedDates, i);
         }
         return false;
     }
 
     // ── Leaf evaluation ──────────────────────────────────────────────────────
 
-    private static boolean evalLeaf(RuleDto rule, Map<String, ArrowDataFrame> frames, LocalDate d) {
+    private static boolean evalLeaf(RuleDto rule, Map<String, ArrowDataFrame> frames,
+            List<LocalDate> sortedDates, int i) {
         if (rule == null) return false;
+
+        // Shift (bars-ago): evaluate this leaf `shift` TRADING bars before the decision
+        // bar (default 0 = the decision bar). Bar-indexed via the sorted trading
+        // calendar, so shift=1 from a Monday lands on the prior Friday. Enables the RSI
+        // overbought-rollover (rsi[T-2] vs rsi[T-1]). shift=0 == prior behaviour.
+        int shift = (rule.getShift() == null || rule.getShift() < 0) ? 0 : rule.getShift();
+        int shiftedIdx = i - shift;
+        if (shiftedIdx < 0) return false; // not enough history for the requested shift
+        LocalDate d = sortedDates.get(shiftedIdx);
+
+        // ── Special case: month_in operator
 
         // ── Special case: month_in operator ─────────────────────────────────
         // indicator="month", operator="month_in", label="5,6" (or value=5 for single)

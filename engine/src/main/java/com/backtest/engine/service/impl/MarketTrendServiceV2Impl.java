@@ -61,8 +61,8 @@ public class MarketTrendServiceV2Impl implements MarketTrendServiceV2 {
 	//                                   target market ticker, return Set<dates>
 	// buildLabelFromTree              → concatenate leaf labels with "_"
 	//                                   (mirrors the flat-list label scheme)
-
-	private Map<LocalDate, String> generateMarketSignalsFromTree(
+	@Override
+	public Map<LocalDate, String> generateMarketSignalsFromTree(
 			Map<String, Object> treeMap,
 			Map<String, ArrowDataFrame> marketTrendMap,
 			PriceDataV2 priceData) {
@@ -472,5 +472,8 @@ public class MarketTrendServiceV2Impl implements MarketTrendServiceV2 {
 
 		}
 	}
+	
+	
+	
 
 }
